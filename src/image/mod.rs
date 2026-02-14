@@ -1,4 +1,4 @@
-use image::{GenericImageView, Pixel};
+use image::{Pixel};
 
 
 // open the image
