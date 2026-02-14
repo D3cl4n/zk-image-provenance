@@ -7,6 +7,17 @@ use halo2_proofs::{
 };
 
 
+// structure to store the image details
+#[derive(Clone, Debug)]
+pub struct ImageDetails {
+    width: u32,
+    height: u32,
+    num_pixels: u64,
+    r_vals: Vec<u8>,
+    g_vals: Vec<u8>,
+    b_vals: Vec<u8>
+}
+
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
