@@ -2,7 +2,7 @@ use image::{GenericImageView, Pixel};
 
 
 // open the image
-pub fn open_image() {
+pub fn get_image_rgb_values() {
     let img = image::open("/home/cdeclan/CryptoHack/image_provenance/image.png").expect("[!] Failed to open image");
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();

@@ -1,5 +1,5 @@
 mod image;
 
 fn main() {
-    image::open_image();
+    image::get_image_rgb_values();
 }
