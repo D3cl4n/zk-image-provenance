@@ -10,18 +10,33 @@ use halo2_proofs::{
 // structure to store the image details
 #[derive(Clone, Debug)]
 pub struct ImageDetails {
-    width: u32,
-    height: u32,
-    num_pixels: u64,
-    r_vals: Vec<u8>,
-    g_vals: Vec<u8>,
-    b_vals: Vec<u8>
+    pub width: u32,
+    pub height: u32,
+    pub r: Vec<u8>,
+    pub g: Vec<u8>,
+    pub b: Vec<u8>
 }
 
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
-pub struct GreyscaleChipConfig {
+struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
     fixed: [Column<Fixed>; 3], // fixed column for each of the greyscale coefficients
-    instance: Column<Instance> // public output
+    instance: Column<Instance>, // public output
+    s_greyscale: Selector
+}
+
+// structure for the Greyscale chip
+#[derive(Clone, Debug)]
+struct GreyscaleChip<F: PrimeField> {
+    config: GreyscaleChipConfig, 
+    _marker: PhantomData<F>
+} 
+
+// structure for the Greyscale circuit
+#[derive(Default)]
+struct GreyscaleCircuit<F: PrimeField> {
+    r_elements: Vec<Value<F>>,
+    g_elements: Vec<Value<F>>, 
+    b_elements: Vec<Value<F>>
 }

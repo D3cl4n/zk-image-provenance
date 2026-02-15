@@ -2,10 +2,13 @@ use image::{Pixel};
 
 
 // open the image
-pub fn get_image_rgb_values() -> (Vec<u8>, Vec<u8>, Vec<u8>) {
-    let img = image::open("/home/cdeclan/CryptoHack/image_provenance/image.png").expect("[!] Failed to open image");
+pub fn get_image_rgb_values(original_img: &String) -> (u32, u32, Vec<u8>, Vec<u8>, Vec<u8>) {
+    // open image and convert to RGB8
+    println!("[*] Opening image and parsing out rgb values...");
+    let img = image::open(original_img).expect("[!] Failed to open image");
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
+    println!("[*] Original image is {}x{}", width, height);
 
     // vectors for r, g, b bytes
     let mut r: Vec<u8> = vec![];
@@ -22,5 +25,5 @@ pub fn get_image_rgb_values() -> (Vec<u8>, Vec<u8>, Vec<u8>) {
         }
     }
 
-    (r, g, b)
+    (width, height, r, g, b)
 }
