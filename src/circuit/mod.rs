@@ -56,3 +56,32 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
         &()
     }
 }
+
+// helper function to create the greyscale gate
+fn create_greyscale_gate<F: PrimeField> (
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 4],
+    fixed: [Column<Fixed>; 3],
+    s_greyscale: Selector
+) {
+    meta.create_gate("greyscale_gate", |meta| {
+        let s_greyscale = meta.query_selector(s_greyscale);
+        // current rgb values
+        let r = meta.query_advice(advice[0], Rotation::cur());
+        let g = meta.query_advice(advice[1], Rotation::cur());
+        let b = meta.query_advice(advice[2], Rotation::cur());
+
+        // greyscaled values from formula (30*r + 58*g + 11*b) // 100
+        let r_next = meta.query_advice(advice[0], Rotation::next());
+        let g_next = meta.query_advice(advice[1], Rotation::next());
+        let b_next = meta.query_advice(advice[2], Rotation::next());
+
+        // constants for greyscale formula coefficients
+        let r_coeff = meta.query_fixed(fixed[0]);
+        let g_coeff = meta.query_fixed(fixed[1]);
+        let b_coeff = meta.query_fixed(fixed[2]);
+
+        // constraints
+        // TODO: fill this in
+    });
+}
