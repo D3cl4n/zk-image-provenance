@@ -40,3 +40,19 @@ struct GreyscaleCircuit<F: PrimeField> {
     g_elements: Vec<Value<F>>, 
     b_elements: Vec<Value<F>>
 }
+
+// implement the chip trait for GreyscaleChip
+impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
+    type Config = GreyscaleChipConfig;
+    type Loaded = ();
+
+    // getter for the chip config 
+    fn config(&self) -> &Self::Config {
+        &self.config
+    }
+
+    // getter for the Loaded field
+    fn loaded(&self) -> &Self::Loaded {
+        &()
+    }
+}
