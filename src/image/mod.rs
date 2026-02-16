@@ -1,7 +1,7 @@
 use image::{Pixel};
 
 
-// open the image
+// open the image and store the rgb values
 pub fn get_image_rgb_values(original_img: &String) -> (u32, u32, Vec<u8>, Vec<u8>, Vec<u8>) {
     // open image and convert to RGB8
     println!("[*] Opening image and parsing out rgb values...");
