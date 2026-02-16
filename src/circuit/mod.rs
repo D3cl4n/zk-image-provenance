@@ -71,7 +71,7 @@ fn create_greyscale_gate<F: PrimeField> (
         let g = meta.query_advice(advice[1], Rotation::cur());
         let b = meta.query_advice(advice[2], Rotation::cur());
 
-        // greyscaled values from formula (30*r + 58*g + 11*b) // 100
+        // greyscaled values from formula 100y = (30*r + 58*g + 11*b)
         let r_next = meta.query_advice(advice[0], Rotation::next());
         let g_next = meta.query_advice(advice[1], Rotation::next());
         let b_next = meta.query_advice(advice[2], Rotation::next());
@@ -82,6 +82,8 @@ fn create_greyscale_gate<F: PrimeField> (
         let b_coeff = meta.query_fixed(fixed[2]);
 
         // constraints
-        // TODO: fill this in
+        vec![
+            
+        ]
     });
 }
