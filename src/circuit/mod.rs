@@ -83,7 +83,9 @@ fn create_greyscale_gate<F: PrimeField> (
 
         // constraints
         vec![
-            
+            s_greyscale.clone() * (r_next.clone() - (r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone())),
+            s_greyscale.clone() * (g_next.clone() - (r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone())),
+            s_greyscale * (b_next - (r_coeff*r + g_coeff*g + b_coeff*b))
         ]
     });
 }
