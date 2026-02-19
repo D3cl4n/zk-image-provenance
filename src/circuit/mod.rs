@@ -21,7 +21,7 @@ pub struct ImageDetails {
 #[derive(Clone, Debug)]
 struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
-    fixed: [Column<Fixed>; 4], // fixed column for each of the greyscale coefficients, one fixed column for byte values for lookups
+    fixed: [Column<Fixed>; 1], // one fixed column for byte values for lookups
     instance: Column<Instance>, // public output
     s_greyscale: Selector
 }
@@ -38,7 +38,8 @@ struct GreyscaleChip<F: PrimeField> {
 struct GreyscaleCircuit<F: PrimeField> {
     r_elements: Vec<Value<F>>,
     g_elements: Vec<Value<F>>, 
-    b_elements: Vec<Value<F>>
+    b_elements: Vec<Value<F>>,
+    y_elements: Vec<Value<F>>
 }
 
 // implement the chip trait for GreyscaleChip
@@ -57,11 +58,11 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
     }
 }
 
-// helper function to create the greyscale gate TODO: change this to store y in advice[3]
+// helper function to create the greyscale gate TODO: ADD RANGE CHECKS ON r,g,b,y for 0, ..., 255
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 4],
-    fixed: [Column<Fixed>; 4],
+    fixed: Column<Fixed>,
     s_greyscale: Selector
 ) {
     meta.create_gate("greyscale_gate", |meta| {
@@ -72,23 +73,19 @@ fn create_greyscale_gate<F: PrimeField> (
         let b = meta.query_advice(advice[2], Rotation::cur());
 
         // greyscaled values from formula y = (30*r + 58*g + 11*b)/100
-        let r_next = meta.query_advice(advice[0], Rotation::next());
-        let g_next = meta.query_advice(advice[1], Rotation::next());
-        let b_next = meta.query_advice(advice[2], Rotation::next());
+        let y = meta.query_advice(advice[3], Rotation::cur());
 
         // constants for greyscale formula coefficients
-        let r_coeff = meta.query_fixed(fixed[0]);
-        let g_coeff = meta.query_fixed(fixed[1]);
-        let b_coeff = meta.query_fixed(fixed[2]);
+        let r_coeff = Expression::Constant(F::from(30));
+        let g_coeff = Expression::Constant(F::from(58));
+        let b_coeff = Expression::Constant(F::from(11));
 
         // greyscale value for constraint checks
         let sum = r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone();
 
         // constraints
         vec![
-            s_greyscale.clone() * (r_next.clone() - g_next.clone()), // enforce equality between r' and g'
-            s_greyscale.clone() * (g_next.clone() - b_next.clone()), // enforce equality between g' and b'
-            s_greyscale * (Expression::Constant(F::from(100))*r_next - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
+            s_greyscale * (Expression::Constant(F::from(100))*y - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
         ]
     });
 }
