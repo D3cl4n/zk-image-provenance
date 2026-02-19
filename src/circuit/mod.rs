@@ -71,7 +71,7 @@ fn create_greyscale_gate<F: PrimeField> (
         let g = meta.query_advice(advice[1], Rotation::cur());
         let b = meta.query_advice(advice[2], Rotation::cur());
 
-        // greyscaled values from formula 100y = (30*r + 58*g + 11*b)
+        // greyscaled values from formula y = (30*r + 58*g + 11*b)/100
         let r_next = meta.query_advice(advice[0], Rotation::next());
         let g_next = meta.query_advice(advice[1], Rotation::next());
         let b_next = meta.query_advice(advice[2], Rotation::next());
@@ -81,11 +81,14 @@ fn create_greyscale_gate<F: PrimeField> (
         let g_coeff = meta.query_fixed(fixed[1]);
         let b_coeff = meta.query_fixed(fixed[2]);
 
+        // greyscale value for constraint checks
+        let sum = r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone();
+
         // constraints
         vec![
-            s_greyscale.clone() * (r_next.clone() - (r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone())),
-            s_greyscale.clone() * (g_next.clone() - (r_coeff.clone()*r.clone() + g_coeff.clone()*g.clone() + b_coeff.clone()*b.clone())),
-            s_greyscale * (b_next - (r_coeff*r + g_coeff*g + b_coeff*b))
+            s_greyscale.clone() * (r_next.clone() - g_next.clone()), // enforce equality between r' and g'
+            s_greyscale.clone() * (g_next.clone() - b_next.clone()), // enforce equality between g' and b'
+            s_greyscale * (Expression::Constant(F::from(100))*r_next - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
         ]
     });
 }
