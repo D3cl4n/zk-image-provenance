@@ -90,3 +90,13 @@ fn create_greyscale_gate<F: PrimeField> (
     });
 }
 
+// implementation of additional methods for GreyscaleChip
+impl<F: PrimeField> GreyscaleChip<F> {
+    // constructor
+    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+        GreyscaleChip {config, _marker: PhantomData}
+    }
+
+    // configure the chip including all gates, constraints, and selectors
+}
+
