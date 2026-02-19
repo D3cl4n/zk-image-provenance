@@ -21,7 +21,7 @@ pub struct ImageDetails {
 #[derive(Clone, Debug)]
 struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
-    fixed: [Column<Fixed>; 3], // fixed column for each of the greyscale coefficients
+    fixed: [Column<Fixed>; 4], // fixed column for each of the greyscale coefficients, one fixed column for byte values for lookups
     instance: Column<Instance>, // public output
     s_greyscale: Selector
 }
@@ -57,11 +57,11 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
     }
 }
 
-// helper function to create the greyscale gate
+// helper function to create the greyscale gate TODO: change this to store y in advice[3]
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 4],
-    fixed: [Column<Fixed>; 3],
+    fixed: [Column<Fixed>; 4],
     s_greyscale: Selector
 ) {
     meta.create_gate("greyscale_gate", |meta| {
@@ -92,3 +92,4 @@ fn create_greyscale_gate<F: PrimeField> (
         ]
     });
 }
+
