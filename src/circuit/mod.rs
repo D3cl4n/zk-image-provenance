@@ -89,6 +89,8 @@ fn create_greyscale_gate<F: PrimeField> (
     });
 }
 
+// helper function to create lookup table constraints
+
 // implementation of additional methods for GreyscaleChip
 impl<F: PrimeField> GreyscaleChip<F> {
     // constructor
@@ -112,7 +114,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
         let s_greyscale = meta.selector();
         create_greyscale_gate(meta, advice, s_greyscale);
 
-        // lookups for byte range checks
+        // lookups for byte range checks, since we don't use a selector it applies to every row
         meta.lookup(|meta| {
             let r = meta.query_advice(advice[0], Rotation::cur());
             vec![(r, table)]
@@ -142,3 +144,53 @@ impl<F: PrimeField> GreyscaleChip<F> {
     }
 }
 
+// trait for sub-functions of the circuit
+trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
+    type Num;
+
+    // expose a value as public
+    fn expose_as_public(&self, layouter: impl Layouter<F>, num: Self::Num, row: usize) -> Result<(), Error>;
+
+    // greyscale
+    fn greyscale(
+        &self, 
+        layouter: impl Layouter<F>,
+        r: Vec<u8>,
+        g: Vec<u8>,
+        b: Vec<u8>
+    ) -> Result<Vec<u8>, Error>;
+}
+
+impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
+    type Num = Number<F>;
+
+    // expose a value as public in the instance column
+    fn expose_as_public(&self, mut layouter: impl Layouter<F>, num: Self::Num, row: usize) -> Result<(), Error> {
+        let config = self.config();
+        layouter.constrain_instance(num.0.cell(), config.instance, row)
+    }
+
+    // greyscale transformation
+    fn greyscale(
+        &self, 
+        mut layouter: impl Layouter<F>,
+        r: Vec<u8>,
+        g: Vec<u8>, 
+        b: Vec<u8>
+    ) -> Result<Vec<u8>, Error> {
+        let config = self.config();
+
+        // create a region for the lookup table
+        layouter.assign_region(
+            || "lookup_table", |mut region| {
+                let mut offset: usize = 0;
+
+                // iterate over the r, g, b vectors and transform to greyscale
+                for i in 0..r.len() {
+                    println!("memes!");
+                }
+            }
+            //TODO: finish me
+        )
+    }
+}
