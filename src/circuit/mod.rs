@@ -118,23 +118,17 @@ impl<F: PrimeField> GreyscaleChip<F> {
 
         // lookups for byte range checks, since we don't use a selector it applies to every row
         meta.lookup(|meta| {
+            let s_greyscale = meta.query_selector(s_greyscale);
             let r = meta.query_advice(advice[0], Rotation::cur());
-            vec![(r, table)]
-        });
-
-        meta.lookup(|meta| {
             let g = meta.query_advice(advice[1], Rotation::cur());
-            vec![(g, table)]
-        });
-
-        meta.lookup(|meta| {
             let b = meta.query_advice(advice[2], Rotation::cur());
-            vec![(b, table)]
-        });
-
-        meta.lookup(|meta| {
             let y = meta.query_advice(advice[3], Rotation::cur());
-            vec![(y, table)]
+            vec![
+                (s_greyscale.clone() * r, table),
+                (s_greyscale.clone() * g, table),
+                (s_greyscale.clone() * b, table),
+                (s_greyscale * y, table)
+            ]
         });
 
         GreyscaleChipConfig {
