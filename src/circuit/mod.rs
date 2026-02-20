@@ -180,6 +180,12 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
         layouter.assign_region(
             || "lookup_table_region", |mut region| {
                 let mut offset: usize = 0;
+
+                // loop over channel values
+                for i in 0..r.len() {
+                    println!(r[i]);
+                }
+
                 // default return value
                 Ok(vec![0u8])
             }

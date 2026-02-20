@@ -13,6 +13,7 @@ def edit_img(image):
     for y in range(height):
         for x in range(width):
             r, g, b = pixels[x, y]
+            print(f"r: {r}, g: {g}, b: {b}") # TODO: write to csv for verification against rust code channel extraction
             grey_pixel = (30*r + 58*g + 11*b) // 100
             grey_pixels[x, y] = grey_pixel
 
