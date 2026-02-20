@@ -42,6 +42,10 @@ struct GreyscaleCircuit<F: PrimeField> {
     y_elements: Vec<Value<F>>
 }
 
+// structure to store numbers in cells
+#[derive(Clone)]
+struct Number<F: PrimeField>(AssignedCell<F, F>);
+
 // implement the chip trait for GreyscaleChip
 impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
     type Config = GreyscaleChipConfig;
@@ -88,8 +92,6 @@ fn create_greyscale_gate<F: PrimeField> (
         ]
     });
 }
-
-// helper function to create lookup table constraints
 
 // implementation of additional methods for GreyscaleChip
 impl<F: PrimeField> GreyscaleChip<F> {
@@ -182,15 +184,11 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
 
         // create a region for the lookup table
         layouter.assign_region(
-            || "lookup_table", |mut region| {
+            || "lookup_table_region", |mut region| {
                 let mut offset: usize = 0;
-
-                // iterate over the r, g, b vectors and transform to greyscale
-                for i in 0..r.len() {
-                    println!("memes!");
-                }
+                // default return value
+                Ok(vec![0u8])
             }
-            //TODO: finish me
         )
     }
 }
