@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Region, Chip, Layouter, SimpleFloorPlanner, Value},
-    plonk::{Advice, Fixed, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
+    plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
 
@@ -21,7 +21,7 @@ pub struct ImageDetails {
 #[derive(Clone, Debug)]
 struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
-    fixed: [Column<Fixed>; 1], // one fixed column for byte values for lookups
+    table: TableColumn, // one fixed column for byte values for lookups
     instance: Column<Instance>, // public output
     s_greyscale: Selector
 }
@@ -62,7 +62,6 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 4],
-    fixed: Column<Fixed>,
     s_greyscale: Selector
 ) {
     meta.create_gate("greyscale_gate", |meta| {
@@ -98,5 +97,48 @@ impl<F: PrimeField> GreyscaleChip<F> {
     }
 
     // configure the chip including all gates, constraints, and selectors
+    fn configure(
+        meta: &mut ConstraintSystem<F>,
+        advice: [Column<Advice>; 4],
+        table: TableColumn,
+        instance: Column<Instance>,
+    ) -> <Self as Chip<F>>::Config {
+        meta.enable_equality(instance);
+
+        for column in &advice {
+            meta.enable_equality(*column);
+        }
+
+        let s_greyscale = meta.selector();
+        create_greyscale_gate(meta, advice, s_greyscale);
+
+        // lookups for byte range checks
+        meta.lookup(|meta| {
+            let r = meta.query_advice(advice[0], Rotation::cur());
+            vec![(r, table)]
+        });
+
+        meta.lookup(|meta| {
+            let g = meta.query_advice(advice[1], Rotation::cur());
+            vec![(g, table)]
+        });
+
+        meta.lookup(|meta| {
+            let b = meta.query_advice(advice[2], Rotation::cur());
+            vec![(b, table)]
+        });
+
+        meta.lookup(|meta| {
+            let y = meta.query_advice(advice[3], Rotation::cur());
+            vec![(y, table)]
+        });
+
+        GreyscaleChipConfig {
+            advice, 
+            table, 
+            instance, 
+            s_greyscale
+        }
+    }
 }
 
