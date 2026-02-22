@@ -19,7 +19,7 @@ pub struct ImageDetails {
 
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
-struct GreyscaleChipConfig {
+pub struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
     table: TableColumn, // one fixed column for byte values for lookups
     instance: Column<Instance>, // public output
@@ -35,11 +35,10 @@ struct GreyscaleChip<F: PrimeField> {
 
 // structure for the Greyscale circuit
 #[derive(Default)]
-struct GreyscaleCircuit {
-    r_elements: Vec<u8>,
-    g_elements: Vec<u8>, 
-    b_elements: Vec<u8>,
-    y_elements: Vec<u8>
+pub struct GreyscaleCircuit {
+    pub r_elements: Vec<u8>,
+    pub g_elements: Vec<u8>, 
+    pub b_elements: Vec<u8>
 }
 
 // structure to store numbers in cells

@@ -32,4 +32,16 @@ fn main() {
     // read greyscale values from editor as the public output
     let greyscale_values_file = String::from("output/greyscale.txt");
     let y_values: Vec<u8> = utils::read_greyscale_values(&greyscale_values_file).expect("invalid byte val");
+
+    // MockProver for now - testing
+    let mut expected: Vec<Fr> = vec![];
+    for i in 0..y_values.len() {
+        expected.push(Fr::from(y_values[i] as u64));
+    }
+
+    let greyscale_circuit = circuit::GreyscaleCircuit {
+        r_elements : original_img_details.r, 
+        g_elements : original_img_details.g,
+        b_elements : original_img_details.b
+    };
 }
