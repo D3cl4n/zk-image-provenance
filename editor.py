@@ -19,25 +19,33 @@ def edit_img(image):
     grey_pixels = grey_img.load()
 
     # lists of pixel values
-    pixel_arr = []
+    original_pixel_arr = []
+    greyscale_pixel_arr = []
     
     # iterate over the pixels and extract the 3 bytes for color channels (R, G, B)
     for y in range(height):
         for x in range(width):
             r, g, b = pixels[x, y]
-            pixel_arr.append([r, g, b])
+            original_pixel_arr.append([r, g, b])
             
             grey_pixel = (30*r + 58*g + 11*b) // 100
+            greyscale_pixel_arr.append(grey_pixel)
             grey_pixels[x, y] = grey_pixel
 
     grey_img.save("greyscale.png")
-    write_pixels_to_csv(pixel_arr)
+    write_pixels_to_csv(original_pixel_arr)
+
+    return greyscale_pixel_arr
 
 
 # main function
 def main():
     image = "image.png" # relative path
-    edit_img(image)
+    greyscale_values = edit_img(image)
+
+    # write the greyscale values to list as public input for ZKP generation
+    for y in greyscale_values:
+        pass
 
 
 if __name__ == '__main__':
