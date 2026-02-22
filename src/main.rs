@@ -1,5 +1,6 @@
 mod image;
 mod circuit;
+mod utils;
 
 
 // main function
@@ -7,9 +8,9 @@ fn main() {
     // start with the MockProver and then move to real prover
     use halo2_proofs::dev::MockProver;
     use halo2curves::bls12381::Fr;
-    
+
     // original image as private witness
-    let original_img = String::from("/home/cdeclan/CryptoHack/image_provenance/image.png");
+    let original_img = String::from("image.png");
 
     // parse out rbg values into three vectors and store dimensions
     let mut width: u32 = 0u32;
@@ -27,4 +28,8 @@ fn main() {
         g, 
         b
     };
+
+    // read greyscale values from editor as the public output
+    let greyscale_values_file = String::from("output/greyscale.txt");
+    let y_values: Vec<u8> = utils::read_greyscale_values(&greyscale_values_file).expect("invalid byte val");
 }
