@@ -44,4 +44,8 @@ fn main() {
         g_elements : original_img_details.g,
         b_elements : original_img_details.b
     };
+
+    // TODO: try mock prover and debug
+    let k: u32 = 22;
+    let prover = MockProver::run(k, &greyscale_circuit, vec![expected.clone()]).unwrap();
 }

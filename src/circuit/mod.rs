@@ -112,7 +112,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
             meta.enable_equality(*column);
         }
 
-        let s_greyscale = meta.selector();
+        let s_greyscale = meta.complex_selector();
         create_greyscale_gate(meta, advice, s_greyscale);
 
         // lookups for byte range checks, since we don't use a selector it applies to every row
