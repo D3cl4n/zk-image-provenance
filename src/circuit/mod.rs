@@ -35,11 +35,11 @@ struct GreyscaleChip<F: PrimeField> {
 
 // structure for the Greyscale circuit
 #[derive(Default)]
-struct GreyscaleCircuit<F: PrimeField> {
-    r_elements: Vec<Value<F>>,
-    g_elements: Vec<Value<F>>, 
-    b_elements: Vec<Value<F>>,
-    y_elements: Vec<Value<F>>
+struct GreyscaleCircuit {
+    r_elements: Vec<u8>,
+    g_elements: Vec<u8>, 
+    b_elements: Vec<u8>,
+    y_elements: Vec<u8>
 }
 
 // structure to store numbers in cells
@@ -151,10 +151,10 @@ trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
     fn greyscale(
         &self, 
         layouter: impl Layouter<F>,
-        r: Vec<u8>,
-        g: Vec<u8>,
-        b: Vec<u8>
-    ) -> Result<Vec<u8>, Error>;
+        r: &Vec<u8>,
+        g: &Vec<u8>,
+        b: &Vec<u8>
+    ) -> Result<Vec<AssignedCell<F, F>>, Error>;
 }
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
@@ -170,10 +170,10 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
     fn greyscale(
         &self, 
         mut layouter: impl Layouter<F>,
-        r: Vec<u8>,
-        g: Vec<u8>, 
-        b: Vec<u8>
-    ) -> Result<Vec<u8>, Error> {
+        r: &Vec<u8>,
+        g: &Vec<u8>, 
+        b: &Vec<u8>
+    ) -> Result<Vec<AssignedCell<F, F>>, Error> {
         let config = self.config();
 
         // create a region for the lookup table
@@ -182,7 +182,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 let mut offset: usize = 0;
 
                 // loop over r, g, b values and compute greyscale 
-                let mut y_values: Vec<u8> = vec![];
+                let mut y_values: Vec<AssignedCell<F, F>> = vec![];
                 for i in 0..r.len() {
                     // enable greyscale selector - triggering lookup constraint on all row values
                     config.s_greyscale.enable(&mut region, offset)?;
@@ -216,25 +216,78 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                         || Value::known(F::from(b[i] as u64))
                     )?;
 
-                    // compute the greyscale value
-                    let y: u8 = 100 * (30 * r[i] + 58 * g[i] + 11 * b[i]);
-                    y_values.push(y);
-
                     // map greyscale value to field element and write to fourth advice column
-                    region.assign_advice(
+                    let temp = region.assign_advice(
                         || "y", 
                         config.advice[3], 
                         offset, 
                         || Value::known(F::from(y as u64))
                     )?;
 
+                    // add cell to return vector
+                    y_values.push(temp);
+
                     // increase row offset 
                     offset += 1;
                 }
 
-                // default return value
+                // return value
                 Ok(y_values)
             }
         )
+    }
+}
+
+// implementation of the circuit trait for the GreyscaleCircuit
+impl<F: PrimeField> Circuit<F> for GreyscaleCircuit {
+    type Config = GreyscaleChipConfig;
+    type FloorPlanner = SimpleFloorPlanner;
+
+    fn without_witnesses(&self) -> Self {
+        Self::default()
+    }
+
+    // configure the circuit including column creation
+    fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
+        let advice = [meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column()];
+        let instance = meta.instance_column();
+        let table = meta.lookup_table_column();
+
+        GreyscaleChip::configure(meta, advice, table, instance)
+    }
+
+    // synthesize the circuit
+    fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<F>) -> Result<(), Error> {
+        let chip = GreyscaleChip::construct(config.clone());
+
+        // load the lookup table
+        layouter.assign_table(
+            || "lookup_table", |mut table| {
+                for i in 0..256 {
+                    table.assign_cell(
+                        || "byte_val",
+                        config.table,
+                        i,
+                        || Value::known(F::from(i as u64))
+                    )?;
+                }
+                Ok(())
+            }
+        )?;
+
+        let result = chip.greyscale(
+            layouter.namespace(|| "greyscale_namespace"), 
+            &self.r_elements, 
+            &self.g_elements,
+            &self.b_elements
+        )?;
+
+        // expose the greyscale values as public in the instance column
+        for i in 0..result.len() {
+            let public_value = Number(result[i].clone());
+            chip.expose_as_public(layouter.namespace(|| "greyscale_value"), public_value, i)?;
+        }
+
+        Ok(())
     }
 }

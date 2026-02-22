@@ -1,8 +1,13 @@
 mod image;
 mod circuit;
 
+
 // main function
 fn main() {
+    // start with the MockProver and then move to real prover
+    use halo2_proofs::dev::MockProver;
+    use halo2curves::bls12381::Fr;
+    
     // original image as private witness
     let original_img = String::from("/home/cdeclan/CryptoHack/image_provenance/image.png");
 
