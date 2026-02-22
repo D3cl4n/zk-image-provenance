@@ -1,4 +1,18 @@
 use image::{Pixel};
+use std::fs::File;
+use std::io::{Write, BufWriter};
+
+
+// write the pixels to a csv for checks against python editor scriot
+fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
+    let output_csv = File::create("output/pixels_rust.csv").expect("Failed to create csv");
+    let mut writer = BufWriter::new(output_csv);
+
+    // loop over the three vectors and write rows [r, g, b]
+    for i in 0..r.len() {
+        writeln!(writer, "{},{},{}", r[i], g[i], b[i]).unwrap();
+    }
+}
 
 
 // open the image and store the rgb values
@@ -24,6 +38,9 @@ pub fn get_image_rgb_values(original_img: &String) -> (u32, u32, Vec<u8>, Vec<u8
             b.push(pixel_channels[2] as u8);
         }
     }
+
+    // write the pixel rgb values to csv
+    write_pixels_to_csv(&r, &g, &b);
 
     (width, height, r, g, b)
 }

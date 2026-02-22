@@ -178,16 +178,62 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
 
         // create a region for the lookup table
         layouter.assign_region(
-            || "lookup_table_region", |mut region| {
+            || "greyscale_region", |mut region| {
                 let mut offset: usize = 0;
 
-                // loop over channel values
+                // loop over r, g, b values and compute greyscale 
+                let mut y_values: Vec<u8> = vec![];
                 for i in 0..r.len() {
-                    println!(r[i]);
+                    // enable greyscale selector - triggering lookup constraint on all row values
+                    config.s_greyscale.enable(&mut region, offset)?;
+
+                    // greyscale computation for writing to fourth advice column
+                    let r_curr = r[i] as u32;
+                    let g_curr = g[i] as u32;
+                    let b_curr = b[i] as u32;
+                    let sum = 30 * r_curr + 58 * g_curr + 11 * b_curr;
+                    let y = (sum / 100) as u8;
+
+                    // writing unedited pixels to first three advice columns
+                    region.assign_advice(
+                        || "r_init", 
+                        config.advice[0], 
+                        offset, 
+                        || Value::known(F::from(r[i] as u64))
+                    )?;
+
+                    region.assign_advice(
+                        || "g_init", 
+                        config.advice[1], 
+                        offset, 
+                        || Value::known(F::from(g[i] as u64))
+                    )?;
+
+                    region.assign_advice(
+                        || "b_init", 
+                        config.advice[2], 
+                        offset, 
+                        || Value::known(F::from(b[i] as u64))
+                    )?;
+
+                    // compute the greyscale value
+                    let y: u8 = 100 * (30 * r[i] + 58 * g[i] + 11 * b[i]);
+                    y_values.push(y);
+
+                    // map greyscale value to field element and write to fourth advice column
+                    region.assign_advice(
+                        || "y", 
+                        config.advice[3], 
+                        offset, 
+                        || Value::known(F::from(y as u64))
+                    )?;
+
+                    // increase row offset 
+                    offset += 1;
                 }
 
                 // default return value
-                Ok(vec![0u8])
+                Ok(y_values)
             }
         )
     }
