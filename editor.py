@@ -9,6 +9,8 @@ def write_pixels_to_csv(pixel_arr):
         writer = csv.writer(f)
         writer.writerows(pixel_arr)
 
+    f.close()
+
     
 # read the bytes of the png into an array
 def edit_img(image):
@@ -44,8 +46,10 @@ def main():
     greyscale_values = edit_img(image)
 
     # write the greyscale values to list as public input for ZKP generation
-    for y in greyscale_values:
-        pass
+    greyscale_output_csv = "output/greyscale.txt"
+    with open(greyscale_output_csv, "w") as f:
+        for y in greyscale_values:
+            f.write(str(y) + "\n")
 
 
 if __name__ == '__main__':
