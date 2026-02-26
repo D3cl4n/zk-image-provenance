@@ -13,6 +13,6 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 3) Laptop uses `scp` to retrieve $\text{I}$ off the Raspberry Pi for editing
 4) Python script on laptop, acting as the editor, computes $$\text{I}' = \text{Greyscale}(\text{I})$$
 5) The same python script acting as the editor runs a Rust binary supplying $\text{I}, \text{I}', \sigma$ (via cli arguments) to a Halo2 circuit. The private witness is $\text{I}$ and the public output is $\text{I}'$ and $\sigma$
-6) The circuit arithmetizes the following statement without revealing $\text{I}$: $$Greyscale(\text{I}) = \text{I}' \wedge \text{Verify}(\sigma, \text{I}) = 1$$
+6) The circuit arithmetizes the following statement without revealing $\text{I}$: $$Greyscale(\text{I}) = \text{I}' \wedge \text{Verify}_{\text{PK}}(\sigma, \text{I}) = 1$$
 
 ## Threat Analysis
