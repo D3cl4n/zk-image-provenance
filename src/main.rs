@@ -21,7 +21,7 @@ fn main() {
     (width, height, r, g, b) = image::get_image_rgb_values(&original_img);
 
     // construct ImageDetails structure from parsed values
-    let original_img_details = circuit::ImageDetails {
+    let original_img_details = circuit::greyscale::ImageDetails {
         width, 
         height, 
         r, 
@@ -39,7 +39,7 @@ fn main() {
         expected.push(Fr::from(y_values[i] as u64));
     }
 
-    let greyscale_circuit = circuit::GreyscaleCircuit {
+    let greyscale_circuit = circuit::greyscale::GreyscaleCircuit {
         r_elements : original_img_details.r, 
         g_elements : original_img_details.g,
         b_elements : original_img_details.b
