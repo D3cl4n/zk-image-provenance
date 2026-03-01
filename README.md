@@ -13,6 +13,13 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 3) Laptop uses `scp` to retrieve $\text{I}$ off the Raspberry Pi for editing
 4) Python script on laptop, acting as the editor, computes $$\text{I}' = \text{Greyscale}(\text{I})$$
 5) The same python script acting as the editor runs a Rust binary supplying $\text{I}, \text{I}', \sigma$ (via cli arguments) to a Halo2 circuit. The private witness is $\text{I}$ and the public output is $\text{I}'$ and $\sigma$
-6) The circuit arithmetizes the following statement without revealing $\text{I}$: $$Greyscale(\text{I}) = \text{I}' \wedge \text{Verify}_{\text{PK}}(\sigma, \text{I}) = 1$$
+6) The circuit arithmetizes the following statement without revealing $\text{I}$: $$\text{Greyscale}(\text{I}) = \text{I}' \wedge \text{Verify}_{\text{PK}}(\sigma, \text{I}) = 1$$
 
 ## Threat Analysis
+1) Since the photo is signed automatically as soon as it is captured, and only the camera has $\text{SK}$, the editor cannot use $\text{SK}$ to edit the metadata or contents in $\text{I}$ and then re-sign it.
+2) If the editor supplies $\text{I}'' \neq \text{I}'$ to the verifier, the proof will fail since the proof only works with $\text{Greyscale}(I) = \text{I}'$. A separate proof would need to be computed for $\text{I}''$
+3) If the editor swaps out $\sigma = \text{Sign}_{\text{SK}}(\text{Poseidon}(I))$ for $\sigma' = \text{Sign}_{\text{SK}}(\text{Poseidon}(I'))$ but provides $\text{I}' = \text{Greyscale}(I)$ to the verifier, the proof will fail since there is no collision such that $\text{Poseidon}(I) = \text{Poseidon}(I')$
+4) If the editor uses $\text{SK}' \neq \text{SK}$ to compute
+ a new signature for $\text{I}$ the proof will fail since the verifier uses the corresponding $\text{PK}$ from the camera only. 
+
+ ## Approach Using Commitments 
