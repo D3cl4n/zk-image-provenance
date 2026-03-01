@@ -102,3 +102,49 @@ fn create_arc_gate<F: PrimeField>(
         ]
     });
 }
+
+// helper function to create the MDS multiplication gate
+fn create_mds_mul_gate<F: PrimeField>(
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 4], 
+    s_mds_mul: Selector,
+    mds: &[[F; 4]; 4]
+) {
+    meta.create_gate("ML_gate", |meta| {
+        let s_mds_mul = meta.query_selector(s_mds_mul);
+        let a0 = meta.query_advice(advice[0], Rotation::cur());
+        let a1 = meta.query_advice(advice[1], Rotation::cur());
+        let a2 = meta.query_advice(advice[2], Rotation::cur());
+        let a3 = meta.query_advice(advice[3], Rotation::cur());
+        let a0_next = meta.query_advice(advice[0], Rotation::next());
+        let a1_next = meta.query_advice(advice[1], Rotation::next());
+        let a2_next = meta.query_advice(advice[2], Rotation::next());
+        let a3_next = meta.query_advice(advice[3], Rotation::next();)
+
+        // MDS matrix elements from row in column 0 -> column 2 order, use Expression:Constant to embed into polynomial
+        let mds_0_0 = Expression::Constant(mds[0][0]);
+        let mds_0_1 = Expression::Constant(mds[0][1]);
+        let mds_0_2 = Expression::Constant(mds[0][2]);
+        let mds_0_3 = Expression::Constant(mds[0][3]);
+        let mds_1_0 = Expression::Constant(mds[1][0]);
+        let mds_1_1 = Expression::Constant(mds[1][1]);
+        let mds_1_2 = Expression::Constant(mds[1][2]);
+        let mds_1_3 = Expression::Constant(mds[1][3]);
+        let mds_2_0 = Expression::Constant(mds[2][0]);
+        let mds_2_1 = Expression::Constant(mds[2][1]);
+        let mds_2_2 = Expression::Constant(mds[2][2]);
+        let mds_2_3 = Expression::Constant(mds[2][3]);
+        let mds_3_0 = Expression::Constant(mds[3][0]);
+        let mds_3_1 = Expression::Constant(mds[3][1]);
+        let mds_3_2 = Expression::Constant(mds[3][2]);
+        let mds_3_3 = Expression::Constant(mds[3][3]);
+        
+        // constraint - computes vector matrix product
+        vec![
+            s_mds_mul.clone() * (a0_next - (a0.clone()*mds_0_0 + a1.clone()*mds_0_1 + a2.clone()*mds_0_2) + a3.clone()*mds_0_3),
+            s_mds_mul.clone() * (a1_next - (a0.clone()*mds_1_0 + a1.clone()*mds_1_1 + a2.clone()*mds_1_2) + a3.clone()*mds_1_3),
+            s_mds_mul.clone() * (a2_next - (a0.clone()*mds_2_0 + a1.clone()*mds_2_1 + a2.clone()*mds_2_2) + a3.clone()*mds_2_3)
+            s_mds_mul * (a2_next - (a0*mds_3_0 + a1*mds_3_1 + a2*mds_3_2 + a3*mds_3_3))
+        ]
+    });
+}
