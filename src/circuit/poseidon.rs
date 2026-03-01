@@ -163,3 +163,29 @@ fn create_partial_sbox_gate_ps<F: PrimeField>(
         vec![s_sub_bytes_partial* (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0))]
     });
 }
+
+// helper function for creating the full SB gate (poseidon-hash module uses alpha=5 in neptune parameters)
+fn create_full_sbox_gate_ps<F: PrimeField>(
+    meta: &mut ConstraintSystem<F>,
+    advice: [Column<Advice>; 4],
+    s_sub_bytes_full: Selector, 
+) {
+    meta.create_gate("PS_full_sbox_gate", |meta| {
+        let s_sub_bytes_full = meta.query_selector(s_sub_bytes_full);
+        let a0 = meta.query_advice(advice[0], Rotation::cur());
+        let a1 = meta.query_advice(advice[1], Rotation::cur());
+        let a2 = meta.query_advice(advice[2], Rotation::cur()); 
+        let a3 = meta.query_advice(advice[3], Rotation::cur());
+        let a0_next = meta.query_advice(advice[0], Rotation::next());
+        let a1_next = meta.query_advice(advice[1], Rotation::next());
+        let a2_next = meta.query_advice(advice[2], Rotation::next()); 
+        let a3_next = meta.query_advice(advice[3], Rotation::next());
+
+        vec![
+            s_sub_bytes_full.clone() * (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0)),
+            s_sub_bytes_full.clone() * (a1_next - (a1.clone()*a1.clone()*a1.clone()*a1.clone()*a1)),
+            s_sub_bytes_full.clone() * (a2_next - (a2.clone()*a2.clone()*a2.clone()*a2.clone()*a2)),
+            s_sub_bytes_full * (a2_next - (a3.clone()*a3.clone()*a3.clone()*a3.clone()*a3))
+        ]
+    });
+}
