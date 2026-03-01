@@ -148,3 +148,18 @@ fn create_mds_mul_gate<F: PrimeField>(
         ]
     });
 }
+
+// helper function for creating the partial SB gate (poseidon-hash module computes state[0]^5 for partial rounds)
+fn create_partial_sbox_gate_ps<F: PrimeField>(
+    meta: &mut ConstraintSystem<F>,
+    advice: Column<Advice>,
+    s_sub_bytes_partial: Selector, 
+) {
+    meta.create_gate("PS_partial_sbox_gate", |meta| {
+        let s_sub_bytes_partial = meta.query_selector(s_sub_bytes_partial);
+        let a0 = meta.query_advice(advice, Rotation::cur()); // state[0] = state[0]**5, alpha = 5
+        let a0_next = meta.query_advice(advice, Rotation::next());
+
+        vec![s_sub_bytes_partial* (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0))]
+    });
+}
