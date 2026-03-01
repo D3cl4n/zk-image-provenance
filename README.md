@@ -22,4 +22,7 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 4) If the editor uses $\text{SK}' \neq \text{SK}$ to compute
  a new signature for $\text{I}$ the proof will fail since the verifier uses the corresponding $\text{PK}$ from the camera only. 
 
- ## Approach Using Commitments 
+ ## TODO
+ - Modify poseidon permutation circuit to match `case_neptune` parameters from the poseidon-hash module
+ - add full poseidon hash to circuit (including sponge IO and padding)
+ - add poseidon hash to camera script to compute `Poseidon(I||metadata)
