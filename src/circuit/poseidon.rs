@@ -35,7 +35,6 @@ struct PoseidonChipConfig {
     s_mix_layer: Selector,
 }
 
-
 // structure for the poseidon permutation chip
 struct PoseidonChip<F: PrimeField> {
     config: PoseidonChipConfig,
@@ -44,3 +43,30 @@ struct PoseidonChip<F: PrimeField> {
 
 // structure to store numbers in cells
 struct Number<F: PrimeField>(AssignedCell<F, F>);
+
+// circuit structure
+#[derive(Default)]
+struct PoseidonCircuit<F: PrimeField> {
+    s0: Value<F>, 
+    s1: Value<F>, 
+    s2: Value<F>,
+    s3: Value<F>,
+    full_rounds: usize,
+    partial_rounds: usize
+}
+
+// implement the Chip trait for PoseidonChip
+impl<F: PrimeField> Chip<F> for PoseidonChip<F> {
+    type Config = PoseidonChipConfig;
+    type Loaded = ();
+
+    // getter for the chip config
+    fn config(&self) -> &Self::Config {
+        &self.config
+    }
+
+    // getter for the loaded field
+    fn loaded(&self) -> &Self::Loaded {
+        &()
+    }
+}
