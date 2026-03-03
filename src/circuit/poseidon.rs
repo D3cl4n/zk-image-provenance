@@ -26,7 +26,6 @@ use halo2_proofs::{
 struct PoseidonChipConfig {
     advice: [Column<Advice>; 4],
     fixed: [Column<Fixed>; 4],
-    instance: Column<Instance>,
     full_rounds: usize,
     partial_rounds: usize,
     s_add_rcs: Selector,
@@ -188,4 +187,21 @@ fn create_full_sbox_gate_ps<F: PrimeField>(
             s_sub_bytes_full * (a2_next - (a3.clone()*a3.clone()*a3.clone()*a3.clone()*a3))
         ]
     });
+}
+
+// implementation of additional methods for the PoseidonChip
+impl<F: PrimeField> PoseidonChip<F> {
+    // constructor
+    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+        PoseidonChip {config, _marker: PhantomData}
+    }
+
+    // configure the chip including all gates and constraints TODO: add lookup argument here too
+    fn configure(
+        meta: &mut ConstraintSystem<F>, 
+        advice: [Column<Advice>; 4],
+        fixed: [Column<Fixed>; 4]
+    ) -> <Self as Chip<F>>::Config {
+        meta.enable_equality(instance); // TODO: make the instance column shared for both the greyscale and poseidon portions (move to new file?)
+    }
 }

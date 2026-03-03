@@ -22,7 +22,6 @@ pub struct ImageDetails {
 pub struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
     table: TableColumn, // one fixed column for byte values for lookups
-    instance: Column<Instance>, // public output
     s_greyscale: Selector
 }
 
@@ -104,7 +103,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
         meta: &mut ConstraintSystem<F>,
         advice: [Column<Advice>; 4],
         table: TableColumn,
-        instance: Column<Instance>,
     ) -> <Self as Chip<F>>::Config {
         meta.enable_equality(instance);
 
@@ -133,7 +131,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
         GreyscaleChipConfig {
             advice, 
             table, 
-            instance, 
             s_greyscale
         }
     }
