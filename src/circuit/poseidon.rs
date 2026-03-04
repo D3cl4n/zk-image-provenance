@@ -23,7 +23,7 @@ use halo2_proofs::{
 
 // structure for the configuration for the poseidon permutation chip
 #[derive(Clone, Debug)]
-struct PoseidonChipConfig {
+pub struct PoseidonChipConfig {
     advice: [Column<Advice>; 4],
     fixed: [Column<Fixed>; 4],
     full_rounds: usize,
@@ -42,17 +42,6 @@ struct PoseidonChip<F: PrimeField> {
 
 // structure to store numbers in cells
 struct Number<F: PrimeField>(AssignedCell<F, F>);
-
-// circuit structure
-#[derive(Default)]
-struct PoseidonCircuit<F: PrimeField> {
-    s0: Value<F>, 
-    s1: Value<F>, 
-    s2: Value<F>,
-    s3: Value<F>,
-    full_rounds: usize,
-    partial_rounds: usize
-}
 
 // implement the Chip trait for PoseidonChip
 impl<F: PrimeField> Chip<F> for PoseidonChip<F> {
@@ -118,7 +107,7 @@ fn create_mds_mul_gate<F: PrimeField>(
         let a0_next = meta.query_advice(advice[0], Rotation::next());
         let a1_next = meta.query_advice(advice[1], Rotation::next());
         let a2_next = meta.query_advice(advice[2], Rotation::next());
-        let a3_next = meta.query_advice(advice[3], Rotation::next();)
+        let a3_next = meta.query_advice(advice[3], Rotation::next());
 
         // MDS matrix elements from row in column 0 -> column 2 order, use Expression:Constant to embed into polynomial
         let mds_0_0 = Expression::Constant(mds[0][0]);
@@ -142,8 +131,8 @@ fn create_mds_mul_gate<F: PrimeField>(
         vec![
             s_mds_mul.clone() * (a0_next - (a0.clone()*mds_0_0 + a1.clone()*mds_0_1 + a2.clone()*mds_0_2) + a3.clone()*mds_0_3),
             s_mds_mul.clone() * (a1_next - (a0.clone()*mds_1_0 + a1.clone()*mds_1_1 + a2.clone()*mds_1_2) + a3.clone()*mds_1_3),
-            s_mds_mul.clone() * (a2_next - (a0.clone()*mds_2_0 + a1.clone()*mds_2_1 + a2.clone()*mds_2_2) + a3.clone()*mds_2_3)
-            s_mds_mul * (a2_next - (a0*mds_3_0 + a1*mds_3_1 + a2*mds_3_2 + a3*mds_3_3))
+            s_mds_mul.clone() * (a2_next - (a0.clone()*mds_2_0 + a1.clone()*mds_2_1 + a2.clone()*mds_2_2) + a3.clone()*mds_2_3),
+            s_mds_mul * (a3_next - (a0*mds_3_0 + a1*mds_3_1 + a2*mds_3_2 + a3*mds_3_3))
         ]
     });
 }
@@ -184,7 +173,7 @@ fn create_full_sbox_gate_ps<F: PrimeField>(
             s_sub_bytes_full.clone() * (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0)),
             s_sub_bytes_full.clone() * (a1_next - (a1.clone()*a1.clone()*a1.clone()*a1.clone()*a1)),
             s_sub_bytes_full.clone() * (a2_next - (a2.clone()*a2.clone()*a2.clone()*a2.clone()*a2)),
-            s_sub_bytes_full * (a2_next - (a3.clone()*a3.clone()*a3.clone()*a3.clone()*a3))
+            s_sub_bytes_full * (a3_next - (a3.clone()*a3.clone()*a3.clone()*a3.clone()*a3))
         ]
     });
 }
@@ -202,6 +191,6 @@ impl<F: PrimeField> PoseidonChip<F> {
         advice: [Column<Advice>; 4],
         fixed: [Column<Fixed>; 4]
     ) -> <Self as Chip<F>>::Config {
-        meta.enable_equality(instance); // TODO: make the instance column shared for both the greyscale and poseidon portions (move to new file?)
+        
     }
 }

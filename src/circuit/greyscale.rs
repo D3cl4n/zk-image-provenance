@@ -7,16 +7,6 @@ use halo2_proofs::{
 };
 
 
-// structure to store the image details
-#[derive(Clone, Debug)]
-pub struct ImageDetails {
-    pub width: u32,
-    pub height: u32,
-    pub r: Vec<u8>,
-    pub g: Vec<u8>,
-    pub b: Vec<u8>
-}
-
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
@@ -31,14 +21,6 @@ struct GreyscaleChip<F: PrimeField> {
     config: GreyscaleChipConfig, 
     _marker: PhantomData<F>
 } 
-
-// structure for the Greyscale circuit
-#[derive(Default)]
-pub struct GreyscaleCircuit {
-    pub r_elements: Vec<u8>,
-    pub g_elements: Vec<u8>, 
-    pub b_elements: Vec<u8>
-}
 
 // structure to store numbers in cells
 #[derive(Clone)]
@@ -104,7 +86,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
         advice: [Column<Advice>; 4],
         table: TableColumn,
     ) -> <Self as Chip<F>>::Config {
-        meta.enable_equality(instance);
 
         for column in &advice {
             meta.enable_equality(*column);
@@ -140,9 +121,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
 trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
-    // expose a value as public
-    fn expose_as_public(&self, layouter: impl Layouter<F>, num: Self::Num, row: usize) -> Result<(), Error>;
-
     // greyscale
     fn greyscale(
         &self, 
@@ -155,12 +133,6 @@ trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
     type Num = Number<F>;
-
-    // expose a value as public in the instance column
-    fn expose_as_public(&self, mut layouter: impl Layouter<F>, num: Self::Num, row: usize) -> Result<(), Error> {
-        let config = self.config();
-        layouter.constrain_instance(num.0.cell(), config.instance, row)
-    }
 
     // greyscale transformation
     fn greyscale(
@@ -231,59 +203,5 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 Ok(y_values)
             }
         )
-    }
-}
-
-// implementation of the circuit trait for the GreyscaleCircuit
-impl<F: PrimeField> Circuit<F> for GreyscaleCircuit {
-    type Config = GreyscaleChipConfig;
-    type FloorPlanner = SimpleFloorPlanner;
-
-    fn without_witnesses(&self) -> Self {
-        Self::default()
-    }
-
-    // configure the circuit including column creation
-    fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-        let advice = [meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column()];
-        let instance = meta.instance_column();
-        let table = meta.lookup_table_column();
-
-        GreyscaleChip::configure(meta, advice, table, instance)
-    }
-
-    // synthesize the circuit
-    fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<F>) -> Result<(), Error> {
-        let chip = GreyscaleChip::construct(config.clone());
-
-        // load the lookup table
-        layouter.assign_table(
-            || "lookup_table", |mut table| {
-                for i in 0..256 {
-                    table.assign_cell(
-                        || "byte_val",
-                        config.table,
-                        i,
-                        || Value::known(F::from(i as u64))
-                    )?;
-                }
-                Ok(())
-            }
-        )?;
-
-        let result = chip.greyscale(
-            layouter.namespace(|| "greyscale_namespace"), 
-            &self.r_elements, 
-            &self.g_elements,
-            &self.b_elements
-        )?;
-
-        // expose the greyscale values as public in the instance column
-        for i in 0..result.len() {
-            let public_value = Number(result[i].clone());
-            chip.expose_as_public(layouter.namespace(|| "greyscale_value"), public_value, i)?;
-        }
-
-        Ok(())
     }
 }

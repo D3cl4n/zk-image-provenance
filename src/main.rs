@@ -6,7 +6,7 @@ mod utils;
 // main function
 fn main() {
     // start with the MockProver and then move to real prover
-    use halo2_proofs::dev::MockProver;
+    use crate::circuit::image_circuit::{ImageDetails};
     use halo2curves::bls12381::Fr;
 
     // original image as private witness
@@ -21,7 +21,7 @@ fn main() {
     (width, height, r, g, b) = image::get_image_rgb_values(&original_img);
 
     // construct ImageDetails structure from parsed values
-    let original_img_details = circuit::greyscale::ImageDetails {
+    let original_img_details = ImageDetails {
         width, 
         height, 
         r, 
@@ -38,14 +38,4 @@ fn main() {
     for i in 0..y_values.len() {
         expected.push(Fr::from(y_values[i] as u64));
     }
-
-    let greyscale_circuit = circuit::greyscale::GreyscaleCircuit {
-        r_elements : original_img_details.r, 
-        g_elements : original_img_details.g,
-        b_elements : original_img_details.b
-    };
-
-    // TODO: try mock prover and debug
-    let k: u32 = 22;
-    let prover = MockProver::run(k, &greyscale_circuit, vec![expected.clone()]).unwrap();
 }
