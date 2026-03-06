@@ -26,3 +26,15 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
  - Modify poseidon permutation circuit to match `case_neptune` parameters from the poseidon-hash module
  - add full poseidon hash to circuit (including sponge IO and padding)
  - add poseidon hash to camera script to compute `Poseidon(I||metadata)
+
+## idea for removing signature verification from the circuit
+- camera computes: 
+$$ \text{I}, \text{metadata} = \text{capture}()$$
+$$\sigma = \text{sign}_{\text{SK}}(\text{POSEIDON}(\text{I} || \text{metadata}))$$
+- editor computes (off-circuit):
+$$ \text{I}' = \text{greyscale}(\text{I})$$
+- editor computes a proof for the following statement (on-circuit) given $\text{H}, \text{metadata}, \text{I}'$:
+$$ \text{I}' = \text{greyscale}(\text{I}) \wedge \text{POSEIDON}(\text{\text{I}}||\text{metadata}) = H $$
+- the original hash $\text{H}$ is accessed using $\text{PK}$ off-circuit
+- verifier (recepient) supplied with:
+$$ \text{I}', \sigma, \pi $$
