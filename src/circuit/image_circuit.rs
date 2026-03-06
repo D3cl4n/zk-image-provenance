@@ -10,10 +10,8 @@ use crate::circuit::poseidon::{PoseidonChipConfig};
 
 
 // structure to store the image details
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ImageDetails {
-    pub width: u32,
-    pub height: u32,
     pub r: Vec<u8>,
     pub g: Vec<u8>,
     pub b: Vec<u8>
@@ -21,10 +19,9 @@ pub struct ImageDetails {
 
 
 // struct for the image provenance circuit config as a whole (hash + greyscale)
-pub struct ImageCircuitConfig {
-    greyscale: GreyscaleChipConfig,
-    poseidon: PoseidonChipConfig,
-    instance: Column<Instance>
+#[derive(Default)]
+pub struct ImageCircuit {
+    image_vectors: ImageDetails
 }
 
 

@@ -253,3 +253,25 @@ impl<F: PrimeField> PoseidonChip<F> {
         }
     }
 }
+
+
+// trait for the sub-functions of the circuit
+trait PermutationInstructions<F: PrimeField>: Chip<F> {
+    type Num;
+
+    // permutation
+    fn permute(
+        &self, 
+        layouter: impl Layouter<F>,
+        a0: Value<F>,
+        a1: Value<F>,
+        a2: Value<F>,
+        a3: Value<F>
+    ) -> Result<[Self::Num; 4], Error>;
+}
+
+
+// implementing the PermutationInstructions trait for PoseidonChip
+impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
+
+}
