@@ -31,7 +31,7 @@ pub struct PoseidonChipConfig {
     s_add_rcs: Selector,
     s_sub_bytes_full: Selector,
     s_sub_bytes_partial: Selector,
-    s_mix_layer: Selector,
+    s_mds_mul: Selector
 }
 
 // structure for the poseidon permutation chip
@@ -96,7 +96,7 @@ fn create_mds_mul_gate<F: PrimeField>(
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 4], 
     s_mds_mul: Selector,
-    mds: &[[F; 4]; 4]
+    neptune_mds: &[[F; 4]; 4]
 ) {
     meta.create_gate("ML_gate", |meta| {
         let s_mds_mul = meta.query_selector(s_mds_mul);
@@ -110,22 +110,22 @@ fn create_mds_mul_gate<F: PrimeField>(
         let a3_next = meta.query_advice(advice[3], Rotation::next());
 
         // MDS matrix elements from row in column 0 -> column 2 order, use Expression:Constant to embed into polynomial
-        let mds_0_0 = Expression::Constant(mds[0][0]);
-        let mds_0_1 = Expression::Constant(mds[0][1]);
-        let mds_0_2 = Expression::Constant(mds[0][2]);
-        let mds_0_3 = Expression::Constant(mds[0][3]);
-        let mds_1_0 = Expression::Constant(mds[1][0]);
-        let mds_1_1 = Expression::Constant(mds[1][1]);
-        let mds_1_2 = Expression::Constant(mds[1][2]);
-        let mds_1_3 = Expression::Constant(mds[1][3]);
-        let mds_2_0 = Expression::Constant(mds[2][0]);
-        let mds_2_1 = Expression::Constant(mds[2][1]);
-        let mds_2_2 = Expression::Constant(mds[2][2]);
-        let mds_2_3 = Expression::Constant(mds[2][3]);
-        let mds_3_0 = Expression::Constant(mds[3][0]);
-        let mds_3_1 = Expression::Constant(mds[3][1]);
-        let mds_3_2 = Expression::Constant(mds[3][2]);
-        let mds_3_3 = Expression::Constant(mds[3][3]);
+        let mds_0_0 = Expression::Constant(neptune_mds[0][0]);
+        let mds_0_1 = Expression::Constant(neptune_mds[0][1]);
+        let mds_0_2 = Expression::Constant(neptune_mds[0][2]);
+        let mds_0_3 = Expression::Constant(neptune_mds[0][3]);
+        let mds_1_0 = Expression::Constant(neptune_mds[1][0]);
+        let mds_1_1 = Expression::Constant(neptune_mds[1][1]);
+        let mds_1_2 = Expression::Constant(neptune_mds[1][2]);
+        let mds_1_3 = Expression::Constant(neptune_mds[1][3]);
+        let mds_2_0 = Expression::Constant(neptune_mds[2][0]);
+        let mds_2_1 = Expression::Constant(neptune_mds[2][1]);
+        let mds_2_2 = Expression::Constant(neptune_mds[2][2]);
+        let mds_2_3 = Expression::Constant(neptune_mds[2][3]);
+        let mds_3_0 = Expression::Constant(neptune_mds[3][0]);
+        let mds_3_1 = Expression::Constant(neptune_mds[3][1]);
+        let mds_3_2 = Expression::Constant(neptune_mds[3][2]);
+        let mds_3_3 = Expression::Constant(neptune_mds[3][3]);
         
         // constraint - computes vector matrix product
         vec![
@@ -191,6 +191,65 @@ impl<F: PrimeField> PoseidonChip<F> {
         advice: [Column<Advice>; 4],
         fixed: [Column<Fixed>; 4]
     ) -> <Self as Chip<F>>::Config {
-        
+        // MDS from poseidon-hash module neptune parameters
+        let neptune_mds: [[F; 4]; 4] = [
+            [
+                F::from_str_vartime("0x56f23d7e5f361df6266b620607396203fece3b023ffec4ff3fffffff40000001").expect("error"),
+                F::from_str_vartime("0x458e97984c2b4b2b51ef819e6c2de803323e959b66656a65cccccccc33333334").expect("error"),
+                F::from_str_vartime("0x609b60c54d5893118005895c0806deaf1b1e08ad2aa94ca9d555555480000001").expect("error"),
+                F::from_str_vartime("0x211f5460e751918257c7624b7077624aaa362edc49241a48db6db6db24924925").expect("error")
+            ],
+            [
+                F::from_str_vartime("0x458e97984c2b4b2b51ef819e6c2de803323e959b66656a65cccccccc33333334").expect("error"),
+                F::from_str_vartime("0x609b60c54d5893118005895c0806deaf1b1e08ad2aa94ca9d555555480000001").expect("error"),
+                F::from_str_vartime("0x211f5460e751918257c7624b7077624aaa362edc49241a48db6db6db24924925").expect("error"),
+                F::from_str_vartime("0x656ff268c469cd9f2cd29d07086d9d04a945ef829ffe907f1fffffff20000001").expect("error")
+            ],
+            [
+                F::from_str_vartime("0x609b60c54d5893118005895c0806deaf1b1e08ad2aa94ca9d555555480000001").expect("error"),
+                F::from_str_vartime("0x211f5460e751918257c7624b7077624aaa362edc49241a48db6db6db24924925").expect("error"),
+                F::from_str_vartime("0x656ff268c469cd9f2cd29d07086d9d04a945ef829ffe907f1fffffff20000001").expect("error"),
+                F::from_str_vartime("0x19c308bd25b13848eef068e557794c72f62a247271c6bf1c38e38e38aaaaaaab").expect("error")
+            ],
+            [
+                F::from_str_vartime("0x211f5460e751918257c7624b7077624aaa362edc49241a48db6db6db24924925").expect("error"),
+                F::from_str_vartime("0x656ff268c469cd9f2cd29d07086d9d04a945ef829ffe907f1fffffff20000001").expect("error"),
+                F::from_str_vartime("0x19c308bd25b13848eef068e557794c72f62a247271c6bf1c38e38e38aaaaaaab").expect("error"),
+                F::from_str_vartime("0x22c74bcc2615a595a8f7c0cf3616f401991f4acdb332b532e66666661999999a").expect("error")
+            ]        
+        ];
+
+        // round structure for Poseidon (poseidon-hash module neptune parameters, Hades construction)
+        let full_rounds: usize = 8;
+        let partial_rounds: usize = 56;
+
+        for column in &advice {
+            meta.enable_equality(*column);
+        }
+
+        for column in &fixed {
+            meta.enable_constant(*column);
+        }
+
+        let s_add_rcs = meta.selector();
+        let s_mds_mul = meta.selector();
+        let s_sub_bytes_full = meta.selector();
+        let s_sub_bytes_partial = meta.selector();
+
+        create_arc_gate(meta, advice, fixed, s_add_rcs);
+        create_mds_mul_gate(meta, advice, s_mds_mul, &neptune_mds);
+        create_full_sbox_gate_ps(meta, advice, s_sub_bytes_full);
+        create_partial_sbox_gate_ps(meta, advice[0], s_sub_bytes_partial);
+
+        PoseidonChipConfig {
+            advice,
+            fixed,
+            full_rounds,
+            partial_rounds,
+            s_add_rcs,
+            s_sub_bytes_full,
+            s_sub_bytes_partial,
+            s_mds_mul
+        }
     }
 }
