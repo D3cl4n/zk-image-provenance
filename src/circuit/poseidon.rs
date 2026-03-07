@@ -621,7 +621,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
 
                     // power map for only the first element if partial round, all elements if full round
                     if full_round == true {
-                        config.s_sub_bytes_full.enable(region, *row_offset);
+                        config.s_sub_bytes_full.enable(region, *row_offset)?;
                         *row_offset += 1;
 
                         let after_sb_full = [
@@ -635,6 +635,16 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[1] = region.assign_advice(|| "a0_sb_full", config.advice[1], *row_offset, || after_sb_full[1])?;
                         state[2] = region.assign_advice(|| "a0_sb_full", config.advice[2], *row_offset, || after_sb_full[2])?;
                         state[3] = region.assign_advice(|| "a0_sb_full", config.advice[3], *row_offset, || after_sb_full[3])?;
+                    }
+
+                    else if full_round == false {
+                        config.s_sub_bytes_partial.enable(region, *row_offset)?;
+                        *row_offset += 1;
+
+                        state[0] = region.assign_advice(|| "a0_sb_partial", config.advice[0], *row_offset, || state[0].value().map(|v| pow5(*v)))?;
+                        region.assign_advice(|| "a0_sb_partial", config.advice[1], *row_offset, || state[1].value().copied())?;
+                        region.assign_advice(|| "a0_sb_partial", config.advice[2], *row_offset, || state[2].value().copied())?;
+                        region.assign_advice(|| "a0_sb_partial", config.advice[3], *row_offset, || state[3].value().copied())?;
                     }
 
                     Ok(())
