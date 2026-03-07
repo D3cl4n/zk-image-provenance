@@ -283,11 +283,12 @@ const ROUND_CONSTANTS: [&str; 256] =
 
 // structure for the configuration for the poseidon permutation chip
 #[derive(Clone, Debug)]
-pub struct PoseidonChipConfig {
+pub struct PoseidonChipConfig<F: PrimeField> {
     advice: [Column<Advice>; 4],
     fixed: [Column<Fixed>; 4],
     full_rounds: usize,
     partial_rounds: usize,
+    neptune_mds: [[F; 4]; 4],
     s_add_rcs: Selector,
     s_sub_bytes_full: Selector,
     s_sub_bytes_partial: Selector,
@@ -296,7 +297,7 @@ pub struct PoseidonChipConfig {
 
 // structure for the poseidon permutation chip
 struct PoseidonChip<F: PrimeField> {
-    config: PoseidonChipConfig,
+    config: PoseidonChipConfig<F>,
     _marker: PhantomData<F>,
 }
 
@@ -305,7 +306,7 @@ struct Number<F: PrimeField>(AssignedCell<F, F>);
 
 // implement the Chip trait for PoseidonChip
 impl<F: PrimeField> Chip<F> for PoseidonChip<F> {
-    type Config = PoseidonChipConfig;
+    type Config = PoseidonChipConfig<F>;
     type Loaded = ();
 
     // getter for the chip config
@@ -506,6 +507,7 @@ impl<F: PrimeField> PoseidonChip<F> {
             fixed,
             full_rounds,
             partial_rounds,
+            neptune_mds,
             s_add_rcs,
             s_sub_bytes_full,
             s_sub_bytes_partial,
@@ -596,9 +598,9 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     let rc2 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 2]).unwrap();
                     let rc3 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 3]).unwrap();
                     region.assign_fixed(|| "c0", config.fixed[0], *row_offset, || Value::known(rc0))?;
-                    region.assign_fixed(|| "c0", config.fixed[1], *row_offset, || Value::known(rc1))?;
-                    region.assign_fixed(|| "c0", config.fixed[2], *row_offset, || Value::known(rc2))?;
-                    region.assign_fixed(|| "c0", config.fixed[3], *row_offset, || Value::known(rc3))?;
+                    region.assign_fixed(|| "c1", config.fixed[1], *row_offset, || Value::known(rc1))?;
+                    region.assign_fixed(|| "c2", config.fixed[2], *row_offset, || Value::known(rc2))?;
+                    region.assign_fixed(|| "c3", config.fixed[3], *row_offset, || Value::known(rc3))?;
                     
                     // enable ARC selector once constants and state written to current offset then update counters
                     config.s_add_rcs.enable(region, *row_offset)?;
@@ -615,9 +617,9 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
 
                     // write the new values to the advice columns (row offset counter was already incremented)
                     state[0] = region.assign_advice(|| "a0_arc", config.advice[0], *row_offset, || after_arc[0])?;
-                    state[1] = region.assign_advice(|| "a0_arc", config.advice[1], *row_offset, || after_arc[1])?;
-                    state[2] = region.assign_advice(|| "a0_arc", config.advice[2], *row_offset, || after_arc[2])?;
-                    state[3] = region.assign_advice(|| "a0_arc", config.advice[3], *row_offset, || after_arc[3])?;
+                    state[1] = region.assign_advice(|| "a1_arc", config.advice[1], *row_offset, || after_arc[1])?;
+                    state[2] = region.assign_advice(|| "a2_arc", config.advice[2], *row_offset, || after_arc[2])?;
+                    state[3] = region.assign_advice(|| "a3_arc", config.advice[3], *row_offset, || after_arc[3])?;
 
                     // power map for only the first element if partial round, all elements if full round
                     if full_round == true {
@@ -632,9 +634,9 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         ];
 
                         state[0] = region.assign_advice(|| "a0_sb_full", config.advice[0], *row_offset, || after_sb_full[0])?;
-                        state[1] = region.assign_advice(|| "a0_sb_full", config.advice[1], *row_offset, || after_sb_full[1])?;
-                        state[2] = region.assign_advice(|| "a0_sb_full", config.advice[2], *row_offset, || after_sb_full[2])?;
-                        state[3] = region.assign_advice(|| "a0_sb_full", config.advice[3], *row_offset, || after_sb_full[3])?;
+                        state[1] = region.assign_advice(|| "a1_sb_full", config.advice[1], *row_offset, || after_sb_full[1])?;
+                        state[2] = region.assign_advice(|| "a2_sb_full", config.advice[2], *row_offset, || after_sb_full[2])?;
+                        state[3] = region.assign_advice(|| "a3_sb_full", config.advice[3], *row_offset, || after_sb_full[3])?;
                     }
 
                     else if full_round == false {
@@ -642,10 +644,50 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         *row_offset += 1;
 
                         state[0] = region.assign_advice(|| "a0_sb_partial", config.advice[0], *row_offset, || state[0].value().map(|v| pow5(*v)))?;
-                        region.assign_advice(|| "a0_sb_partial", config.advice[1], *row_offset, || state[1].value().copied())?;
-                        region.assign_advice(|| "a0_sb_partial", config.advice[2], *row_offset, || state[2].value().copied())?;
-                        region.assign_advice(|| "a0_sb_partial", config.advice[3], *row_offset, || state[3].value().copied())?;
+                        region.assign_advice(|| "a1_sb_partial", config.advice[1], *row_offset, || state[1].value().copied())?;
+                        region.assign_advice(|| "a2_sb_partial", config.advice[2], *row_offset, || state[2].value().copied())?;
+                        region.assign_advice(|| "a3_sb_partial", config.advice[3], *row_offset, || state[3].value().copied())?;
                     }
+
+                    // MDS multiplication
+                    config.s_mds_mul.enable(region, *row_offset);
+                    *row_offset += 1;
+
+                    let after_ml = [
+                        state[0].value().copied()
+                            .zip(state[1].value().copied())
+                            .zip(state[2].value().copied())
+                            .zip(state[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[0][0] + s1 * config.neptune_mds[0][1] + s2 * config.neptune_mds[0][2] + s3 * config.neptune_mds[0][3]
+                            }),
+                        state[0].value().copied()
+                            .zip(state[1].value().copied())
+                            .zip(state[2].value().copied())
+                            .zip(state[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[1][0] + s1 * config.neptune_mds[1][1] + s2 * config.neptune_mds[1][2] + s3 * config.neptune_mds[1][3]
+                            }),
+                        state[0].value().copied()
+                            .zip(state[1].value().copied())
+                            .zip(state[2].value().copied())
+                            .zip(state[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[2][0] + s1 * config.neptune_mds[2][1] + s2 * config.neptune_mds[2][2] + s3 * config.neptune_mds[2][3]
+                            }),
+                        state[0].value().copied()
+                            .zip(state[1].value().copied())
+                            .zip(state[2].value().copied())
+                            .zip(state[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[3][0] + s1 * config.neptune_mds[3][1] + s2 * config.neptune_mds[3][2] + s3 * config.neptune_mds[3][3]
+                            }),
+                    ];
+
+                    state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
+                    state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
+                    state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
+                    state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
 
                     Ok(())
                 };
