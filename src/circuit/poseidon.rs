@@ -692,6 +692,39 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     Ok(())
                 };
 
+                // execute half the full rounds
+                for _ in 0..(config.full_rounds / 2) {
+                    permutation_round(
+                        &mut region, 
+                        &mut state,
+                        &mut rc_idx,
+                        &mut row_offset,
+                        true
+                    )?;
+                }
+
+                // execute all the partial rounds
+                for _ in 0..config.partial_rounds {
+                    permutation_round(
+                        &mut region, 
+                        &mut state,
+                        &mut rc_idx,
+                        &mut row_offset,
+                        false
+                    )?;
+                }
+
+                // execute the second half of full rounds
+                for _ in 0..(config.full_rounds / 2) {
+                    permutation_round(
+                        &mut region, 
+                        &mut state,
+                        &mut rc_idx,
+                        &mut row_offset,
+                        true
+                    )?;
+                }
+
                 Ok([Number(state[0].clone()), Number(state[1].clone()), Number(state[2].clone()), Number(state[3].clone())])
             }
         )
