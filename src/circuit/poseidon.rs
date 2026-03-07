@@ -737,7 +737,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
         state: [Value<F>; 4],
         inputs: [Value<F>; 3] 
     ) -> Result<[Value<F>; 4], Error> {
-
+        
     }
 
     // squeeze - Sponge I/O
