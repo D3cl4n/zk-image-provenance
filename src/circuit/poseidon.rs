@@ -529,23 +529,23 @@ trait PermutationInstructions<F: PrimeField>: Chip<F> {
         a1: Value<F>,
         a2: Value<F>,
         a3: Value<F>
-    ) -> Result<[Self::Num; 4], Error>;
+    ) -> Result<[Value<F>; 4], Error>;
 
     // absorb - Sponge I/O
     fn absorb(
         &self, 
         layouter: impl Layouter<F>,
-        state: [Self::Num; 4],
-        inputs: [Self::Num; 3] // rate is 3 in neptune parameters
-    ) -> Result<[Self::Num; 4], Error>;
+        state: [Value<F>; 4],
+        inputs: [Value<F>; 3] // rate is 3 in neptune parameters
+    ) -> Result<[Value<F>; 4], Error>;
 
     // squeeze - Sponge I/O
     fn squeeze(
         &self, 
         layouter: impl Layouter<F>,
-        state: [Self::Num; 4],
+        state: [Value<F>; 4],
         c: usize // capacity is 1 in neptune parameters making t = r + c = 3 + 1 = 4
-    ) -> Result<[Self::Num; 3], Error>; // capacity elements are retained in the sponge
+    ) -> Result<[Value<F>; 3], Error>; // capacity elements are retained in the sponge
 }
 
 
@@ -561,7 +561,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
         a1: Value<F>, 
         a2: Value<F>,
         a3: Value<F>
-    ) -> Result<[Self::Num; 4], Error> {
+    ) -> Result<[Value<F>; 4], Error> {
         let config = self.config();
         layouter.assign_region(
             || "permutation_region", |mut region| {
@@ -725,8 +725,28 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     )?;
                 }
 
-                Ok([Number(state[0].clone()), Number(state[1].clone()), Number(state[2].clone()), Number(state[3].clone())])
+                Ok([state[0].value().copied(), state[1].value().copied(), state[2].value().copied(), state[3].value().copied()])
             }
         )
+    }
+
+    // absorb - Sponge I/O
+    fn absorb(
+        &self, 
+        layouter: impl Layouter<F>,
+        state: [Value<F>; 4],
+        inputs: [Value<F>; 3] 
+    ) -> Result<[Value<F>; 4], Error> {
+
+    }
+
+    // squeeze - Sponge I/O
+    fn squeeze(
+        &self, 
+        layouter: impl Layouter<F>,
+        state: [Value<F>; 4],
+        c: usize 
+    ) -> Result<[Value<F>; 3], Error> {
+
     }
 }
