@@ -730,6 +730,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
         )
     }
 
+    // TODO: do these need constraints / should these work with actual cells or just field values? 
     // absorb - Sponge I/O
     fn absorb(
         &self, 
