@@ -292,7 +292,8 @@ pub struct PoseidonChipConfig<F: PrimeField> {
     s_add_rcs: Selector,
     s_sub_bytes_full: Selector,
     s_sub_bytes_partial: Selector,
-    s_mds_mul: Selector
+    s_mds_mul: Selector,
+    s_sponge_absorb: Selector
 }
 
 // structure for the poseidon permutation chip
@@ -439,6 +440,37 @@ fn create_full_sbox_gate_ps<F: PrimeField>(
     });
 }
 
+// helper function for creating the sponge absorb gate and constraints
+fn create_sponge_absorb_gate<F: PrimeField>(
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 4],
+    fixed: [Column<Fixed>; 3], // store the input to be absorbed in the r fixed columns
+    s_sponge_absorb: Selector
+) {
+    meta.create_gate("PS_sponge_absorb_gate", |meta| {
+        let s_sponge_absorb = meta.query_selector(s_sponge_absorb);
+        let a0 = meta.query_advice(advice[0], Rotation::cur());
+        let a1 = meta.query_advice(advice[1], Rotation::cur());
+        let a2 = meta.query_advice(advice[2], Rotation::cur()); 
+        let a3 = meta.query_advice(advice[3], Rotation::cur());
+        let a0_next = meta.query_advice(advice[0], Rotation::next());
+        let a1_next = meta.query_advice(advice[1], Rotation::next());
+        let a2_next = meta.query_advice(advice[2], Rotation::next()); 
+        let a3_next = meta.query_advice(advice[3], Rotation::next());
+        let input_0 = meta.query_fixed(fixed[0]);
+        let input_1 = meta.query_fixed(fixed[1]);
+        let input_2 = meta.query_fixed(fixed[2]);
+
+        vec![
+            s_sponge_absorb.clone() * (a0_next - a0 + input_0),
+            s_sponge_absorb.clone() * (a1_next - a1 + input_1),
+            s_sponge_absorb.clone() * (a2_next - a2 + input_2),
+            s_sponge_absorb * (a3_next - a3)
+        ]
+    });
+
+}
+
 // implementation of additional methods for the PoseidonChip
 impl<F: PrimeField> PoseidonChip<F> {
     // constructor
@@ -496,11 +528,13 @@ impl<F: PrimeField> PoseidonChip<F> {
         let s_mds_mul = meta.selector();
         let s_sub_bytes_full = meta.selector();
         let s_sub_bytes_partial = meta.selector();
+        let s_sponge_absorb = meta.selector();
 
         create_arc_gate(meta, advice, fixed, s_add_rcs);
         create_mds_mul_gate(meta, advice, s_mds_mul, &neptune_mds);
         create_full_sbox_gate_ps(meta, advice, s_sub_bytes_full);
         create_partial_sbox_gate_ps(meta, advice[0], s_sub_bytes_partial);
+        create_sponge_absorb_gate(meta, advice, [fixed[0], fixed[1], fixed[2]], s_sponge_absorb);
 
         PoseidonChipConfig {
             advice,
@@ -511,7 +545,8 @@ impl<F: PrimeField> PoseidonChip<F> {
             s_add_rcs,
             s_sub_bytes_full,
             s_sub_bytes_partial,
-            s_mds_mul
+            s_mds_mul,
+            s_sponge_absorb
         }
     }
 }
@@ -732,6 +767,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
 
     // TODO: do these need constraints / should these work with actual cells or just field values? 
     // absorb - Sponge I/O
+    // create a separate region for computing state = state + input and constraining it, return values only not cells to permute()
     fn absorb(
         &self, 
         layouter: impl Layouter<F>,
@@ -748,6 +784,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
         state: [Value<F>; 4],
         c: usize 
     ) -> Result<[Value<F>; 3], Error> {
-
+        Ok([state[0].clone(), state[1].clone(), state[2].clone()])
     }
 }
