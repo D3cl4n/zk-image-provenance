@@ -6,6 +6,8 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
+//TODO: refactor to load inputs into advice columns (part of private witness) and use region.constrain_equal
+// so that the two chips can return and pass AssignedCells not Value<F>
 
 // structure for sponge construction chip configuration
 #[derive(Clone, Debug)]
