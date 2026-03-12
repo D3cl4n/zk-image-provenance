@@ -533,7 +533,7 @@ trait PermutationInstructions<F: PrimeField>: Chip<F> {
     ) -> Result<[Value<F>; 4], Error>;
 }
 
-
+// TODO: refactor this to use AssignedCells as input and output not Value<F>
 // implementing the PermutationInstructions trait for PoseidonChip
 impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
     type Num = Number<F>;
