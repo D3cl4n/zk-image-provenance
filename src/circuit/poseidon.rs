@@ -526,14 +526,10 @@ trait PermutationInstructions<F: PrimeField>: Chip<F> {
     fn permute(
         &self, 
         layouter: impl Layouter<F>,
-        a0: Value<F>,
-        a1: Value<F>,
-        a2: Value<F>,
-        a3: Value<F>
-    ) -> Result<[Value<F>; 4], Error>;
+        state: [AssignedCell<F, F>; 4]
+    ) -> Result<[AssignedCell<F, F>; 4], Error>;
 }
 
-// TODO: refactor this to use AssignedCells as input and output not Value<F>
 // implementing the PermutationInstructions trait for PoseidonChip
 impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
     type Num = Number<F>;
@@ -550,34 +546,38 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                 let mut rc_idx: usize = 0;
                 let mut row_offset: usize = 0;
 
-                // copy the current state into this region
-                let prev_state = [
+                // copy the current state into this region at row 0
+                let mut state = [
                     state[0].copy_advice(|| "a0", &mut region, config.advice[0], row_offset)?,
                     state[1].copy_advice(|| "a1", &mut region, config.advice[1], row_offset)?,
                     state[2].copy_advice(|| "a2", &mut region, config.advice[2], row_offset)?,
                     state[3].copy_advice(|| "a3", &mut region, config.advice[3], row_offset)?
                 ];
+                row_offset += 1;
 
                 // helper function to compute exponentiation by alpha = 5
                 let pow5 = |a: F| -> F {
-                    let temp = a * a;
-                    let temp_1 = temp * temp;
-                    a * temp_1
+                    let a2 = a * a;
+                    let a4 = a2 * a2;
+                    a * a4
                 };
 
                 // helper function for computing one permutation round (partial or full based on boolean)
                 let permutation_round = |
                     region: &mut Region<F>,
-                    state: [AssignedCell<F, F>; 4],
+                    state: &mut [AssignedCell<F, F>; 4],
                     rc_idx: &mut usize, 
                     row_offset: &mut usize,
                     full_round: bool
                 | -> Result<(), Error> {
                     // assign the needed round constants to the 4 fixed columns at current offset (state already written to offset)
-                    let rc0 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx]).unwrap();
-                    let rc1 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 1]).unwrap();
-                    let rc2 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 2]).unwrap();
-                    let rc3 = F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 3]).unwrap();
+                    let rc: [F; 4] = [
+                        F::from_str_vartime(ROUND_CONSTANTS[*rc_idx]).unwrap(),
+                        F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 1]).unwrap(),
+                        F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 2]).unwrap(),
+                        F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 3]).unwrap()
+                    ];
+                    
                     region.assign_fixed(|| "c0", config.fixed[0], *row_offset, || Value::known(rc0))?;
                     region.assign_fixed(|| "c1", config.fixed[1], *row_offset, || Value::known(rc1))?;
                     region.assign_fixed(|| "c2", config.fixed[2], *row_offset, || Value::known(rc2))?;
@@ -589,30 +589,30 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     *row_offset += 1;
 
                     // compute the new state values (access and dereference cell value then add constants)
-                    let after_arc = [
+                    let after_arc: [AssignedCell<F, F>; 4] = [
                         region.assign_advice(
                             || "a0_arc",
                             config.advice[0], 
                             *row_offset, 
-                            || state[0].value().map(|v| *v + rc0)
+                            || state[0].value().map(|v| *v + rc[0])
                         )?,
                         region.assign_advice(
                             || "a1_arc",
                             config.advice[1], 
                             *row_offset, 
-                            || state[1].value().map(|v| *v + rc1)
+                            || state[1].value().map(|v| *v + rc[1])
                         )?,
                         region.assign_advice(
                             || "a2_arc",
                             config.advice[2], 
                             *row_offset, 
-                            || state[2].value().map(|v| *v + rc2)
+                            || state[2].value().map(|v| *v + rc[2])
                         )?,
                         region.assign_advice(
                             || "a3_arc",
                             config.advice[3], 
                             *row_offset, 
-                            || state[3].value().map(|v| *v + rc3)
+                            || state[3].value().map(|v| *v + rc[3])
                         )?
                     ];
 
