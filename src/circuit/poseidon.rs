@@ -563,7 +563,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                 };
 
                 // helper function to compute mds multiplication
-                let mds_multiply = |mds: &[[F; 4]; 4], after_sb: &[AssignedCell<F, F>]| -> [Value<F>; 4] {
+                let mds_multiply = |after_sb: &[AssignedCell<F, F>]| -> [Value<F>; 4] {
                     let after_ml: [Value<F>; 4] = [
                         after_sb[0].value().copied()
                             .zip(after_sb[1].value().copied())
@@ -699,10 +699,10 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         *row_offset += 1;
 
                         let after_sb: [AssignedCell<F, F>; 4] = [
-                            region.assign_advice(|| "a0_sb_partial", config.advice[0], *row_offset, || state[0].value().map(|v| pow5(*v)))?,
-                            region.assign_advice(|| "a1_sb_partial", config.advice[1], *row_offset, || state[1].value().copied())?,
-                            region.assign_advice(|| "a2_sb_partial", config.advice[2], *row_offset, || state[2].value().copied())?,
-                            region.assign_advice(|| "a3_sb_partial", config.advice[3], *row_offset, || state[3].value().copied())?
+                            region.assign_advice(|| "a0_sb_partial", config.advice[0], *row_offset, || after_arc[0].value().map(|v| pow5(*v)))?,
+                            region.assign_advice(|| "a1_sb_partial", config.advice[1], *row_offset, || after_arc[1].value().copied())?,
+                            region.assign_advice(|| "a2_sb_partial", config.advice[2], *row_offset, || after_arc[2].value().copied())?,
+                            region.assign_advice(|| "a3_sb_partial", config.advice[3], *row_offset, || after_arc[3].value().copied())?
                         ];
                         // MDS multiplication
                         config.s_mds_mul.enable(region, *row_offset)?;
