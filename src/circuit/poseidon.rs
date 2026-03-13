@@ -562,6 +562,42 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     a * a4
                 };
 
+                // helper function to compute mds multiplication
+                let mds_multiply = |mds: &[[F; 4]; 4], after_sb: &[AssignedCell<F, F>]| -> [Value<F>; 4] {
+                    let after_ml: [Value<F>; 4] = [
+                        after_sb[0].value().copied()
+                            .zip(after_sb[1].value().copied())
+                            .zip(after_sb[2].value().copied())
+                            .zip(after_sb[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[0][0] + s1 * config.neptune_mds[0][1] + s2 * config.neptune_mds[0][2] + s3 * config.neptune_mds[0][3]
+                            }),
+                        after_sb[0].value().copied()
+                            .zip(after_sb[1].value().copied())
+                            .zip(after_sb[2].value().copied())
+                            .zip(after_sb[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[1][0] + s1 * config.neptune_mds[1][1] + s2 * config.neptune_mds[1][2] + s3 * config.neptune_mds[1][3]
+                            }),
+                        after_sb[0].value().copied()
+                            .zip(after_sb[1].value().copied())
+                            .zip(after_sb[2].value().copied())
+                            .zip(after_sb[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[2][0] + s1 * config.neptune_mds[2][1] + s2 * config.neptune_mds[2][2] + s3 * config.neptune_mds[2][3]
+                            }),
+                        after_sb[0].value().copied()
+                            .zip(after_sb[1].value().copied())
+                            .zip(after_sb[2].value().copied())
+                            .zip(after_sb[3].value().copied())
+                            .map(|(((s0, s1), s2), s3)| {
+                                s0 * config.neptune_mds[3][0] + s1 * config.neptune_mds[3][1] + s2 * config.neptune_mds[3][2] + s3 * config.neptune_mds[3][3]
+                            }),
+                    ];
+
+                    after_ml
+                };
+
                 // helper function for computing one permutation round (partial or full based on boolean)
                 let permutation_round = |
                     region: &mut Region<F>,
@@ -578,10 +614,10 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         F::from_str_vartime(ROUND_CONSTANTS[*rc_idx + 3]).unwrap()
                     ];
                     
-                    region.assign_fixed(|| "c0", config.fixed[0], *row_offset, || Value::known(rc0))?;
-                    region.assign_fixed(|| "c1", config.fixed[1], *row_offset, || Value::known(rc1))?;
-                    region.assign_fixed(|| "c2", config.fixed[2], *row_offset, || Value::known(rc2))?;
-                    region.assign_fixed(|| "c3", config.fixed[3], *row_offset, || Value::known(rc3))?;
+                    region.assign_fixed(|| "c0", config.fixed[0], *row_offset, || Value::known(rc[0]))?;
+                    region.assign_fixed(|| "c1", config.fixed[1], *row_offset, || Value::known(rc[1]))?;
+                    region.assign_fixed(|| "c2", config.fixed[2], *row_offset, || Value::known(rc[2]))?;
+                    region.assign_fixed(|| "c3", config.fixed[3], *row_offset, || Value::known(rc[3]))?;
                     
                     // enable ARC selector once constants and state written to current offset then update counters
                     config.s_add_rcs.enable(region, *row_offset)?;
@@ -617,7 +653,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     ];
 
                     // power map for only the first element if partial round, all elements if full round
-                    //TODO: refactor to extract MDS multiplication into its own function that takes in after_sb as param for state
                     if full_round == true {
                         config.s_sub_bytes_full.enable(region, *row_offset)?;
                         *row_offset += 1;
@@ -648,6 +683,15 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                                 || after_arc[3].value().map(|v| pow5(*v))
                             )?
                         ];
+                        // MDS multiplication
+                        config.s_mds_mul.enable(region, *row_offset)?;
+                        *row_offset += 1;
+
+                        let after_ml: [Value<F>; 4] = mds_multiply(&config.neptune_mds, &after_sb);
+                        state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
+                        state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
+                        state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
+                        state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
                     }
 
                     else if full_round == false {
@@ -660,48 +704,16 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                             region.assign_advice(|| "a2_sb_partial", config.advice[2], *row_offset, || state[2].value().copied())?,
                             region.assign_advice(|| "a3_sb_partial", config.advice[3], *row_offset, || state[3].value().copied())?
                         ];
-                        
+                        // MDS multiplication
+                        config.s_mds_mul.enable(region, *row_offset)?;
+                        *row_offset += 1;
+
+                        let after_ml: [Value<F>; 4] = mds_multiply(&config.neptune_mds, &after_sb);
+                        state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
+                        state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
+                        state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
+                        state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
                     }
-
-                    // MDS multiplication
-                    config.s_mds_mul.enable(region, *row_offset)?;
-                    *row_offset += 1;
-
-                    let after_ml = [
-                        after_sb[0].value().copied()
-                            .zip(after_sb[1].value().copied())
-                            .zip(after_sb[2].value().copied())
-                            .zip(after_sb[3].value().copied())
-                            .map(|(((s0, s1), s2), s3)| {
-                                s0 * config.neptune_mds[0][0] + s1 * config.neptune_mds[0][1] + s2 * config.neptune_mds[0][2] + s3 * config.neptune_mds[0][3]
-                            }),
-                        after_sb[0].value().copied()
-                            .zip(after_sb[1].value().copied())
-                            .zip(after_sb[2].value().copied())
-                            .zip(after_sb[3].value().copied())
-                            .map(|(((s0, s1), s2), s3)| {
-                                s0 * config.neptune_mds[1][0] + s1 * config.neptune_mds[1][1] + s2 * config.neptune_mds[1][2] + s3 * config.neptune_mds[1][3]
-                            }),
-                        after_sb[0].value().copied()
-                            .zip(after_sb[1].value().copied())
-                            .zip(after_sb[2].value().copied())
-                            .zip(after_sb[3].value().copied())
-                            .map(|(((s0, s1), s2), s3)| {
-                                s0 * config.neptune_mds[2][0] + s1 * config.neptune_mds[2][1] + s2 * config.neptune_mds[2][2] + s3 * config.neptune_mds[2][3]
-                            }),
-                        after_sb[0].value().copied()
-                            .zip(after_sb[1].value().copied())
-                            .zip(after_sb[2].value().copied())
-                            .zip(after_sb[3].value().copied())
-                            .map(|(((s0, s1), s2), s3)| {
-                                s0 * config.neptune_mds[3][0] + s1 * config.neptune_mds[3][1] + s2 * config.neptune_mds[3][2] + s3 * config.neptune_mds[3][3]
-                            }),
-                    ];
-
-                    state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
-                    state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
-                    state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
-                    state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
 
                     Ok(())
                 };
