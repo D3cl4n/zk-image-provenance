@@ -694,7 +694,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
                     }
 
-                    else if full_round == false {
+                    else {
                         config.s_sub_bytes_partial.enable(region, *row_offset)?;
                         *row_offset += 1;
 
