@@ -296,7 +296,7 @@ pub struct PoseidonChipConfig<F: PrimeField> {
 }
 
 // structure for the poseidon permutation chip
-struct PoseidonChip<F: PrimeField> {
+pub struct PoseidonChip<F: PrimeField> {
     config: PoseidonChipConfig<F>,
     _marker: PhantomData<F>,
 }
@@ -448,7 +448,7 @@ impl<F: PrimeField> PoseidonChip<F> {
     }
 
     // configure the chip including all gates and constraints TODO: add lookup argument here too
-    fn configure(
+    pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 4],
         fixed: [Column<Fixed>; 4]
@@ -687,7 +687,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         config.s_mds_mul.enable(region, *row_offset)?;
                         *row_offset += 1;
 
-                        let after_ml: [Value<F>; 4] = mds_multiply(&config.neptune_mds, &after_sb);
+                        let after_ml: [Value<F>; 4] = mds_multiply(&after_sb);
                         state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
@@ -708,7 +708,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         config.s_mds_mul.enable(region, *row_offset)?;
                         *row_offset += 1;
 
-                        let after_ml: [Value<F>; 4] = mds_multiply(&config.neptune_mds, &after_sb);
+                        let after_ml: [Value<F>; 4] = mds_multiply(&after_sb);
                         state[0] = region.assign_advice(|| "a0_ml", config.advice[0], *row_offset, || after_ml[0])?;
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;

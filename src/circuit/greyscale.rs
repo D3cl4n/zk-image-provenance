@@ -17,7 +17,7 @@ pub struct GreyscaleChipConfig {
 
 // structure for the Greyscale chip
 #[derive(Clone, Debug)]
-struct GreyscaleChip<F: PrimeField> {
+pub struct GreyscaleChip<F: PrimeField> {
     config: GreyscaleChipConfig, 
     _marker: PhantomData<F>
 } 
@@ -81,7 +81,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
     }
 
     // configure the chip including all gates, constraints, and selectors
-    fn configure(
+    pub fn configure(
         meta: &mut ConstraintSystem<F>,
         advice: [Column<Advice>; 4],
         table: TableColumn,

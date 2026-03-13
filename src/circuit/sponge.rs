@@ -6,8 +6,6 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
-//TODO: refactor to load inputs into advice columns (part of private witness) and use region.constrain_equal
-// so that the two chips can return and pass AssignedCells not Value<F>
 
 // structure for sponge construction chip configuration
 #[derive(Clone, Debug)]
@@ -17,7 +15,7 @@ pub struct SpongeChipConfig {
 }
 
 // structure for the sponge construction chip
-struct SpongeChip<F: PrimeField> {
+pub struct SpongeChip<F: PrimeField> {
     config: SpongeChipConfig, 
     _marker: PhantomData<F>
 }
@@ -80,14 +78,10 @@ impl<F: PrimeField> SpongeChip<F> {
     }
 
     // configure the chip including all gates and constraints TODO: add lookup argument here too
-    fn configure(
+    pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 4],
     ) -> <Self as Chip<F>>::Config {
-        for column in &advice { // TODO: do this in the circuit synthesis not in the chip configuration
-            meta.enable_equality(*column);
-        }
-
         let s_sponge_absorb = meta.selector();
 
         // create the sponge I/O gates
