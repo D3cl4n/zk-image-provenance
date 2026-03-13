@@ -542,10 +542,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
     fn permute(
         &self, 
         mut layouter: impl Layouter<F>,
-        a0: Value<F>, 
-        a1: Value<F>, 
-        a2: Value<F>,
-        a3: Value<F>
+        state: [AssignedCell<F, F>; 4]
     ) -> Result<[Value<F>; 4], Error> {
         let config = self.config();
         layouter.assign_region(
@@ -553,13 +550,12 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                 let mut rc_idx: usize = 0;
                 let mut row_offset: usize = 0;
 
-                // assigning initial state to advice columns
-                let mut state = 
-                [
-                    region.assign_advice(|| "a0", config.advice[0], row_offset, || a0)?,
-                    region.assign_advice(|| "a1", config.advice[1], row_offset, || a1)?,
-                    region.assign_advice(|| "a2", config.advice[2], row_offset, || a2)?,
-                    region.assign_advice(|| "a3", config.advice[3], row_offset, || a3)?
+                // copy the current state into this region
+                let prev_state = [
+                    state[0].copy_advice(|| "a0", &mut region, config.advice[0], row_offset)?,
+                    state[1].copy_advice(|| "a1", &mut region, config.advice[1], row_offset)?,
+                    state[2].copy_advice(|| "a2", &mut region, config.advice[2], row_offset)?,
+                    state[3].copy_advice(|| "a3", &mut region, config.advice[3], row_offset)?
                 ];
 
                 // helper function to compute exponentiation by alpha = 5
@@ -572,7 +568,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                 // helper function for computing one permutation round (partial or full based on boolean)
                 let permutation_round = |
                     region: &mut Region<F>,
-                    state: &mut [AssignedCell<F, F>; 4],
+                    state: [AssignedCell<F, F>; 4],
                     rc_idx: &mut usize, 
                     row_offset: &mut usize,
                     full_round: bool
@@ -594,17 +590,31 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
 
                     // compute the new state values (access and dereference cell value then add constants)
                     let after_arc = [
-                        state[0].value().map(|v| *v + rc0),
-                        state[1].value().map(|v| *v + rc1),
-                        state[2].value().map(|v| *v + rc2),
-                        state[3].value().map(|v| *v + rc3)
+                        region.assign_advice(
+                            || "a0_arc",
+                            config.advice[0], 
+                            *row_offset, 
+                            || state[0].value().map(|v| *v + rc0)
+                        )?,
+                        region.assign_advice(
+                            || "a1_arc",
+                            config.advice[1], 
+                            *row_offset, 
+                            || state[1].value().map(|v| *v + rc1)
+                        )?,
+                        region.assign_advice(
+                            || "a2_arc",
+                            config.advice[2], 
+                            *row_offset, 
+                            || state[2].value().map(|v| *v + rc2)
+                        )?,
+                        region.assign_advice(
+                            || "a3_arc",
+                            config.advice[3], 
+                            *row_offset, 
+                            || state[3].value().map(|v| *v + rc3)
+                        )?
                     ];
-
-                    // write the new values to the advice columns (row offset counter was already incremented)
-                    state[0] = region.assign_advice(|| "a0_arc", config.advice[0], *row_offset, || after_arc[0])?;
-                    state[1] = region.assign_advice(|| "a1_arc", config.advice[1], *row_offset, || after_arc[1])?;
-                    state[2] = region.assign_advice(|| "a2_arc", config.advice[2], *row_offset, || after_arc[2])?;
-                    state[3] = region.assign_advice(|| "a3_arc", config.advice[3], *row_offset, || after_arc[3])?;
 
                     // power map for only the first element if partial round, all elements if full round
                     if full_round == true {
@@ -612,16 +622,31 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         *row_offset += 1;
 
                         let after_sb_full = [
-                            state[0].value().map(|v| pow5(*v)),
-                            state[1].value().map(|v| pow5(*v)),
-                            state[2].value().map(|v| pow5(*v)),
-                            state[3].value().map(|v| pow5(*v))
+                            region.assign_advice(
+                                || "a0_sb_full",
+                                config.advice[0], 
+                                *row_offset,
+                                || state[0].value().map(|v| pow5(*v))
+                            )?,
+                            region.assign_advice(
+                                || "a1_sb_full",
+                                config.advice[1], 
+                                *row_offset,
+                                || state[1].value().map(|v| pow5(*v))
+                            )?,
+                            region.assign_advice(
+                                || "a2_sb_full",
+                                config.advice[2], 
+                                *row_offset,
+                                || state[2].value().map(|v| pow5(*v))
+                            )?,
+                            region.assign_advice(
+                                || "a3_sb_full",
+                                config.advice[3], 
+                                *row_offset,
+                                || state[3].value().map(|v| pow5(*v))
+                            )?
                         ];
-
-                        state[0] = region.assign_advice(|| "a0_sb_full", config.advice[0], *row_offset, || after_sb_full[0])?;
-                        state[1] = region.assign_advice(|| "a1_sb_full", config.advice[1], *row_offset, || after_sb_full[1])?;
-                        state[2] = region.assign_advice(|| "a2_sb_full", config.advice[2], *row_offset, || after_sb_full[2])?;
-                        state[3] = region.assign_advice(|| "a3_sb_full", config.advice[3], *row_offset, || after_sb_full[3])?;
                     }
 
                     else if full_round == false {
