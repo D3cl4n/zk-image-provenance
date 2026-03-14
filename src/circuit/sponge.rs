@@ -242,10 +242,21 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .chain(exif)
             .collect();
 
-        // check if padding is necessary
-        let rem = input.len() % r;
-        if rem != 0 {
-            // TODO: finish me
-        }
+        // divide into chunks and pad last chunk if needed
+        message
+            .chunks(r)
+            .map(|chunk| {
+                let mut block = chunk.to_vec();
+                block.resize(r, 0u8);
+                let ret: [Value<F>; 3] = 
+                [
+                    Value::known(F::from(block[0] as u64)),
+                    Value::known(F::from(block[1] as u64)),
+                    Value::known(F::from(block[2] as u64))
+                ]
+
+                ret
+            })
+            .collect()
     }
 }
