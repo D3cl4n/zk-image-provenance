@@ -124,6 +124,17 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
         state: [AssignedCell<F, F>; 4],
         c: usize // capacity is 1 in neptune parameters making t = r + c = 3 + 1 = 4
     ) -> Result<[Value<F>; 3], Error>; // capacity elements are retained in the sponge
+
+    // pad - Sponge funtionality before input is passed to permute()
+    // split each vector into chunks of size r, pad last chunk to r elements using 0s if needed
+    fn pad(
+        &self,
+        r_channel: Vec<u8>,
+        g_channel: Vec<u8>,
+        b_channel: Vec<u8>,
+        exif: Vec<u8>,
+        r: usize
+    ) -> Result<Vec<[Value<F>; 3]>, Error>; // return one vector of arrays (each 3 elements): pad(r || g || b || exif)
 }
 
 
@@ -143,7 +154,6 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     }
 
     // absorb - Sponge I/O
-    // create a separate region for computing state = state + input and constraining it, return values only not cells to permute()
     fn absorb(
         &self, 
         mut layouter: impl Layouter<F>,
@@ -214,5 +224,28 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         c: usize 
     ) -> Result<[Value<F>; 3], Error> {
         Ok([state[0].value().copied(), state[1].value().copied(), state[2].value().copied()])
+    }
+
+    // pad function - returning pad(r_channel || g_channel || b_chanel || exif)
+    fn pad(
+        &self,
+        r_channel: Vec<u8>,
+        g_channel: Vec<u8>,
+        b_channel: Vec<u8>,
+        exif: Vec<u8>,
+        r: usize
+    ) -> Result<Vec<[Value<F>; 3]>, Error> {
+        // concatenate input vectors 
+        let input: Vec<u8> = r_channel.into_iter()
+            .chain(g_channel)
+            .chain(b_channel)
+            .chain(exif)
+            .collect();
+
+        // check if padding is necessary
+        let rem = input.len() % r;
+        if rem != 0 {
+            // TODO: finish me
+        }
     }
 }
