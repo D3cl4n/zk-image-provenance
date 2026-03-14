@@ -100,6 +100,9 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             greyscale_chip.expose_as_public(&mut layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
         }
 
+        // hash each vector of original pixel values
+        
+
         Ok(())
     }
 }
