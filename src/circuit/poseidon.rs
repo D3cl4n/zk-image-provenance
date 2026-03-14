@@ -302,7 +302,7 @@ pub struct PoseidonChip<F: PrimeField> {
 }
 
 // structure to store numbers in cells
-struct Number<F: PrimeField>(AssignedCell<F, F>);
+pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the Chip trait for PoseidonChip
 impl<F: PrimeField> Chip<F> for PoseidonChip<F> {

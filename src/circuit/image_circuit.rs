@@ -5,7 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
-use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig};
+use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number};
 use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig};
 use crate::circuit::sponge::{SpongeChip, SpongeChipConfig};
 
@@ -29,7 +29,7 @@ pub struct ImageCircuitConfig<F: PrimeField> {
 // struct for the image provenance circuit config as a whole (hash + greyscale)
 #[derive(Default)]
 pub struct ImageCircuit {
-    image_vectors: ImageDetails
+    pixel_vectors: ImageDetails
 }
 
 // implement the Circuit trait for ImageCircuit
@@ -60,7 +60,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, advice, table),
+            greyscale: GreyscaleChip::configure(meta, advice, instance, table),
             poseidon: PoseidonChip::configure(meta, advice, fixed),
             sponge: SpongeChip::configure(meta, advice, instance)
         }
@@ -86,6 +86,21 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
                 Ok(())
             }
         )?;
+
+        let greyscale_result = greyscale_chip.greyscale(
+            layouter.namespace(|| "greyscale_namespace"),
+            &self.pixel_vectors.r,
+            &self.pixel_vectors.g,
+            &self.pixel_vectors.b
+        )?;
+
+        // expose the greyscale pixel values as public
+        for i in 0..greyscale_result.len() {
+            let grey_pixel = Number(greyscale_result[i].clone());
+            greyscale_chip.expose_as_public(layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
+        }
+
+        Ok(())
     }
 }
 

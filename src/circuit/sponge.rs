@@ -22,7 +22,7 @@ pub struct SpongeChip<F: PrimeField> {
 }
 
 // structure to store numbers in cells
-struct Number<F: PrimeField>(AssignedCell<F, F>);
+pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the Chip trait for SpongeChip
 impl<F: PrimeField> Chip<F> for SpongeChip<F> {

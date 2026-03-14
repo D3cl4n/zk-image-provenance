@@ -12,6 +12,7 @@ use halo2_proofs::{
 pub struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
     pub table: TableColumn, // one fixed column for byte values for lookups
+    instance: Column<Instance>,
     s_greyscale: Selector
 }
 
@@ -24,7 +25,7 @@ pub struct GreyscaleChip<F: PrimeField> {
 
 // structure to store numbers in cells
 #[derive(Clone)]
-struct Number<F: PrimeField>(AssignedCell<F, F>);
+pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the chip trait for GreyscaleChip
 impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
@@ -84,6 +85,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
         advice: [Column<Advice>; 4],
+        instance: Column<Instance>,
         table: TableColumn,
     ) -> <Self as Chip<F>>::Config {
 
@@ -112,6 +114,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
         GreyscaleChipConfig {
             advice, 
             table, 
+            instance,
             s_greyscale
         }
     }
@@ -120,6 +123,14 @@ impl<F: PrimeField> GreyscaleChip<F> {
 // trait for sub-functions of the circuit
 trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
     type Num;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error>;
 
     // greyscale
     fn greyscale(
@@ -133,6 +144,17 @@ trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
     type Num = Number<F>;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error> {
+        let config = self.config();
+        layouter.constrain_instance(num.0.cell(), config.instance, row)
+    }
 
     // greyscale transformation
     fn greyscale(
