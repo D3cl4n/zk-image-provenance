@@ -62,9 +62,30 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         ImageCircuitConfig {
             greyscale: GreyscaleChip::configure(meta, advice, table),
             poseidon: PoseidonChip::configure(meta, advice, fixed),
-            sponge: SpongeChip::configure(meta, advice)
+            sponge: SpongeChip::configure(meta, advice, instance)
         }
+    }
 
+    // synthesize the circuit
+    fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<F>) -> Result<(), Error> {
+        let greyscale_chip = GreyscaleChip::construct(config.greyscale.clone());
+        let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
+        let sponge_chip = SpongeChip::construct(config.sponge.clone());
+
+        // populate the lookup table for constraining pixel values to bytes (0-255)
+        layouter.assign_table(
+            || "lookup_table", |mut table| {
+                for i in 0..256 {
+                    table.assign_cell(
+                        || "byte_val",
+                        config.greyscale.table,
+                        i, 
+                        || Value::known(F::from(i as u64))
+                    )?;
+                }
+                Ok(())
+            }
+        )?;
     }
 }
 

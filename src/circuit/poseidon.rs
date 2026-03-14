@@ -443,7 +443,7 @@ fn create_full_sbox_gate_ps<F: PrimeField>(
 // implementation of additional methods for the PoseidonChip
 impl<F: PrimeField> PoseidonChip<F> {
     // constructor
-    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+    pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
         PoseidonChip {config, _marker: PhantomData}
     }
 

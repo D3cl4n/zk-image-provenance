@@ -11,6 +11,7 @@ use halo2_proofs::{
 #[derive(Clone, Debug)]
 pub struct SpongeChipConfig {
     advice: [Column<Advice>; 4],
+    instance: Column<Instance>,
     s_sponge_absorb: Selector
 }
 
@@ -73,7 +74,7 @@ fn create_sponge_absorb_gate<F: PrimeField>(
 // implementation of additional methods for the SpongeChip
 impl<F: PrimeField> SpongeChip<F> {
     // constructor
-    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+    pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
         SpongeChip {config, _marker: PhantomData}
     }
 
@@ -81,6 +82,7 @@ impl<F: PrimeField> SpongeChip<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 4],
+        instance: Column<Instance>
     ) -> <Self as Chip<F>>::Config {
         let s_sponge_absorb = meta.selector();
 
@@ -89,6 +91,7 @@ impl<F: PrimeField> SpongeChip<F> {
 
         SpongeChipConfig {
             advice,
+            instance,
             s_sponge_absorb
         }
     }
@@ -97,6 +100,14 @@ impl<F: PrimeField> SpongeChip<F> {
 // trait for the sub-functions of the sponge construction
 trait SpongeInstructions<F: PrimeField>: Chip<F> {
     type Num;
+
+    // expose the squeezed elements as public in the instance column
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error>;
 
     // absorb - Sponge I/O
     fn absorb(
@@ -119,6 +130,18 @@ trait SpongeInstructions<F: PrimeField>: Chip<F> {
 // implement the SpongeInstructions trait for the SpongeChip
 impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     type Num = Number<F>;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error> {
+        let config = self.config();
+        layouter.constrain_instance(num.0.cell(), config.instance, row)
+    }
+
     // absorb - Sponge I/O
     // create a separate region for computing state = state + input and constraining it, return values only not cells to permute()
     fn absorb(

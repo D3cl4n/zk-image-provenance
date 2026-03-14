@@ -11,7 +11,7 @@ use halo2_proofs::{
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
     advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
-    table: TableColumn, // one fixed column for byte values for lookups
+    pub table: TableColumn, // one fixed column for byte values for lookups
     s_greyscale: Selector
 }
 
@@ -76,7 +76,7 @@ fn create_greyscale_gate<F: PrimeField> (
 // implementation of additional methods for GreyscaleChip
 impl<F: PrimeField> GreyscaleChip<F> {
     // constructor
-    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+    pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
         GreyscaleChip {config, _marker: PhantomData}
     }
 
