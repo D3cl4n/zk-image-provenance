@@ -5,7 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
-use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number};
+use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number, GreyscaleInstructions};
 use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig};
 use crate::circuit::sponge::{SpongeChip, SpongeChipConfig};
 
@@ -70,7 +70,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
     fn synthesize(&self, config: Self::Config, mut layouter: impl Layouter<F>) -> Result<(), Error> {
         let greyscale_chip = GreyscaleChip::construct(config.greyscale.clone());
         let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
-        let sponge_chip = SpongeChip::construct(config.sponge.clone());
+        let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
 
         // populate the lookup table for constraining pixel values to bytes (0-255)
         layouter.assign_table(
@@ -97,7 +97,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         // expose the greyscale pixel values as public
         for i in 0..greyscale_result.len() {
             let grey_pixel = Number(greyscale_result[i].clone());
-            greyscale_chip.expose_as_public(layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
+            greyscale_chip.expose_as_public(&mut layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
         }
 
         Ok(())

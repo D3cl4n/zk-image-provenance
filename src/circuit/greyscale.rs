@@ -121,7 +121,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
 }
 
 // trait for sub-functions of the circuit
-trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
+pub trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
     // expose output as public
