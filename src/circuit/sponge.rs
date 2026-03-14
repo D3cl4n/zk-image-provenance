@@ -237,26 +237,20 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     ) -> Result<Vec<[Value<F>; 3]>, Error> {
         // concatenate input vectors 
         let input: Vec<u8> = r_channel.into_iter()
-            .chain(g_channel)
-            .chain(b_channel)
-            .chain(exif)
+            .chain(g_channel.into_iter())
+            .chain(b_channel.into_iter())
+            .chain(b_channel.into_iter())
+            .chain(exif.into_iter())
             .collect();
 
-        // divide into chunks and pad last chunk if needed
-        message
-            .chunks(r)
-            .map(|chunk| {
-                let mut block = chunk.to_vec();
-                block.resize(r, 0u8);
-                let ret: [Value<F>; 3] = 
-                [
-                    Value::known(F::from(block[0] as u64)),
-                    Value::known(F::from(block[1] as u64)),
-                    Value::known(F::from(block[2] as u64))
-                ]
+        // divide the vector into slices of 3
+        let chunks: Vec<&[u8; 3]> = input.chunks(3).collect();
 
-                ret
-            })
-            .collect()
+        if chunks.last().len() % r != 0 {
+            chunks.last().resize(3, 0u8);
+        }
+
+        // TODO: fix me to return Value<F>s
+        Ok(chunks)
     }
 }
