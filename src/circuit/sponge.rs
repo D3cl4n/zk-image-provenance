@@ -51,7 +51,7 @@ fn create_sponge_absorb_gate<F: PrimeField>(
         let a1_prev = meta.query_advice(advice[1], Rotation::prev());
         let a2_prev = meta.query_advice(advice[2], Rotation::prev());
         let a3_prev = meta.query_advice(advice[3], Rotation::prev());
-        let input_0 = meta.query_advice(advice[0], Rotation::cur());;
+        let input_0 = meta.query_advice(advice[0], Rotation::cur());
         let input_1 = meta.query_advice(advice[1], Rotation::cur());
         let input_2 = meta.query_advice(advice[2], Rotation::cur()); 
         let input_3 = meta.query_advice(advice[3], Rotation::cur());

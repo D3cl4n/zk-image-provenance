@@ -20,7 +20,7 @@ pub struct ImageDetails {
 
 // structure storing all chip configurations
 #[derive(Clone)]
-pub struct ImageCircuitConfig<F> {
+pub struct ImageCircuitConfig<F: PrimeField> {
     pub greyscale: GreyscaleChipConfig,
     pub poseidon: PoseidonChipConfig<F>,
     pub sponge: SpongeChipConfig
