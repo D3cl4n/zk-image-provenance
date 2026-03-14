@@ -6,8 +6,8 @@ use halo2_proofs::{
     poly::Rotation,
 };
 use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number, GreyscaleInstructions};
-use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig};
-use crate::circuit::sponge::{SpongeChip, SpongeChipConfig};
+use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
+use crate::circuit::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
 
 
 // structure to store the image details

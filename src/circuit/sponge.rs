@@ -98,7 +98,7 @@ impl<F: PrimeField> SpongeChip<F> {
 }
 
 // trait for the sub-functions of the sponge construction
-trait SpongeInstructions<F: PrimeField>: Chip<F> {
+pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
     // expose the squeezed elements as public in the instance column

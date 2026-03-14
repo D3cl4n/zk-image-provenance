@@ -519,7 +519,7 @@ impl<F: PrimeField> PoseidonChip<F> {
 
 
 // trait for the sub-functions of the poseidon permutation
-trait PermutationInstructions<F: PrimeField>: Chip<F> {
+pub trait PermutationInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
     // permutation
