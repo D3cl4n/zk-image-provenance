@@ -242,12 +242,11 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .chain(exif.into_iter())
             .collect();
 
-        // divide the vector into slices of 3
-        let chunks: Vec<&[u8; 3]> = input.chunks(3).collect();
-
-        if chunks.last().len() % r != 0 {
-            chunks.last().resize(3, 0u8);
-        }
+        // divide the vector into slices of 3 and pad
+        let rem: usize = input.len() % r;
+        if rem != 0 {
+            input.resize(input.len() + (r - rem), 0u8);
+        }        
 
         // TODO: fix me to return Value<F>s
         Ok(chunks)
