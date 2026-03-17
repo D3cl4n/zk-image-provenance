@@ -22,6 +22,18 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
     let img_reader = ImageReader::open(original_img).expect("[!] Failed to open image");
     let mut decoder = img_reader.into_decoder().expect("[!] Failed to create image decoder");
+
+    match decoder.exif_metadata() {
+        // if successful return raw bytes for exif section, could be empty
+        Ok(Some(exif_bytes)) => {
+            exif_bytes
+        }
+
+        // return vector with just 0 on error
+        Err(e) => {
+            vec![0u8]
+        }
+    }
 }
 
 
