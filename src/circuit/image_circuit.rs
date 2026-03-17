@@ -111,6 +111,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         )?;
 
         // compute the hash and expose as public 
+        // TODO: figure out if I should be reusing layouters??
+        let initial_state: [AssignedCell<F, F>; 4] = sponge_chip.initialize(&mut layouter.namespace(|| "sponge_init"))?;
         for i in 0..preimage.len() {
 
         }
