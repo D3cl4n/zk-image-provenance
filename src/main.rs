@@ -19,8 +19,8 @@ fn main() {
     (r, g, b) = image::get_image_rgb_values(&original_img);
 
     // parse the exifdata section from the jpeg
-    let exifdata: Vec<u8> = image::get_image_exifdata(&original_img);
-    if exifdata.len() == 0 {
+    let exif: Vec<u8> = image::get_image_exifdata(&original_img);
+    if exif.len() == 0 {
         println!("[!] exifdata not present or an error has occured");
     }
 
@@ -28,7 +28,8 @@ fn main() {
     let original_img_details = ImageDetails {
         r, 
         g, 
-        b
+        b,
+        exif
     };
 
     // read greyscale values from editor as the public output

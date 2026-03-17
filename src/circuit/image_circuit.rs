@@ -15,7 +15,8 @@ use crate::circuit::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
 pub struct ImageDetails {
     pub r: Vec<u8>,
     pub g: Vec<u8>,
-    pub b: Vec<u8>
+    pub b: Vec<u8>,
+    pub exif: Vec<u8>
 }
 
 // structure storing all chip configurations
