@@ -24,9 +24,14 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     let mut decoder = img_reader.into_decoder().expect("[!] Failed to create image decoder");
 
     match decoder.exif_metadata() {
-        // if successful return raw bytes for exif section, could be empty
+        // if successful return raw bytes for exif section
         Ok(Some(exif_bytes)) => {
             exif_bytes
+        }
+
+        // if exif section empty, return empty vector as well
+        Ok(None) => {
+            vec![]
         }
 
         // return vector with just 0 on error

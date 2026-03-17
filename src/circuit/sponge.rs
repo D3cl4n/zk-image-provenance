@@ -248,7 +248,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             input.resize(input.len() + (r - rem), 0u8);
         }
 
-        let blocks: Vec<[Value<F>; 3] = input
+        let blocks: Vec<[Value<F>; 3]> = input
             .chunks(r)
             .map(|chunk| {
                 [
