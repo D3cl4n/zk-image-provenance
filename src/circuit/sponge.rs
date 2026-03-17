@@ -236,7 +236,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         r: usize
     ) -> Result<Vec<[Value<F>; 3]>, Error> {
         // concatenate input vectors 
-        let input: Vec<u8> = r_channel.into_iter()
+        let mut input: Vec<u8> = r_channel.into_iter()
             .chain(g_channel.into_iter())
             .chain(b_channel.into_iter())
             .chain(exif.into_iter())
