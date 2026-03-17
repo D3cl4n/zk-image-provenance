@@ -17,7 +17,6 @@ fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
 
 
 // open the image and read the metadata (return vector of bytes for metadata values)
-// TODO: finish this
 pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
     let img_reader = ImageReader::open(original_img).expect("[!] Failed to open image");
@@ -34,9 +33,9 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
             vec![]
         }
 
-        // return vector with just 0 on error
+        // return empty vector on error
         Err(e) => {
-            vec![0u8]
+            vec![]
         }
     }
 }
