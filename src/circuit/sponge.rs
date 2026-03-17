@@ -253,11 +253,11 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .map(|chunk| {
                 [
                     Value::known(F::from(chunk[0] as u64)),
-                    Value::known(F::from(chunk[1] as u64))
+                    Value::known(F::from(chunk[1] as u64)),
                     Value::known(F::from(chunk[2] as u64))
                 ]
             })
-            .collect()
+            .collect();
 
         // return
         Ok(blocks)
