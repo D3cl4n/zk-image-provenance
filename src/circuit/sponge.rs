@@ -239,7 +239,6 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         let input: Vec<u8> = r_channel.into_iter()
             .chain(g_channel.into_iter())
             .chain(b_channel.into_iter())
-            .chain(b_channel.into_iter())
             .chain(exif.into_iter())
             .collect();
 
