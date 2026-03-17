@@ -109,6 +109,12 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
         row: usize
     ) -> Result<(), Error>;
 
+    // initialize the sponge permutation's internal state to all 0
+    fn initialize(
+        &self, 
+        layouter: impl Layouter<F>
+    ) -> Result<[AssignedCell<F, F>; 4], Error>;
+
     // absorb - Sponge I/O
     fn absorb(
         &self, 
@@ -151,6 +157,24 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     ) -> Result<(), Error> {
         let config = self.config();
         layouter.constrain_instance(num.0.cell(), config.instance, row)
+    }
+
+    // initialize the internal state to all 0s per Poseidon paper
+    fn initialize(
+        &self, 
+        mut layouter: impl Layouter<F>
+    ) -> Result<[AssignedCell<F, F>; 4], Error> {
+        let config = self.config();
+        layouter.assign_region(
+            || "initial_state", |mut region| {
+                Ok([
+                    region.assign_advice(|| "input0", config.advice[0], 0, || Value::known(F::from(0u64)))?,
+                    region.assign_advice(|| "input1", config.advice[1], 0, || Value::known(F::from(0u64)))?,
+                    region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?,
+                    region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?
+                ])
+            }
+        )
     }
 
     // absorb - Sponge I/O

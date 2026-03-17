@@ -110,6 +110,11 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             3 as usize
         )?;
 
+        // compute the hash and expose as public 
+        for i in 0..preimage.len() {
+
+        }
+
         Ok(())
     }
 }
