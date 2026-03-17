@@ -246,9 +246,20 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         let rem: usize = input.len() % r;
         if rem != 0 {
             input.resize(input.len() + (r - rem), 0u8);
-        }        
+        }
 
-        // TODO: fix me to return Value<F>s
-        Ok(chunks)
+        let blocks: Vec<[Value<F>; 3] = input
+            .chunks(r)
+            .map(|chunk| {
+                [
+                    Value::known(F::from(chunk[0] as u64)),
+                    Value::known(F::from(chunk[1] as u64))
+                    Value::known(F::from(chunk[2] as u64))
+                ]
+            })
+            .collect()
+
+        // return
+        Ok(blocks)
     }
 }
