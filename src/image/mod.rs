@@ -1,4 +1,5 @@
-use image::{Pixel};
+use image::{Pixel, ImageDecoder};
+use image::io::Reader as ImageReader;
 use std::fs::File;
 use std::io::{Write, BufWriter};
 
@@ -19,7 +20,8 @@ fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
 // TODO: finish this
 pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
-    let img = image::open(original_img).expect("[!] Failed to open image");
+    let img_reader = ImageReader::open(original_img).expect("[!] Failed to open image");
+    let mut decoder = img_reader.into_decoder().expect("[!] Failed to create image decoder");
 }
 
 
