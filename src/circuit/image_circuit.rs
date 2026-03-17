@@ -30,7 +30,7 @@ pub struct ImageCircuitConfig<F: PrimeField> {
 // struct for the image provenance circuit config as a whole (hash + greyscale)
 #[derive(Default)]
 pub struct ImageCircuit {
-    pixel_vectors: ImageDetails
+    jpeg_vectors: ImageDetails
 }
 
 // implement the Circuit trait for ImageCircuit
@@ -90,9 +90,9 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         let greyscale_result = greyscale_chip.greyscale(
             layouter.namespace(|| "greyscale_namespace"),
-            &self.pixel_vectors.r,
-            &self.pixel_vectors.g,
-            &self.pixel_vectors.b
+            &self.jpeg_vectors.r,
+            &self.jpeg_vectors.g,
+            &self.jpeg_vectors.b
         )?;
 
         // expose the greyscale pixel values as public
@@ -101,8 +101,14 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             greyscale_chip.expose_as_public(&mut layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
         }
 
-        // hash each vector of original pixel values
-        
+        // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
+        let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
+            &self.jpeg_vectors.r, 
+            &self.jpeg_vectors.g, 
+            &self.jpeg_vectors.b, 
+            &self.jpeg_vectors.exif,
+            3 as usize
+        )?;
 
         Ok(())
     }

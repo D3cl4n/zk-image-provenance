@@ -129,10 +129,10 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     // split each vector into chunks of size r, pad last chunk to r elements using 0s if needed
     fn pad(
         &self,
-        r_channel: Vec<u8>,
-        g_channel: Vec<u8>,
-        b_channel: Vec<u8>,
-        exif: Vec<u8>,
+        r_channel: &Vec<u8>,
+        g_channel: &Vec<u8>,
+        b_channel: &Vec<u8>,
+        exif: &Vec<u8>,
         r: usize
     ) -> Result<Vec<[Value<F>; 3]>, Error>; // return one vector of arrays (each 3 elements): pad(r || g || b || exif)
 }
@@ -229,17 +229,17 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     // pad function - returning pad(r_channel || g_channel || b_chanel || exif)
     fn pad(
         &self,
-        r_channel: Vec<u8>,
-        g_channel: Vec<u8>,
-        b_channel: Vec<u8>,
-        exif: Vec<u8>,
+        r_channel: &Vec<u8>,
+        g_channel: &Vec<u8>,
+        b_channel: &Vec<u8>,
+        exif: &Vec<u8>,
         r: usize
     ) -> Result<Vec<[Value<F>; 3]>, Error> {
         // concatenate input vectors 
-        let mut input: Vec<u8> = r_channel.into_iter()
-            .chain(g_channel.into_iter())
-            .chain(b_channel.into_iter())
-            .chain(exif.into_iter())
+        let mut input: Vec<u8> = r_channel.iter().copied()
+            .chain(g_channel.iter().copied())
+            .chain(b_channel.iter().copied())
+            .chain(exif.iter().copied())
             .collect();
 
         // divide the vector into slices of 3 and pad
