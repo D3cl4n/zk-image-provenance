@@ -525,7 +525,7 @@ pub trait PermutationInstructions<F: PrimeField>: Chip<F> {
     // permutation
     fn permute(
         &self, 
-        layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4]
     ) -> Result<[AssignedCell<F, F>; 4], Error>;
 }
@@ -537,7 +537,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
     // Poseidon"s internal permutation function
     fn permute(
         &self, 
-        mut layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4]
     ) -> Result<[AssignedCell<F, F>; 4], Error> {
         let config = self.config();

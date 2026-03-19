@@ -118,6 +118,11 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
                 state,
                 preimage[i]
             )?;
+
+            state = poseidon_chip.permute(
+                &mut layouter,
+                state
+            )?;
         }
 
         Ok(())
