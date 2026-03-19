@@ -390,9 +390,9 @@ fn create_mds_mul_gate<F: PrimeField>(
         
         // constraint - computes vector matrix product
         vec![
-            s_mds_mul.clone() * (a0_next - (a0.clone()*mds_0_0 + a1.clone()*mds_0_1 + a2.clone()*mds_0_2) + a3.clone()*mds_0_3),
-            s_mds_mul.clone() * (a1_next - (a0.clone()*mds_1_0 + a1.clone()*mds_1_1 + a2.clone()*mds_1_2) + a3.clone()*mds_1_3),
-            s_mds_mul.clone() * (a2_next - (a0.clone()*mds_2_0 + a1.clone()*mds_2_1 + a2.clone()*mds_2_2) + a3.clone()*mds_2_3),
+            s_mds_mul.clone() * (a0_next - (a0.clone()*mds_0_0 + a1.clone()*mds_0_1 + a2.clone()*mds_0_2 + a3.clone()*mds_0_3)),
+            s_mds_mul.clone() * (a1_next - (a0.clone()*mds_1_0 + a1.clone()*mds_1_1 + a2.clone()*mds_1_2 + a3.clone()*mds_1_3)),
+            s_mds_mul.clone() * (a2_next - (a0.clone()*mds_2_0 + a1.clone()*mds_2_1 + a2.clone()*mds_2_2 + a3.clone()*mds_2_3)),
             s_mds_mul * (a3_next - (a0*mds_3_0 + a1*mds_3_1 + a2*mds_3_2 + a3*mds_3_3))
         ]
     });

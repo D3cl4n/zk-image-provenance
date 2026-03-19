@@ -35,6 +35,6 @@ $$\sigma = \text{sign}_{\text{SK}}(\text{POSEIDON}(\text{I} || \text{metadata}))
 $$ \text{I}' = \text{greyscale}(\text{I})$$
 - editor computes a proof for the following statement (on-circuit) given $\text{H}, \text{metadata}, \text{I}'$:
 $$ \text{I}' = \text{greyscale}(\text{I}) \wedge \text{POSEIDON}(\text{\text{I}}||\text{metadata}) = H $$
-- the original hash $\text{H}$ is accessed using $\text{PK}$ off-circuit
+- the original hash $\text{H}$ is accessed using $\text{PK}$ off-circuit $\sigma^{\text{PK}} \equiv H \pmod n$ if using RSA signatures as a simple example.
 - verifier (recepient) supplied with:
 $$ \text{I}', \sigma, \pi $$
