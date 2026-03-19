@@ -5,9 +5,9 @@ use halo2_proofs::{
     plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
-use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number, GreyscaleInstructions};
+use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
 use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
-use crate::circuit::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
+use crate::circuit::sponge::{SpongeChip, SpongeChipConfig, Number as SpongeNumber, SpongeInstructions};
 
 
 // structure to store the image details
@@ -97,7 +97,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // expose the greyscale pixel values as public
         for i in 0..greyscale_result.len() {
-            let grey_pixel = Number(greyscale_result[i].clone());
+            let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
             greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
         }
 
@@ -129,7 +129,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // squeeze once all blocks are permuted and expose as public
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
-        let digest: Value<F> = digest_cell.value().copied();
+        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?;
 
         Ok(())
     }
