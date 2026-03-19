@@ -112,13 +112,13 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     // initialize the sponge permutation's internal state to all 0
     fn initialize(
         &self, 
-        layouter: impl Layouter<F>
+        layouter: &mut impl Layouter<F>
     ) -> Result<[AssignedCell<F, F>; 4], Error>;
 
     // absorb - Sponge I/O
     fn absorb(
         &self, 
-        layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
         inputs: [Value<F>; 3] // rate is 3 in neptune parameters
     ) -> Result<[AssignedCell<F, F>; 4], Error>;
@@ -126,7 +126,7 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     // squeeze - Sponge I/O
     fn squeeze(
         &self, 
-        layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
         c: usize // capacity is 1 in neptune parameters making t = r + c = 3 + 1 = 4
     ) -> Result<[Value<F>; 3], Error>; // capacity elements are retained in the sponge
@@ -162,7 +162,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     // initialize the internal state to all 0s per Poseidon paper
     fn initialize(
         &self, 
-        mut layouter: impl Layouter<F>
+        layouter: &mut impl Layouter<F>
     ) -> Result<[AssignedCell<F, F>; 4], Error> {
         let config = self.config();
         layouter.assign_region(
@@ -171,7 +171,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
                     region.assign_advice(|| "input0", config.advice[0], 0, || Value::known(F::from(0u64)))?,
                     region.assign_advice(|| "input1", config.advice[1], 0, || Value::known(F::from(0u64)))?,
                     region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?,
-                    region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?
+                    region.assign_advice(|| "input2", config.advice[3], 0, || Value::known(F::from(0u64)))?
                 ])
             }
         )
@@ -180,7 +180,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     // absorb - Sponge I/O
     fn absorb(
         &self, 
-        mut layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
         inputs: [Value<F>; 3] 
     ) -> Result<[AssignedCell<F, F>; 4], Error> {
@@ -243,7 +243,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     // squeeze - Sponge I/O
     fn squeeze(
         &self, 
-        layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
         c: usize 
     ) -> Result<[Value<F>; 3], Error> {

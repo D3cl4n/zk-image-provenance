@@ -98,7 +98,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         // expose the greyscale pixel values as public
         for i in 0..greyscale_result.len() {
             let grey_pixel = Number(greyscale_result[i].clone());
-            greyscale_chip.expose_as_public(&mut layouter.namespace(|| "grey_pixel"), grey_pixel, i)?;
+            greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
         }
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
@@ -111,10 +111,13 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         )?;
 
         // compute the hash and expose as public 
-        // TODO: figure out if I should be reusing layouters??
-        let initial_state: [AssignedCell<F, F>; 4] = sponge_chip.initialize(&mut layouter.namespace(|| "sponge_init"))?;
+        let mut state: [AssignedCell<F, F>; 4] = sponge_chip.initialize(&mut layouter)?;
         for i in 0..preimage.len() {
-
+            state = sponge_chip.absorb(
+                &mut layouter,
+                state,
+                preimage[i]
+            )?;
         }
 
         Ok(())
