@@ -127,9 +127,8 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     fn squeeze(
         &self, 
         layouter: &mut impl Layouter<F>,
-        state: [AssignedCell<F, F>; 4],
-        c: usize // capacity is 1 in neptune parameters making t = r + c = 3 + 1 = 4
-    ) -> Result<[Value<F>; 3], Error>; // capacity elements are retained in the sponge
+        state: [AssignedCell<F, F>; 4]
+    ) -> Result<AssignedCell<F, F>, Error>; // capacity elements are retained in the sponge
 
     // pad - Sponge funtionality before input is passed to permute()
     // split each vector into chunks of size r, pad last chunk to r elements using 0s if needed
@@ -244,10 +243,9 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     fn squeeze(
         &self, 
         layouter: &mut impl Layouter<F>,
-        state: [AssignedCell<F, F>; 4],
-        c: usize 
-    ) -> Result<[Value<F>; 3], Error> {
-        Ok([state[0].value().copied(), state[1].value().copied(), state[2].value().copied()])
+        state: [AssignedCell<F, F>; 4]
+    ) -> Result<AssignedCell<F, F>, Error> {
+        Ok(state[1].clone()) // match poseidon-hash module and squeeze the 2nd state element
     }
 
     // pad function - returning pad(r_channel || g_channel || b_chanel || exif)

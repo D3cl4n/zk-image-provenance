@@ -113,17 +113,23 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         // compute the hash and expose as public 
         let mut state: [AssignedCell<F, F>; 4] = sponge_chip.initialize(&mut layouter)?;
         for i in 0..preimage.len() {
+            // absorb the input block 
             state = sponge_chip.absorb(
                 &mut layouter,
                 state,
                 preimage[i]
             )?;
 
+            // compute the permutation once the block is absobed
             state = poseidon_chip.permute(
                 &mut layouter,
                 state
             )?;
         }
+
+        // squeeze once all blocks are permuted and expose as public
+        let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
+        let digest: Value<F> = digest_cell.value().copied();
 
         Ok(())
     }
