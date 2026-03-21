@@ -43,3 +43,7 @@ $$ \text{I}', \sigma, \pi $$
 ### On Pi 4
  - `sudo apt install pyenv`
  - `pyenv install 3.10.12` to align with supported versions for poseidon-hash sub-modules
+ - `pyenv local 3.10.12` inside the project directory `~/Desktop/zk-image-provenance`
+ - `pyenv install --list | grep "3.10.12"` for confirmation of install
+ - `nano ~/.bashrc` -> ADD `export PATH="$HOME/.pyenv/bin:$PATH"` and `eval "$(pyenv init -)"` to the bottom
+ - `python3.10 -m pip install poseidon-hash` from the project dir
