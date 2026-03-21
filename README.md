@@ -41,7 +41,5 @@ $$ \text{I}', \sigma, \pi $$
 
 ## Install Instructions
 ### On Pi 4
- - `python3 -m venv zk-venv`
- - `source zk-venv/bin/activate`
- - `pip install poseidon-hash --verbose` (may take a while due to compiling sub-modules)
-  TODO: downgrade, python version on Pi needs to be 3.10.12 to line up with laptop
+ - `sudo apt install pyenv`
+ - `pyenv install 3.10.12` to align with supported versions for poseidon-hash sub-modules
