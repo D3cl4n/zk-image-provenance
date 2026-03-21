@@ -38,3 +38,9 @@ $$ \text{I}' = \text{greyscale}(\text{I}) \wedge \text{POSEIDON}(\text{\text{I}}
 - the original hash $\text{H}$ is accessed using $\text{PK}$ off-circuit $\sigma^{\text{PK}} \equiv H \pmod n$ if using RSA signatures as a simple example.
 - verifier (recepient) supplied with:
 $$ \text{I}', \sigma, \pi $$
+
+## Install Instructions
+### On Pi 4
+ - `python3 -m venv zk-venv`
+ - `source zk-venv/bin/activate`
+ - `pip install poseidon-hash --verbose` (may take a while due to compiling sub-modules)
