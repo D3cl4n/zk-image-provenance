@@ -74,8 +74,17 @@ def hash_img_details(preimage):
     poseidon_instance.partial_rounds()
     poseidon_instance.full_rounds()
 
+    # permute over the remaining blocks, resetting constant counter and carrying over capacity element
     for block in blocks[:1]:
-        pass
+        poseidon_instance.state[0] = field(block[0])
+        poseidon_instance.state[1] = field(block[1])
+        poseidon_instance.state[2] = field(block[2])
+        poseidon_instance.full_rounds()
+        poseidon_instance.partial_rounds()
+        poseidon_instance.full_rounds()
+
+    H = poseidon_instance.state[1]
+    print(f"[+] Hash: {hex(int(H))}")
 
 
 # sign - this will all be done on the Pi once prototype works
