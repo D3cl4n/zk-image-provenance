@@ -52,7 +52,7 @@ fn main() {
     expected.push(Fr::from_str_vartime("15711561074231250861997412468897245375220690714040714471551241776308611552084").unwrap());
     
     // make and run the circuit
-    let k: u32 = 19;
+    let k: u32 = 22;
     let circuit = ImageCircuit {
         jpeg_vectors: original_img_details
     };

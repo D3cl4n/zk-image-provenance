@@ -75,10 +75,10 @@ def hash_img_details(preimage):
     poseidon_instance.full_rounds()
 
     # permute over the remaining blocks, resetting constant counter and carrying over capacity element
-    for block in blocks[:1]:
-        poseidon_instance.state[0] = field(block[0])
-        poseidon_instance.state[1] = field(block[1])
-        poseidon_instance.state[2] = field(block[2])
+    for block in blocks[1:]:
+        poseidon_instance.state[0] += field(block[0])
+        poseidon_instance.state[1] += field(block[1])
+        poseidon_instance.state[2] += field(block[2])
         poseidon_instance.rc_counter = 0
         poseidon_instance.full_rounds()
         poseidon_instance.partial_rounds()
