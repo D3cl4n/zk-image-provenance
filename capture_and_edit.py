@@ -1,4 +1,5 @@
 import csv
+import poseidon
 from PIL import Image
 
 
@@ -40,9 +41,32 @@ def edit_img(image):
     return greyscale_pixel_arr
 
 
+# sign - this will all be done on the Pi once prototype works
+def sign(image):
+    img = Image.open(image).convert("RGB") # open again since this will be moved to script on Pi
+    pixels = img.load()
+    width, height = img.size
+    r_vec = []
+    g_vec = []
+    b_vec = []
+    exif_vec = []
+
+    # iterate over the pixels and extract the 3 bytes for color channels (R, G, B)
+    for y in range(height):
+        for x in range(width):
+            r, g, b = pixels[x, y]
+            r_vec.append(r)
+            g_vec.append(g)
+            b_vec.append(b)
+
+
 # main function
 def main():
-    image = "image.png" # relative path
+    image = "original.jpg" # relative path
+    # all camera / signing functionality below
+    sign(image)
+
+    # all editor functionality below
     greyscale_values = edit_img(image)
 
     # write the greyscale values to list as public input for ZKP generation
