@@ -45,14 +45,9 @@ def edit_img(image):
 def pad(preimage, rate):
     rem = len(preimage) % rate
     if rem != 0:
-        preimage.extend([0] * rate - rem)
+        preimage.extend([0] * (rate - rem))
 
     return [preimage[i:i+3] for i in range(0, len(preimage), 3)]
-
-
-# implement the sponge functionality - will be done on the Pi once prototype works
-def absorb():
-    pass
 
 
 # compute Poseidon(r||g||b||exif) - this will be done on the Pi once prototype works
@@ -69,11 +64,14 @@ def hash_img_details(preimage):
     p_bits = 255
 
     # pad input to poseidon
-    preimage_padded = pad(preimage, rate)
+    blocks = pad(preimage, rate)
 
-    # initialize a poseidon instance
+    # initialize a poseidon instance and hash
     poseidon_instance = poseidon.Poseidon(p, security_level, alpha, rate, t, full_rounds, partial_rounds, mds_matrix, rc_list, p_bits)
-    H = poseidon_instance.run_hash(preimage)
+    init_state = [0] * t
+    for i in range(len(blocks)):
+        init_state = [init_state[j] + blocks[i][j] for j in range(rate)]
+        capacity = poseidon_instance.run_hash(blocks[i])
 
 
 # sign - this will all be done on the Pi once prototype works
