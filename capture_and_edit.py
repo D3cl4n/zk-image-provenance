@@ -43,7 +43,18 @@ def edit_img(image):
 
 # compute Poseidon(r||g||b||exif) - this will be done on the Pi once prototype works
 def hash_img_details(preimage):
-    pass
+    security_level = 128
+    rate = 3
+    t = 4
+    full_rounds = 8
+    partial_rounds = 56
+    alpha = 5
+    p = poseidon.parameters.prime_255 # BLS12-381 scalar field
+    rc_list = poseidon.parameters.round_constants_neptune
+    mds_matrix = poseidon.parameters.matrix_neptune
+    p_bits = 255
+
+    poseidon_instance = poseidon.Poseidon(p, security_level, alpha, rate, t, full_rounds, partial_rounds, mds_matrix, rc_list, p_bits)
 
 
 # sign - this will all be done on the Pi once prototype works
@@ -68,7 +79,8 @@ def sign(image):
             b_vec.append(b)
 
     # compute Poseidon(r||g||b||exif)
-    preimage = r_vec + g_vec + b_vec + exif_vec
+    preimage = r_vec + g_vec + b_vec + list(exif_vec)
+    hash_img_details(preimage)
 
 
 # main function
