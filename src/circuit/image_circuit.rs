@@ -30,7 +30,7 @@ pub struct ImageCircuitConfig<F: PrimeField> {
 // struct for the image provenance circuit config as a whole (hash + greyscale)
 #[derive(Default)]
 pub struct ImageCircuit {
-    jpeg_vectors: ImageDetails
+    pub jpeg_vectors: ImageDetails
 }
 
 // implement the Circuit trait for ImageCircuit

@@ -97,7 +97,7 @@ def sign(image):
     r_vec = []
     g_vec = []
     b_vec = []
-    exif_vec = img.getexif().tobytes()[6:] # TODO: this will need to match rust exifdata, rust has 2 trailing \x00
+    exif_vec = img.getexif().tobytes()[6:] + b"\x00\x00" # add two trailing null bytes to match Rust
 
     print(f"[+] Exifdata: {exif_vec}")
     print(f"[+] Exifdata length: {len(exif_vec)}")

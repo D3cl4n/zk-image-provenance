@@ -6,9 +6,10 @@ mod utils;
 // main function
 fn main() {
     // start with the MockProver and then move to real prover
-    use crate::circuit::image_circuit::{ImageDetails};
+    use crate::circuit::image_circuit::{ImageDetails, ImageCircuit};
     use ff::PrimeField;
     use halo2curves::bls12381::Fr;
+    use halo2_proofs::dev::MockProver;
 
     // original image as private witness
     let original_img = String::from("original.jpg");
@@ -47,6 +48,16 @@ fn main() {
     for i in 0..y_values.len() {
         expected.push(Fr::from(y_values[i] as u64));
     }
+    
+    expected.push(Fr::from_str_vartime("15711561074231250861997412468897245375220690714040714471551241776308611552084").unwrap());
+    
+    // make and run the circuit
+    let k: u32 = 15;
+    let circuit = ImageCircuit {
+        jpeg_vectors: original_img_details
+    };
 
-    let expected_hash: Fr = Fr::from_str_vartime("15711561074231250861997412468897245375220690714040714471551241776308611552084").unwrap();
+
+    let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
+    assert_eq!(prover.verify(), Ok(()));
 }
