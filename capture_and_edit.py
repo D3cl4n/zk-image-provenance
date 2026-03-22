@@ -63,15 +63,19 @@ def hash_img_details(preimage):
     mds_matrix = poseidon.parameters.matrix_neptune
     p_bits = 255
 
-    # pad input to poseidon
-    blocks = pad(preimage, rate)
-
     # initialize a poseidon instance and hash
     poseidon_instance = poseidon.Poseidon(p, security_level, alpha, rate, t, full_rounds, partial_rounds, mds_matrix, rc_list, p_bits)
-    init_state = [0] * t
-    for i in range(len(blocks)):
-        init_state = [init_state[j] + blocks[i][j] for j in range(rate)]
-        capacity = poseidon_instance.run_hash(blocks[i])
+    # pad input to poseidon and process first block
+    blocks = pad(preimage, rate)
+    field = poseidon_instance.field_p
+    poseidon_instance.state = field([blocks[0][0], blocks[0][1], blocks[0][2], 0]) # absorb first block
+    poseidon_instance.rc_counter = 0
+    poseidon_instance.full_rounds()
+    poseidon_instance.partial_rounds()
+    poseidon_instance.full_rounds()
+
+    for block in blocks[:1]:
+        pass
 
 
 # sign - this will all be done on the Pi once prototype works
