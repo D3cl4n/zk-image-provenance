@@ -7,6 +7,7 @@ mod utils;
 fn main() {
     // start with the MockProver and then move to real prover
     use crate::circuit::image_circuit::{ImageDetails};
+    use ff::PrimeField;
     use halo2curves::bls12381::Fr;
 
     // original image as private witness
@@ -46,4 +47,6 @@ fn main() {
     for i in 0..y_values.len() {
         expected.push(Fr::from(y_values[i] as u64));
     }
+
+    let expected_hash: Fr = Fr::from_str_vartime("15711561074231250861997412468897245375220690714040714471551241776308611552084").unwrap();
 }

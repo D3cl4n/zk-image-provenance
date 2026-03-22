@@ -86,6 +86,7 @@ def hash_img_details(preimage):
 
     H = poseidon_instance.state[1]
     print(f"[+] Hash: {hex(int(H))}")
+    print(f"[+] Hash field element: {int(H)}")
 
 
 # sign - this will all be done on the Pi once prototype works

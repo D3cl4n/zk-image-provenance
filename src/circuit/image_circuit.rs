@@ -107,7 +107,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.jpeg_vectors.g, 
             &self.jpeg_vectors.b, 
             &self.jpeg_vectors.exif,
-            3 as usize
+            3 as usize 
         )?;
 
         // compute the hash and expose as public 
@@ -129,6 +129,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // squeeze once all blocks are permuted and expose as public
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
+        // print the digest here for debugging
+        println!("[+] Hash: {:?}", digest_cell.value().copied());
         sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?;
 
         Ok(())
