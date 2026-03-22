@@ -42,8 +42,13 @@ def edit_img(image):
 
 
 # implement the padding scheme to match rust code - will shift to Pi
-def pad():
-    pass
+def pad(preimage, rate):
+    rem = len(preimage) % rate
+    if rem != 0:
+        preimage.extend([0] * rate - rem)
+
+    return [preimage[i:i+3] for i in range(0, len(preimage), 3)]
+
 
 # implement the sponge functionality - will be done on the Pi once prototype works
 def absorb():
