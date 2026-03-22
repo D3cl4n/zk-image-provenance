@@ -41,6 +41,11 @@ def edit_img(image):
     return greyscale_pixel_arr
 
 
+# compute Poseidon(r||g||b||exif) - this will be done on the Pi once prototype works
+def hash_img_details(preimage):
+    pass
+
+
 # sign - this will all be done on the Pi once prototype works
 def sign(image):
     img = Image.open(image).convert("RGB") # open again since this will be moved to script on Pi
@@ -49,7 +54,7 @@ def sign(image):
     r_vec = []
     g_vec = []
     b_vec = []
-    exif_vec = img.getexif().tobytes()[4:]
+    exif_vec = img.getexif().tobytes()[6:] # TODO: this will need to match rust exifdata, rust has 2 trailing \x00
 
     print(f"[+] Exifdata: {exif_vec}")
     print(f"[+] Exifdata length: {len(exif_vec)}")
@@ -61,6 +66,9 @@ def sign(image):
             r_vec.append(r)
             g_vec.append(g)
             b_vec.append(b)
+
+    # compute Poseidon(r||g||b||exif)
+    preimage = r_vec + g_vec + b_vec + exif_vec
 
 
 # main function
