@@ -35,7 +35,7 @@ def edit_img(image):
             greyscale_pixel_arr.append(grey_pixel)
             grey_pixels[x, y] = grey_pixel
 
-    grey_img.save("greyscale.png")
+    grey_img.save("greyscale.jpg")
     write_pixels_to_csv(original_pixel_arr)
 
     return greyscale_pixel_arr
@@ -49,7 +49,10 @@ def sign(image):
     r_vec = []
     g_vec = []
     b_vec = []
-    exif_vec = []
+    exif_vec = img.getexif().tobytes()[4:]
+
+    print(f"[+] Exifdata: {exif_vec}")
+    print(f"[+] Exifdata length: {len(exif_vec)}")
 
     # iterate over the pixels and extract the 3 bytes for color channels (R, G, B)
     for y in range(height):
