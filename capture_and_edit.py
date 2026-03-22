@@ -70,7 +70,7 @@ def hash_img_details(preimage):
     field = poseidon_instance.field_p
     poseidon_instance.state = field([blocks[0][0], blocks[0][1], blocks[0][2], 0]) # absorb first block
     poseidon_instance.rc_counter = 0
-    poseidon_instance.full_rounds()
+    poseidon_instance.full_rounds() # inherently executes RF / 2 rounds
     poseidon_instance.partial_rounds()
     poseidon_instance.full_rounds()
 
@@ -79,6 +79,7 @@ def hash_img_details(preimage):
         poseidon_instance.state[0] = field(block[0])
         poseidon_instance.state[1] = field(block[1])
         poseidon_instance.state[2] = field(block[2])
+        poseidon_instance.rc_counter = 0
         poseidon_instance.full_rounds()
         poseidon_instance.partial_rounds()
         poseidon_instance.full_rounds()
