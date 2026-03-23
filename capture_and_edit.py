@@ -1,21 +1,13 @@
-import csv
+import ecdsa
 import poseidon
+import piexif
+import hashlib
 from PIL import Image
-
-
-# write the pixel values to a output csv for verification against prover
-def write_pixels_to_csv(pixel_arr):
-    output_csv = "output/pixels_python.csv"
-    with open(output_csv, "w") as f:
-        writer = csv.writer(f)
-        writer.writerows(pixel_arr)
-
-    f.close()
 
     
 # read the bytes of the png into an array
-def edit_img(image):
-    img = Image.open(image).convert("RGB")
+def edit_img(image_path):
+    img = Image.open(image_path).convert("RGB")
     width, height = img.size
     pixels = img.load()
     grey_img = Image.new("L", (width, height)) # create a new image to write to - greyscale
@@ -36,9 +28,6 @@ def edit_img(image):
             grey_pixels[x, y] = grey_pixel
 
     grey_img.save("greyscale.jpg")
-    write_pixels_to_csv(original_pixel_arr)
-
-    return greyscale_pixel_arr
 
 
 # implement the padding scheme to match rust code - will shift to Pi
@@ -85,22 +74,29 @@ def hash_img_details(preimage):
         poseidon_instance.full_rounds()
 
     H = poseidon_instance.state[1]
-    print(f"[+] Hash: {hex(int(H))}")
-    print(f"[+] Hash field element: {int(H)}")
+
+    return int(H)
+
+
+# embed the signature into the jpg, in the Makernote https://exiv2.org/makernote.html
+def embed_signature(image_path, signature_bytes):
+    exif_dict = piexif.load(image_path)
+    value = b"zkp-sig\x00" + signature_bytes
+    exif_dict["Exif"][piexif.ExifIFD.MakerNote] = value
+
+    exif_bytes = piexif.dump(exif_dict)
+    piexif.insert(exif_bytes, image_path)
 
 
 # sign - this will all be done on the Pi once prototype works
-def sign(image):
-    img = Image.open(image).convert("RGB") # open again since this will be moved to script on Pi
+def sign(image_path, sk):
+    img = Image.open(image_path).convert("RGB") # open again since this will be moved to script on Pi
     pixels = img.load()
     width, height = img.size
     r_vec = []
     g_vec = []
     b_vec = []
     exif_vec = img.getexif().tobytes()[6:] + b"\x00\x00" # add two trailing null bytes to match Rust
-
-    print(f"[+] Exifdata: {exif_vec}")
-    print(f"[+] Exifdata length: {len(exif_vec)}")
 
     # iterate over the pixels and extract the 3 bytes for color channels (R, G, B)
     for y in range(height):
@@ -112,24 +108,27 @@ def sign(image):
 
     # compute Poseidon(r||g||b||exif)
     preimage = r_vec + g_vec + b_vec + list(exif_vec)
-    hash_img_details(preimage)
+    H = hash_img_details(preimage)
+    H_bytes = H.to_bytes(32, "little")
+    signature = sk.sign(H_bytes, hashfunc=hashlib.sha256)
+    embed_signature(image_path, signature)
+
+    H_bytes, signature
 
 
 # main function
 def main():
-    image = "original.jpg" # relative path
+    image_path = "original.jpg" # relative path
     # all camera / signing functionality below
-    sign(image)
+    sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+    vk = sk.get_verifying_key()
+    hash, signature = sign(image_path, sk)
 
     # all editor functionality below
-    greyscale_values = edit_img(image)
-
-    # write the greyscale values to list as public input for ZKP generation
-    greyscale_output_csv = "output/greyscale.txt"
-    with open(greyscale_output_csv, "w") as f:
-        for y in greyscale_values:
-            f.write(str(y) + "\n")
+    edit_img(image_path)
 
 
+# TODO: clean up the whole script - pack multiple bytes / pixel values into one field element
+# 255 bits in BLS12-381 scalar field Fr lets us hold 31 bytes per field element, pack in both python and rust
 if __name__ == '__main__':
     main()
