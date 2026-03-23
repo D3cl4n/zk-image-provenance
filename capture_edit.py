@@ -56,9 +56,10 @@ class Editor:
         
 # class for all functionality related to the camera (move to Raspberry Pi once prototype works)
 class Camera:
-    def __init__(self):
+    def __init__(self, image_path):
         self.sk = None
         self.vk = None
+        self.image_path = image_path
         self.poseidon_instance = poseidon.Poseidon(
             poseidon.parameters.prime_255, 
             128, # security level in bits
@@ -72,23 +73,54 @@ class Camera:
             255 # modulus bit size
         )
 
+
     # generate ECDSA keys - only call if keys are not already generated and securely stored
     def keygen(self):
         self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
         self.vk = self.sk.get_verifying_key()
+
 
     # implement the padding scheme to match rust code - will shift to Pi
     # TODO: make sure this is done, add in packing functionality
     def pad(self, preimage, rate):
         rem = len(preimage) % rate
         if rem != 0:
-            preimage.extend([0] * (rate - rem))
+            preimage.extend([self.poseidon_instance.field(0)] * (rate - rem))
 
         return [preimage[i:i+3] for i in range(0, len(preimage), 3)]
+    
+    
+    # compute Poseidon(preimage); preimage = pad(pack(r||g||b||exif))
+    def hash(self, preimage):
+        pass
+
+
+    # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
+    def pack(self, raw_preimage):
+        pass
+
 
     # compute the digital signature of the original image
     def sign(self):
-        pass
+        image = Image.open(self.image_path).convert("RGB") 
+        pixels = image.load()
+        width, height = image.size
+        r_vec = []
+        g_vec = []
+        b_vec = []
+
+        # extract pixels and exifdata from captured image
+        exif_vec = image.getexif().tobytes()[6:] + b"\x00\x00" # add two trailing null bytes to match Rust
+        for y in range(height):
+            for x in range(width):
+                r, g, b = pixels[x, y]
+                r_vec.append(r)
+                g_vec.append(g)
+                b_vec.append(b)
+
+        raw_preimage = r_vec + g_vec + b_vec + list(exif_vec)
+        packed_preimage = self.pack(raw_preimage)
+
 
     # capture a photo (do not call this function unless on the pi)
     def capture(self):
@@ -98,7 +130,7 @@ class Camera:
 # main function
 def main():
     # camera functionality
-    camera = Camera()
+    camera = Camera("original.jpg")
     camera.keygen()
 
     # editor functionality
