@@ -1,6 +1,7 @@
 import ecdsa
 import poseidon
 import piexif
+import math
 import hashlib
 import os
 from PIL import Image
@@ -97,7 +98,19 @@ class Camera:
 
     # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
     def pack(self, raw_preimage):
-        pass
+        preimage_elements = [] # list storing all the field elements, each packed with 31 bytes from preimage
+        bytes_per_element = 31
+        blocks = [raw_preimage[i:i+bytes_per_element] for i in range(0, len(raw_preimage), bytes_per_element)] # 31 byte blocks
+        
+        for i in range(len(blocks)):
+            element = self.poseidon_instance.field(0)
+            for j in range(len(blocks[i])): # if last block is less then 31 bytes we will naturally stop
+                element += self.poseidon_instance.field(blocks[i][j]) * self.poseidon_instance.field(256**j)
+
+            preimage_elements.append(element)
+
+        return preimage_elements
+
 
 
     # compute the digital signature of the original image
