@@ -86,7 +86,7 @@ class Camera:
     def pad(self, preimage, rate):
         rem = len(preimage) % rate
         if rem != 0:
-            preimage.extend([self.poseidon_instance.field(0)] * (rate - rem))
+            preimage.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
 
         return [preimage[i:i+3] for i in range(0, len(preimage), 3)]
     
@@ -103,9 +103,9 @@ class Camera:
         blocks = [raw_preimage[i:i+bytes_per_element] for i in range(0, len(raw_preimage), bytes_per_element)] # 31 byte blocks
         
         for i in range(len(blocks)):
-            element = self.poseidon_instance.field(0)
+            element = self.poseidon_instance.field_p(0)
             for j in range(len(blocks[i])): # if last block is less then 31 bytes we will naturally stop
-                element += self.poseidon_instance.field(blocks[i][j]) * self.poseidon_instance.field(256**j)
+                element += self.poseidon_instance.field_p(blocks[i][j]) * self.poseidon_instance.field_p(256**j)
 
             preimage_elements.append(element)
 
@@ -133,6 +133,7 @@ class Camera:
 
         raw_preimage = r_vec + g_vec + b_vec + list(exif_vec)
         packed_preimage = self.pack(raw_preimage)
+        padded_preimage = self.pad(packed_preimage)
 
 
     # capture a photo (do not call this function unless on the pi)
