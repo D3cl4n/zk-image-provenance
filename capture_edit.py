@@ -82,18 +82,36 @@ class Camera:
 
 
     # implement the padding scheme to match rust code - will shift to Pi
-    # TODO: make sure this is done, add in packing functionality
-    def pad(self, preimage, rate):
-        rem = len(preimage) % rate
+    def pad(self, preimage_packed, rate):
+        rem = len(preimage_packed) % rate
         if rem != 0:
-            preimage.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
+            preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
 
-        return [preimage[i:i+3] for i in range(0, len(preimage), 3)]
+        return [preimage_packed[i:i+rate] for i in range(0, len(preimage_packed), rate)]
     
     
     # compute Poseidon(preimage); preimage = pad(pack(r||g||b||exif))
-    def hash(self, preimage):
-        pass
+    def hash(self, preimage_blocks):
+        field = self.poseidon_instance.field_p
+        self.poseidon_instance.state = field([preimage_blocks[0][0], preimage_blocks[0][1], preimage_blocks[0][2], field(0)]) # absorb first block
+        self.poseidon_instance.rc_counter = 0
+        self.poseidon_instance.full_rounds() # inherently executes RF / 2 rounds
+        self.poseidon_instance.partial_rounds()
+        self.poseidon_instance.full_rounds()
+
+        # permute over the remaining blocks, resetting constant counter and carrying over capacity element
+        for block in preimage_blocks[1:]:
+            self.poseidon_instance.state[0] += field(block[0])
+            self.poseidon_instance.state[1] += field(block[1])
+            self.poseidon_instance.state[2] += field(block[2])
+            self.poseidon_instance.rc_counter = 0
+            self.poseidon_instance.full_rounds()
+            self.poseidon_instance.partial_rounds()
+            self.poseidon_instance.full_rounds()
+
+        H = self.poseidon_instance.state[1]
+
+        return int(H)
 
 
     # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
@@ -110,7 +128,6 @@ class Camera:
             preimage_elements.append(element)
 
         return preimage_elements
-
 
 
     # compute the digital signature of the original image
@@ -133,7 +150,9 @@ class Camera:
 
         raw_preimage = r_vec + g_vec + b_vec + list(exif_vec)
         packed_preimage = self.pack(raw_preimage)
-        padded_preimage = self.pad(packed_preimage)
+        padded_preimage = self.pad(packed_preimage, 3)
+        H = self.hash(padded_preimage)
+        print(f"[*] Hash of original image: {hex(H)}")
 
 
     # capture a photo (do not call this function unless on the pi)
@@ -146,6 +165,7 @@ def main():
     # camera functionality
     camera = Camera("original.jpg")
     camera.keygen()
+    camera.sign()
 
     # editor functionality
     editor = Editor("original.jpg")
