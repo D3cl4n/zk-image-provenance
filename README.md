@@ -47,3 +47,14 @@ $$ \text{I}', \sigma, \pi $$
  - `pyenv install --list | grep "3.10.12"` for confirmation of install
  - `nano ~/.bashrc` -> ADD `export PATH="$HOME/.pyenv/bin:$PATH"` and `eval "$(pyenv init -)"` to the bottom
  - `python3.10 -m pip install poseidon-hash` from the project dir
+
+ ## Expected hash from python code - for MockProver testing
+ ```
+ Initialize Round Numbers
+Initialize field
+Initialize MDS matrix
+Initialize Round Constant
+[*] Hash of original image: 0x671f485fbf4166fff42152eca598fcf97cb7ccac0a30db91f50881eda08527cb
+[*] Greyscaling image: original.jpg
+[*] Saving greyscaled image as: greyscale.jpg
+```
