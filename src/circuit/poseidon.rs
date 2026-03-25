@@ -401,15 +401,26 @@ fn create_mds_mul_gate<F: PrimeField>(
 // helper function for creating the partial SB gate (poseidon-hash module computes state[0]^5 for partial rounds)
 fn create_partial_sbox_gate_ps<F: PrimeField>(
     meta: &mut ConstraintSystem<F>,
-    advice: Column<Advice>,
+    advice: [Column<Advice>; 4],
     s_sub_bytes_partial: Selector, 
 ) {
     meta.create_gate("PS_partial_sbox_gate", |meta| {
         let s_sub_bytes_partial = meta.query_selector(s_sub_bytes_partial);
-        let a0 = meta.query_advice(advice, Rotation::cur()); // state[0] = state[0]**5, alpha = 5
-        let a0_next = meta.query_advice(advice, Rotation::next());
+        let a0 = meta.query_advice(advice[0], Rotation::cur()); // state[0] = state[0]**5, alpha = 5
+        let a1 = meta.query_advice(advice[1], Rotation::cur());
+        let a2 = meta.query_advice(advice[2], Rotation::cur());
+        let a3 = meta.query_advice(advice[3], Rotation::cur());
+        let a0_next = meta.query_advice(advice[0], Rotation::next());
+        let a1_next = meta.query_advice(advice[1], Rotation::next());
+        let a2_next = meta.query_advice(advice[2], Rotation::next());
+        let a3_next = meta.query_advice(advice[3], Rotation::next());
 
-        vec![s_sub_bytes_partial* (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0))]
+        vec![
+            s_sub_bytes_partial.clone() * (a1_next.clone() - a1.clone()), // ensure the unchanged state elements are copied correctly
+            s_sub_bytes_partial.clone() * (a2_next.clone() - a2.clone()),
+            s_sub_bytes_partial.clone() * (a3_next.clone() - a3.clone()),
+            s_sub_bytes_partial * (a0_next - (a0.clone()*a0.clone()*a0.clone()*a0.clone()*a0))
+        ]
     });
 }
 
@@ -501,7 +512,7 @@ impl<F: PrimeField> PoseidonChip<F> {
         create_arc_gate(meta, advice, fixed, s_add_rcs);
         create_mds_mul_gate(meta, advice, s_mds_mul, &neptune_mds);
         create_full_sbox_gate_ps(meta, advice, s_sub_bytes_full);
-        create_partial_sbox_gate_ps(meta, advice[0], s_sub_bytes_partial);
+        create_partial_sbox_gate_ps(meta, advice, s_sub_bytes_partial);
 
         PoseidonChipConfig {
             advice,
@@ -704,6 +715,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                             region.assign_advice(|| "a2_sb_partial", config.advice[2], *row_offset, || after_arc[2].value().copied())?,
                             region.assign_advice(|| "a3_sb_partial", config.advice[3], *row_offset, || after_arc[3].value().copied())?
                         ];
+
                         // MDS multiplication
                         config.s_mds_mul.enable(region, *row_offset)?;
                         *row_offset += 1;
