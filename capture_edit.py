@@ -27,6 +27,14 @@ class Editor:
         self.greyscale_pixels = []
         self.target = "greyscale.jpg"
 
+    # write the pixels to output/greyscale.txt as public input to the circuit (should be extracted from edited image)
+    def write_to_output(self):
+        with open("output/greyscale.txt", "w") as f:
+            for grey_pixel in self.greyscale_pixels:
+                f.write(grey_pixel)
+
+        f.close()
+
     # greyscale the image and save as a new jpg
     def greyscale(self):
         print(f"[*] Greyscaling image: {self.image_path}")

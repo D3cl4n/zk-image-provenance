@@ -49,7 +49,7 @@ fn main() {
         expected.push(Fr::from(y_values[i] as u64));
     }
     
-    expected.push(Fr::from_str_vartime("15711561074231250861997412468897245375220690714040714471551241776308611552084").unwrap());
+    expected.push(Fr::from_str_vartime("46643495170158022888651350105295503193941320572865653776696418093201101236171").unwrap());
     
     // make and run the circuit
     let k: u32 = 22;
