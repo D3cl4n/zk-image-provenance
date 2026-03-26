@@ -31,7 +31,7 @@ class Editor:
     def write_to_output(self):
         with open("output/greyscale.txt", "w") as f:
             for grey_pixel in self.greyscale_pixels:
-                f.write(grey_pixel)
+                f.write(str(grey_pixel))
 
         f.close()
 
@@ -138,6 +138,11 @@ class Camera:
         return preimage_elements
 
 
+    # TODO: method for embedding the signature inside the original jpeg to be done by the camera
+    def embed_signature(self):
+        pass
+
+
     # compute the digital signature of the original image
     def sign(self):
         image = Image.open(self.image_path).convert("RGB") 
@@ -178,6 +183,7 @@ def main():
     # editor functionality
     editor = Editor("original.jpg")
     editor.greyscale()
+    editor.write_to_output()
 
 
 if __name__ == '__main__':
