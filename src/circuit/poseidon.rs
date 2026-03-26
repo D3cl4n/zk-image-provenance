@@ -564,7 +564,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     state[2].copy_advice(|| "a2", &mut region, config.advice[2], row_offset)?,
                     state[3].copy_advice(|| "a3", &mut region, config.advice[3], row_offset)?
                 ];
-                row_offset += 1;
 
                 // helper function to compute exponentiation by alpha = 5
                 let pow5 = |a: F| -> F {
@@ -632,8 +631,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     
                     // enable ARC selector once constants and state written to current offset then update counters
                     config.s_add_rcs.enable(region, *row_offset)?;
-                    *rc_idx += 4;
-                    *row_offset += 1;
 
                     // compute the new state values (access and dereference cell value then add constants)
                     let after_arc: [AssignedCell<F, F>; 4] = [
@@ -662,6 +659,9 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                             || state[3].value().map(|v| *v + rc[3])
                         )?
                     ];
+
+                    *rc_idx += 4;
+                    *row_offset += 1;
 
                     // power map for only the first element if partial round, all elements if full round
                     if full_round == true {
@@ -703,6 +703,8 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
                         state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
+
+                        *row_offset += 1;
                     }
 
                     else {
@@ -725,6 +727,8 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
                         state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
+
+                        *row_offset += 1; // increment row before next round executed
                     }
 
                     Ok(())
