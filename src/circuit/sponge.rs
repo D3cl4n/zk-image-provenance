@@ -267,20 +267,19 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
 
         // pack 31 bytes into each field element then pad and construct blocks
         let bytes_per_block: usize = 31;
-        let preimage_elements: Vec<F> = input
+        let mut preimage_elements: Vec<F> = input
             .chunks(bytes_per_block) // split input vector into slides of size bytes_per_block
             .map(|chunk| { // for each slice execute a closure to produce a packed field element
                 let mut bytes = [0u8; 32];
                 bytes[..chunk.len()].copy_from_slice(chunk) // high bits stay 0 since bytes array initialized to 0s
                 F::from_repr(bytes.into()).unwrap_or(F::ZERO) // convert to field element, 0 if None
             })
-            .collect()
+            .collect();
 
         // divide the vector of packed field elements into slices of 3 and pad
-        let rem: usize = input.len() % r;
-        let mut padded = preimage_elements;
+        let rem: usize = preimage_elements.len() % r;
         if rem != 0 {
-            input.resize(input.len() + (r - rem), F::ZERO);
+            preimage_elements.resize(preimage_elements.len() + (r - rem), F::ZERO);
         }
 
         let blocks: Vec<[Value<F>; 3]> = padded
