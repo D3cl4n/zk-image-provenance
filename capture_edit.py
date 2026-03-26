@@ -31,7 +31,7 @@ class Editor:
     def write_to_output(self):
         with open("output/greyscale.txt", "w") as f:
             for grey_pixel in self.greyscale_pixels:
-                f.write(str(grey_pixel))
+                f.write(str(grey_pixel) + "\n")
 
         f.close()
 

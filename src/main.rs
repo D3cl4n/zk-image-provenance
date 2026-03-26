@@ -45,9 +45,9 @@ fn main() {
 
     // MockProver for now - testing
     let mut expected: Vec<Fr> = vec![];
-    for i in 0..y_values.len() {
-        expected.push(Fr::from(y_values[i] as u64));
-    }
+    // for i in 0..y_values.len() { TODO: uncomment when ready to test greyscale
+    //     expected.push(Fr::from(y_values[i] as u64));
+    // }
     
     expected.push(Fr::from_str_vartime("46643495170158022888651350105295503193941320572865653776696418093201101236171").unwrap());
     

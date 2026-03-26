@@ -62,9 +62,9 @@ fn create_sponge_absorb_gate<F: PrimeField>(
         let a3_next = meta.query_advice(advice[3], Rotation::next());
 
         vec![
-            s_sponge_absorb.clone() * (a0_next - a0_prev + input_0),
-            s_sponge_absorb.clone() * (a1_next - a1_prev + input_1),
-            s_sponge_absorb.clone() * (a2_next - a2_prev + input_2),
+            s_sponge_absorb.clone() * (a0_next - (a0_prev + input_0)),
+            s_sponge_absorb.clone() * (a1_next - (a1_prev + input_1)),
+            s_sponge_absorb.clone() * (a2_next - (a2_prev + input_2)),
             s_sponge_absorb * (a3_next - a3_prev)
         ]
     });

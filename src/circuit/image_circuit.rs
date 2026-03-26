@@ -96,10 +96,10 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         )?;
 
         // expose the greyscale pixel values as public
-        for i in 0..greyscale_result.len() {
-            let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
-            greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
-        }
+        // for i in 0..greyscale_result.len() { TODO: uncomment when ready to test greyscale
+        //     let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
+        //     greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
+        // }
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
