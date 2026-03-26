@@ -23,9 +23,9 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
  a new signature for $\text{I}$ the proof will fail since the verifier uses the corresponding $\text{PK}$ from the camera only. 
 
  ## TODO
- - Modify poseidon permutation circuit to match `case_neptune` parameters from the poseidon-hash module
- - add full poseidon hash to circuit (including sponge IO and padding)
- - add poseidon hash to camera script to compute `Poseidon(I||metadata)
+- check python module for correct order of poseidon sub function
+- generate a 512x512 image -> editor pipeline using Pi properly for testing hash
+- add poseidon hash to camera script to compute `Poseidon(I||metadata)
 
 ## idea for removing signature verification from the circuit
 - camera computes: 
@@ -50,7 +50,7 @@ $$ \text{I}', \sigma, \pi $$
 
  ## Expected hash from python code - for MockProver testing
  ```
- Initialize Round Numbers
+Initialize Round Numbers
 Initialize field
 Initialize MDS matrix
 Initialize Round Constant
