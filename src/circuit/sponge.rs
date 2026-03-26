@@ -270,9 +270,17 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         let mut preimage_elements: Vec<F> = input
             .chunks(bytes_per_block) // split input vector into slides of size bytes_per_block
             .map(|chunk| { // for each slice execute a closure to produce a packed field element
-                let mut bytes = [0u8; 32];
-                bytes[..chunk.len()].copy_from_slice(chunk) // high bits stay 0 since bytes array initialized to 0s
-                F::from_repr(bytes.into()).unwrap_or(F::ZERO) // convert to field element, 0 if None
+                let mut element: F = F::ZERO;
+                let mut base: F = F::ONE;
+                let base_256: F = F::from(256 as u64);
+
+                // iterate over each byte in slice and pack into position based on powers of 256
+                for &byte in chunk {
+                    element += F::from(byte as u64) * base; // pack
+                    base *= base_256;
+                } 
+
+                element
             })
             .collect();
 
@@ -282,7 +290,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             preimage_elements.resize(preimage_elements.len() + (r - rem), F::ZERO);
         }
 
-        let blocks: Vec<[Value<F>; 3]> = padded
+        let blocks: Vec<[Value<F>; 3]> = preimage_elements
             .chunks(r)
             .map(|elements| {
                 [
