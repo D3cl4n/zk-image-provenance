@@ -154,6 +154,8 @@ class Camera:
 
         # extract pixels and exifdata from captured image
         exif_vec = image.getexif().tobytes()[6:] + b"\x00\x00" # add two trailing null bytes to match Rust
+        print(exif_vec) # TODO: remove once done debugging
+
         for y in range(height):
             for x in range(width):
                 r, g, b = pixels[x, y]

@@ -131,7 +131,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?;
+        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), 0)?; // change to use actual row not 0 once testing greyscale
 
         Ok(())
     }
