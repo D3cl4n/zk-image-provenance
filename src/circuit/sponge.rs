@@ -132,6 +132,7 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
 
     // pad - Sponge funtionality before input is passed to permute()
     // split each vector into chunks of size r, pad last chunk to r elements using 0s if needed
+    // pack 31 bytes from the preimage into one field element
     fn pad(
         &self,
         r_channel: &Vec<u8>,
@@ -264,19 +265,31 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .chain(exif.iter().copied())
             .collect();
 
-        // divide the vector into slices of 3 and pad
+        // pack 31 bytes into each field element then pad and construct blocks
+        let bytes_per_block: usize = 31;
+        let preimage_elements: Vec<F> = input
+            .chunks(bytes_per_block) // split input vector into slides of size bytes_per_block
+            .map(|chunk| { // for each slice execute a closure to produce a packed field element
+                let mut bytes = [0u8; 32];
+                bytes[..chunk.len()].copy_from_slice(chunk) // high bits stay 0 since bytes array initialized to 0s
+                F::from_repr(bytes.into()).unwrap_or(F::ZERO) // convert to field element, 0 if None
+            })
+            .collect()
+
+        // divide the vector of packed field elements into slices of 3 and pad
         let rem: usize = input.len() % r;
+        let mut padded = preimage_elements;
         if rem != 0 {
-            input.resize(input.len() + (r - rem), 0u8);
+            input.resize(input.len() + (r - rem), F::ZERO);
         }
 
-        let blocks: Vec<[Value<F>; 3]> = input
+        let blocks: Vec<[Value<F>; 3]> = padded
             .chunks(r)
-            .map(|chunk| {
+            .map(|elements| {
                 [
-                    Value::known(F::from(chunk[0] as u64)),
-                    Value::known(F::from(chunk[1] as u64)),
-                    Value::known(F::from(chunk[2] as u64))
+                    Value::known(elements[0]),
+                    Value::known(elements[1]),
+                    Value::known(elements[2])
                 ]
             })
             .collect();
