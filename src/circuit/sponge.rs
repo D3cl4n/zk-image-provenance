@@ -171,7 +171,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
                     region.assign_advice(|| "input0", config.advice[0], 0, || Value::known(F::from(0u64)))?,
                     region.assign_advice(|| "input1", config.advice[1], 0, || Value::known(F::from(0u64)))?,
                     region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?,
-                    region.assign_advice(|| "input2", config.advice[3], 0, || Value::known(F::from(0u64)))?
+                    region.assign_advice(|| "input3", config.advice[3], 0, || Value::known(F::from(0u64)))?
                 ])
             }
         )

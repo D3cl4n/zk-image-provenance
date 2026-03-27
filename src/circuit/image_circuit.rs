@@ -107,7 +107,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.jpeg_vectors.g, 
             &self.jpeg_vectors.b, 
             &self.jpeg_vectors.exif,
-            3 as usize 
+            3
         )?;
 
         // compute the hash and expose as public 

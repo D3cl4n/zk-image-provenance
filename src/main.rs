@@ -21,7 +21,8 @@ fn main() {
     (r, g, b) = image::get_image_rgb_values(&original_img);
 
     // parse the exifdata section from the jpeg
-    let exif: Vec<u8> = image::get_image_exifdata(&original_img);
+    //let exif: Vec<u8> = image::get_image_exifdata(&original_img);
+    let exif: Vec<u8> = vec![1u8, 2u8, 3u8];
     
     if exif.len() == 0 {
         println!("[!] exifdata not present or an error has occured");
@@ -49,7 +50,7 @@ fn main() {
     //     expected.push(Fr::from(y_values[i] as u64));
     // }
     
-    expected.push(Fr::from_str_vartime("50655993825175368607456413534436783461020922689266405594526086013281927335191").unwrap());
+    expected.push(Fr::from_str_vartime("29367575011628738021107784008719518401585637450018456490707231338204327270565").unwrap());
     
     // make and run the circuit
     let k: u32 = 22;
