@@ -30,8 +30,12 @@ class Editor:
     # write the pixels to output/greyscale.txt as public input to the circuit (should be extracted from edited image)
     def write_to_output(self):
         with open("output/greyscale.txt", "w") as f:
-            for grey_pixel in self.greyscale_pixels:
-                f.write(str(grey_pixel) + "\n")
+            for i in range(len(self.greyscale_pixels)):
+                if i == len(self.greyscale_pixels) - 1:
+                    f.write(str(self.greyscale_pixels[i]))
+                
+                else:
+                    f.write(str(self.greyscale_pixels[i]) + "\n")
 
         f.close()
 
@@ -82,6 +86,8 @@ class Camera:
             255 # modulus bit size
         )
 
+        print(poseidon.parameters.matrix_neptune)
+
 
     # generate ECDSA keys - only call if keys are not already generated and securely stored
     def keygen(self):
@@ -107,8 +113,11 @@ class Camera:
         self.poseidon_instance.partial_rounds()
         self.poseidon_instance.full_rounds()
 
+        print(self.poseidon_instance.state)
+
         # permute over the remaining blocks, resetting constant counter and carrying over capacity element
         for block in preimage_blocks[1:]:
+            # absorb the block into the current state
             self.poseidon_instance.state[0] += field(block[0])
             self.poseidon_instance.state[1] += field(block[1])
             self.poseidon_instance.state[2] += field(block[2])

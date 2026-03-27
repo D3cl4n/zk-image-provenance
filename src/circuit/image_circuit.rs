@@ -125,6 +125,11 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
                 &mut layouter,
                 state
             )?;
+
+            println!("{:?}", state[0].value().copied());
+            println!("{:?}", state[1].value().copied());
+            println!("{:?}", state[2].value().copied());
+            println!("{:?}", state[3].value().copied());
         }
 
         // squeeze once all blocks are permuted and expose as public

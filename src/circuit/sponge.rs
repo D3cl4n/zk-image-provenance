@@ -201,7 +201,8 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
                 let input_elements = [
                     region.assign_advice(|| "input0", config.advice[0], row_offset, || inputs[0])?,
                     region.assign_advice(|| "input1", config.advice[1], row_offset, || inputs[1])?,
-                    region.assign_advice(|| "input2", config.advice[2], row_offset, || inputs[2])?
+                    region.assign_advice(|| "input2", config.advice[2], row_offset, || inputs[2])?,
+                    region.assign_advice(|| "zero", config.advice[3], row_offset, || Value::known(F::ZERO))?
                 ];
 
                 config.s_sponge_absorb.enable(&mut region, row_offset)?;

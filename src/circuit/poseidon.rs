@@ -23,7 +23,7 @@ use halo2_proofs::{
 
 const ROUND_CONSTANTS: [&str; 256] = 
 [
-   "30470571304995235595463659381685019699505426278959289095541009437717507578745",
+    "30470571304995235595463659381685019699505426278959289095541009437717507578745",
     "1370520444679725988228262470913666553238263453957210974636393810919959979221",
     "41637855569271974110963994248369663785005040003812164334381798821088665880018",
     "10904314678364808044230213451965080218085737975089994055575542411979256546511",
@@ -631,6 +631,8 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     
                     // enable ARC selector once constants and state written to current offset then update counters
                     config.s_add_rcs.enable(region, *row_offset)?;
+                    *row_offset += 1;
+                    *rc_idx += 4;
 
                     // compute the new state values (access and dereference cell value then add constants)
                     let after_arc: [AssignedCell<F, F>; 4] = [
@@ -660,11 +662,8 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         )?
                     ];
 
-                    *rc_idx += 4;
-                    *row_offset += 1;
-
                     // power map for only the first element if partial round, all elements if full round
-                    if full_round == true {
+                    if full_round {
                         config.s_sub_bytes_full.enable(region, *row_offset)?;
                         *row_offset += 1;
 
@@ -694,6 +693,7 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                                 || after_arc[3].value().map(|v| pow5(*v))
                             )?
                         ];
+
                         // MDS multiplication
                         config.s_mds_mul.enable(region, *row_offset)?;
                         *row_offset += 1;
@@ -703,8 +703,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
                         state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
-
-                        *row_offset += 1;
                     }
 
                     else {
@@ -727,8 +725,6 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                         state[1] = region.assign_advice(|| "a1_ml", config.advice[1], *row_offset, || after_ml[1])?;
                         state[2] = region.assign_advice(|| "a2_ml", config.advice[2], *row_offset, || after_ml[2])?;
                         state[3] = region.assign_advice(|| "a3_ml", config.advice[3], *row_offset, || after_ml[3])?;
-
-                        *row_offset += 1; // increment row before next round executed
                     }
 
                     Ok(())
