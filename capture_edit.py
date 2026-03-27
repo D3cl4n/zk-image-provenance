@@ -300,17 +300,85 @@ NEPTUNE_MDS = [
 
 # class for computing the Poseidon hash (rewrite of the python-poseidon module)
 class Poseidon:
-    def __init__(self, p, security_level, alpha, r, t, full_rounds, partial_rounds, mds_matrix, rc_list):
+    def __init__(self, p, security_level, alpha, r, t, full_rounds, partial_rounds, mds_matrix, rc_list, prime_size):
         self.p = p
         self.field_p = GF(p)
         self.security_level = security_level
-        self.alpha = alpha, 
+        self.alpha = alpha
         self.r = r
         self.t = t
         self.RF = full_rounds
         self.RP = partial_rounds
-        self.mds = mds_matrix
-        self.rcs = rc_list
+        self.mds = [[self.field_p(x) for x in row] for row in mds_matrix]
+        self.rcs = [self.field_p(x) for x in rc_list]
+        self.prime_size = prime_size
+        self.state = [self.field_p(0)] * self.t # initialize
+
+    # pow5 helper function for permute
+    def pow5(self, x):
+        return self.field_p(x**self.alpha)
+    
+    # sub bytes full helper function for permute
+    def sub_bytes_full(self):
+        return [self.pow5(self.state[0]), self.pow5(self.state[1]), self.pow5(self.state[2]), self.pow5(self.state[3])]
+    
+    # sub bytes partial helper function for permute
+    def sub_bytes_partial(self):
+        return [self.pow5(self.state[0]), self.state[1], self.state[2], self.state[3]]
+
+    # add round constants helper function for permute
+    def add_round_constants(self, constants):
+        assert len(constants) == self.t
+
+        return [self.field_p(self.state[0] + constants[0]), self.field_p(self.state[1] + constants[1]), self.field_p(self.state[2] + constants[2]), self.field_p(self.state[3] + constants[3])]
+
+    # mds matrix multiplication helper function for permute
+    def mds_multiply(self):
+        next_state = []
+        next_state.append(self.field_p(self.state[0] * self.mds[0][0] + self.state[1] * self.mds[0][1] + self.state[2] * self.mds[0][2] + self.state[3] * self.mds[0][3]))
+        next_state.append(self.field_p(self.state[0] * self.mds[1][0] + self.state[1] * self.mds[1][1] + self.state[2] * self.mds[1][2] + self.state[3] * self.mds[1][3]))
+        next_state.append(self.field_p(self.state[0] * self.mds[2][0] + self.state[1] * self.mds[2][1] + self.state[2] * self.mds[2][2] + self.state[3] * self.mds[2][3]))
+        next_state.append(self.field_p(self.state[0] * self.mds[3][0] + self.state[1] * self.mds[3][1] + self.state[2] * self.mds[3][2] + self.state[3] * self.mds[3][3]))
+        
+        return next_state
+
+    # permutation
+    def permute(self):
+        rc_idx = 0
+        for _ in range(0, self.RF // 2):
+            self.state = self.add_round_constants([self.rcs[rc_idx], self.rcs[rc_idx+1], self.rcs[rc_idx+2], self.rcs[rc_idx+3]])
+            rc_idx += 4
+            self.state = self.sub_bytes_full()
+            self.state = self.mds_multiply()
+
+        for _ in range(0, self.RP):
+            self.state = self.add_round_constants([self.rcs[rc_idx], self.rcs[rc_idx+1], self.rcs[rc_idx+2], self.rcs[rc_idx+3]])
+            rc_idx += 4
+            self.state = self.sub_bytes_partial()
+            self.state = self.mds_multiply()
+
+        for _ in range(0, self.RF // 2):
+            self.state = self.add_round_constants([self.rcs[rc_idx], self.rcs[rc_idx+1], self.rcs[rc_idx+2], self.rcs[rc_idx+3]])
+            rc_idx += 4
+            self.state = self.sub_bytes_full()
+            self.state = self.mds_multiply()
+
+    # absorb the input
+    def absorb(self, inputs):
+        assert len(inputs) == self.r
+        self.state = [self.field_p(self.state[0] + inputs[0]), self.field_p(self.state[1] + inputs[1]), self.field_p(self.state[2] + inputs[2]), self.state[3]]
+
+    # squeeze state[1] as output
+    def squeeze(self):
+        return self.state[1]
+    
+    # hash given a padded and packed preimage
+    def hash(self, preimage_blocks):
+        for block in preimage_blocks:
+            self.absorb(block)
+            self.permute()
+
+        return self.squeeze()
 
 
 # class for all functionality related to the editor
@@ -372,20 +440,18 @@ class Camera:
         self.sk = None
         self.vk = None
         self.image_path = image_path
-        self.poseidon_instance = poseidon.Poseidon(
-            poseidon.parameters.prime_255, 
+        self.poseidon_instance = Poseidon(
+            0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001, 
             128, # security level in bits
             5, # alpha for SB
             3, # rate
             4, # t (total state size)
             8, # RF
             56, # RP
-            poseidon.parameters.matrix_neptune, # MDS matrix neptune
-            poseidon.parameters.round_constants_neptune, # round constants neptune
+            NEPTUNE_MDS, # MDS matrix neptune
+            NEPTUNE_CONSTANTS, # round constants neptune
             255 # modulus bit size
         )
-
-        print(poseidon.parameters.matrix_neptune)
 
 
     # generate ECDSA keys - only call if keys are not already generated and securely stored
@@ -401,33 +467,6 @@ class Camera:
             preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
 
         return [preimage_packed[i:i+rate] for i in range(0, len(preimage_packed), rate)]
-    
-    
-    # compute Poseidon(preimage); preimage = pad(pack(r||g||b||exif))
-    def hash(self, preimage_blocks):
-        field = self.poseidon_instance.field_p
-        self.poseidon_instance.state = field([preimage_blocks[0][0], preimage_blocks[0][1], preimage_blocks[0][2], field(0)]) # absorb first block
-        self.poseidon_instance.rc_counter = 0
-        self.poseidon_instance.full_rounds() # inherently executes RF / 2 rounds
-        self.poseidon_instance.partial_rounds()
-        self.poseidon_instance.full_rounds()
-
-        print(self.poseidon_instance.state)
-
-        # permute over the remaining blocks, resetting constant counter and carrying over capacity element
-        for block in preimage_blocks[1:]:
-            # absorb the block into the current state
-            self.poseidon_instance.state[0] += field(block[0])
-            self.poseidon_instance.state[1] += field(block[1])
-            self.poseidon_instance.state[2] += field(block[2])
-            self.poseidon_instance.rc_counter = 0
-            self.poseidon_instance.full_rounds()
-            self.poseidon_instance.partial_rounds()
-            self.poseidon_instance.full_rounds()
-
-        H = self.poseidon_instance.state[1]
-
-        return int(H)
 
 
     # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
@@ -475,7 +514,7 @@ class Camera:
         raw_preimage = r_vec + g_vec + b_vec + list(exif_vec)
         packed_preimage = self.pack(raw_preimage)
         padded_preimage = self.pad(packed_preimage, 3)
-        H = self.hash(padded_preimage)
+        H = self.poseidon_instance.hash(padded_preimage)
         print(f"[*] Hash of original image: {hex(H)}")
 
 
