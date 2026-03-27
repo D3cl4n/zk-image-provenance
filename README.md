@@ -26,6 +26,7 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 - check python module for correct order of poseidon sub function
 - generate a 512x512 image -> editor pipeline using Pi properly for testing hash
 - add poseidon hash to camera script to compute `Poseidon(I||metadata)
+- MAKE RAW BYTE EXIFDATA PARSER FOR PYTHON TO MATCH RUST CONSISTENTLY
 
 ## idea for removing signature verification from the circuit
 - camera computes: 
@@ -58,3 +59,5 @@ Initialize Round Constant
 [*] Greyscaling image: original.jpg
 [*] Saving greyscaled image as: greyscale.jpg
 ```
+
+`scp cdeclan@zk-camera-pi:/home/cdeclan/Desktop/zk-image-provenance/photo.jpeg .`
