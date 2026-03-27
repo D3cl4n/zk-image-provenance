@@ -59,7 +59,7 @@ pub fn get_image_rgb_values(original_img: &String) -> (Vec<u8>, Vec<u8>, Vec<u8>
     for y in 0..height { // y=0 -> top row
         for x in 0..width { // x=0 -> leftmost column
             let pixel_channels = rgb.get_pixel(x, y).channels();
-            r.push(pixel_channels[0] as u8); // u8 (will need to round greyscale coefficients to use ints not floats)
+            r.push(pixel_channels[0] as u8);
             g.push(pixel_channels[1] as u8);
             b.push(pixel_channels[2] as u8);
         }
