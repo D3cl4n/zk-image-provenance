@@ -47,7 +47,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let advice = [meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column()];
         let fixed = [meta.fixed_column(), meta.fixed_column(), meta.fixed_column(), meta.fixed_column()];
         let instance = meta.instance_column();
-        let table = meta.lookup_table_column();
+        let byte_table = meta.lookup_table_column();
+        let rem_table = meta.lookup_table_column();
 
         for column in &advice {
             meta.enable_equality(*column);
@@ -61,7 +62,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, advice, instance, table),
+            greyscale: GreyscaleChip::configure(meta, advice, instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
             sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance)
         }
@@ -75,11 +76,26 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // // populate the lookup table for constraining pixel values to bytes (0-255)
         layouter.assign_table(
-            || "lookup_table", |mut table| {
+            || "byte_table", |mut table| {
                 for i in 0..256 {
                     table.assign_cell(
                         || "byte_val",
-                        config.greyscale.table,
+                        config.greyscale.byte_table,
+                        i, 
+                        || Value::known(F::from(i as u64))
+                    )?;
+                }
+                Ok(())
+            }
+        )?;
+
+        // populate the remainder lookup table for constraining remainder values from [0, 99]
+        layouter.assign_table(
+            || "remainder_table", |mut table| {
+                for i in 0..100 {
+                    table.assign_cell(
+                        || "byte_val",
+                        config.greyscale.rem_table,
                         i, 
                         || Value::known(F::from(i as u64))
                     )?;

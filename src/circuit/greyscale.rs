@@ -11,7 +11,8 @@ use halo2_proofs::{
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
     advice: [Column<Advice>; 5], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
-    pub table: TableColumn, // one fixed column for byte values for lookups
+    pub byte_table: TableColumn, // one fixed column for byte values for lookups
+    pub rem_table: TableColumn,
     instance: Column<Instance>,
     s_greyscale: Selector
 }
@@ -87,30 +88,35 @@ impl<F: PrimeField> GreyscaleChip<F> {
         meta: &mut ConstraintSystem<F>,
         advice: [Column<Advice>; 5],
         instance: Column<Instance>,
-        table: TableColumn,
+        byte_table: TableColumn,
+        rem_table: TableColumn
     ) -> <Self as Chip<F>>::Config {
 
         let s_greyscale = meta.complex_selector();
         create_greyscale_gate(meta, advice, s_greyscale);
 
         // lookups for byte range checks, since we don't use a selector it applies to every row
-        // TODO: add separate lookup table for constraining remainder column to [0, 99]
         meta.lookup(|meta| {
             let s_greyscale = meta.query_selector(s_greyscale);
             let r = meta.query_advice(advice[0], Rotation::cur());
             let g = meta.query_advice(advice[1], Rotation::cur());
             let b = meta.query_advice(advice[2], Rotation::cur());
             let y = meta.query_advice(advice[3], Rotation::cur());
+            let rem = meta.query_advice(advice[4], Rotation::cur());
+
             vec![
-                (s_greyscale.clone() * r, table),
-                (s_greyscale.clone() * g, table),
-                (s_greyscale.clone() * b, table)
+                (s_greyscale.clone() * r, byte_table),
+                (s_greyscale.clone() * g, byte_table),
+                (s_greyscale.clone() * b, byte_table),
+                (s_greyscale.clone() * rem, rem_table),
+                (s_greyscale * y, byte_table)
             ]
         });
 
         GreyscaleChipConfig {
             advice, 
-            table, 
+            byte_table,
+            rem_table, 
             instance,
             s_greyscale
         }
