@@ -47,7 +47,7 @@ fn main() {
     // MockProver for now - testing
     let mut expected = vec![];
     for i in 0..y_values.len() { 
-        expected.push(Fr::from(y_values[i] as u64));
+        expected.push(Fr::from(y_values[i] as u64)); // TODO: save instance columns by packing the greyscale result?
     }
     expected.push(Fr::from_str_vartime("29221395841653964015170585603422403478440481860287876693139631319738952317158").unwrap());
     

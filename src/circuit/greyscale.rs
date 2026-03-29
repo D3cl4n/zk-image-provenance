@@ -10,7 +10,7 @@ use halo2_proofs::{
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
-    advice: [Column<Advice>; 4], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
+    advice: [Column<Advice>; 5], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
     pub table: TableColumn, // one fixed column for byte values for lookups
     instance: Column<Instance>,
     s_greyscale: Selector
@@ -46,7 +46,7 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
 // helper function to create the greyscale gate TODO: ADD RANGE CHECKS ON r,g,b,y for 0, ..., 255
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
-    advice: [Column<Advice>; 4],
+    advice: [Column<Advice>; 5],
     s_greyscale: Selector
 ) {
     meta.create_gate("greyscale_gate", |meta| {
@@ -58,6 +58,7 @@ fn create_greyscale_gate<F: PrimeField> (
 
         // greyscaled values from formula y = (30*r + 58*g + 11*b)/100
         let y = meta.query_advice(advice[3], Rotation::cur());
+        let remainder = meta.query_advice(advice[4], Rotation::cur());
 
         // constants for greyscale formula coefficients
         let r_coeff = Expression::Constant(F::from(30));
@@ -69,7 +70,7 @@ fn create_greyscale_gate<F: PrimeField> (
 
         // constraints
         vec![
-            s_greyscale * (Expression::Constant(F::from(100))*y - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
+            s_greyscale * ((Expression::Constant(F::from(100))*y + remainder) - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
         ]
     });
 }
@@ -84,7 +85,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
     // configure the chip including all gates, constraints, and selectors
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        advice: [Column<Advice>; 4],
+        advice: [Column<Advice>; 5],
         instance: Column<Instance>,
         table: TableColumn,
     ) -> <Self as Chip<F>>::Config {
@@ -97,6 +98,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
         create_greyscale_gate(meta, advice, s_greyscale);
 
         // lookups for byte range checks, since we don't use a selector it applies to every row
+        // TODO: add separate lookup table for constraining remainder column to [0, 99]
         meta.lookup(|meta| {
             let s_greyscale = meta.query_selector(s_greyscale);
             let r = meta.query_advice(advice[0], Rotation::cur());
@@ -182,6 +184,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                     let g_curr = g[i] as u32;
                     let b_curr = b[i] as u32;
                     let sum = 30 * r_curr + 58 * g_curr + 11 * b_curr;
+                    let rem = sum % 100;
                     let y = (sum / 100) as u8;
 
                     // writing unedited pixels to first three advice columns
@@ -212,6 +215,13 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                         config.advice[3], 
                         offset, 
                         || Value::known(F::from(y as u64))
+                    )?;
+
+                    let rem_cell = region.assign_advice(
+                        || "y", 
+                        config.advice[4], 
+                        offset, 
+                        || Value::known(F::from(rem as u64))
                     )?;
 
                     // add cell to return vector
