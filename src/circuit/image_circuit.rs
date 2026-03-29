@@ -74,32 +74,32 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
 
         // // populate the lookup table for constraining pixel values to bytes (0-255)
-        // layouter.assign_table(
-        //     || "lookup_table", |mut table| {
-        //         for i in 0..256 {
-        //             table.assign_cell(
-        //                 || "byte_val",
-        //                 config.greyscale.table,
-        //                 i, 
-        //                 || Value::known(F::from(i as u64))
-        //             )?;
-        //         }
-        //         Ok(())
-        //     }
-        // )?;
+        layouter.assign_table(
+            || "lookup_table", |mut table| {
+                for i in 0..256 {
+                    table.assign_cell(
+                        || "byte_val",
+                        config.greyscale.table,
+                        i, 
+                        || Value::known(F::from(i as u64))
+                    )?;
+                }
+                Ok(())
+            }
+        )?;
 
-        // let greyscale_result = greyscale_chip.greyscale(
-        //     layouter.namespace(|| "greyscale_namespace"),
-        //     &self.jpeg_vectors.r,
-        //     &self.jpeg_vectors.g,
-        //     &self.jpeg_vectors.b
-        // )?;
+        let greyscale_result = greyscale_chip.greyscale(
+            layouter.namespace(|| "greyscale_namespace"),
+            &self.jpeg_vectors.r,
+            &self.jpeg_vectors.g,
+            &self.jpeg_vectors.b
+        )?;
 
         // expose the greyscale pixel values as public
-        // for i in 0..greyscale_result.len() { TODO: uncomment when ready to test greyscale
-        //     let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
-        //     greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
-        // }
+        for i in 0..greyscale_result.len() {
+            let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
+            greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
+        }
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
@@ -131,7 +131,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), 0)?; // change to use actual row not 0 once testing greyscale
+        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?; // change to use actual row not 0 once testing greyscale
 
         Ok(())
     }

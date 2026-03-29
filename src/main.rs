@@ -45,10 +45,11 @@ fn main() {
     let y_values: Vec<u8> = utils::read_greyscale_values(&greyscale_values_file).expect("invalid byte val");
 
     // MockProver for now - testing
-    let mut expected = vec![Fr::from_str_vartime("29221395841653964015170585603422403478440481860287876693139631319738952317158").unwrap()];
-    // for i in 0..y_values.len() { TODO: uncomment when ready to test greyscale
-    //     expected.push(Fr::from(y_values[i] as u64));
-    // }
+    let mut expected = vec![];
+    for i in 0..y_values.len() { 
+        expected.push(Fr::from(y_values[i] as u64));
+    }
+    expected.push(Fr::from_str_vartime("29221395841653964015170585603422403478440481860287876693139631319738952317158").unwrap());
     
     // make and run the circuit
     let k: u32 = 22;
