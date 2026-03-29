@@ -104,8 +104,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
             vec![
                 (s_greyscale.clone() * r, table),
                 (s_greyscale.clone() * g, table),
-                (s_greyscale.clone() * b, table),
-                (s_greyscale * y, table)
+                (s_greyscale.clone() * b, table)
             ]
         });
 
