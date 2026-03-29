@@ -49,25 +49,5 @@ $$ \text{I}', \sigma, \pi $$
  - `nano ~/.bashrc` -> ADD `export PATH="$HOME/.pyenv/bin:$PATH"` and `eval "$(pyenv init -)"` to the bottom
  - `python3.10 -m pip install poseidon-hash` from the project dir
 
- ## Expected hash from python code - for MockProver testing
- ```
-Initialize Round Numbers
-Initialize field
-Initialize MDS matrix
-Initialize Round Constant
-[*] Hash of original image: 0x671f485fbf4166fff42152eca598fcf97cb7ccac0a30db91f50881eda08527cb
-[*] Greyscaling image: original.jpg
-[*] Saving greyscaled image as: greyscale.jpg
-```
 
 `scp cdeclan@zk-camera-pi:/home/cdeclan/Desktop/zk-image-provenance/photo.jpeg .`
-
-
-# Expected state from python after 1 permutation
-[48564527837214243613400841794264231967959949942492631763025916702995383194229
- 43638929602092035353711850058465855065529971243611739873087284142638395661616
-  9437278921198742666662961430001238946240200855472529553894908447904790077735
-  9551166785170949407786309268921782875538774008237264678496299382168867001437]
-
-# TODO: 
-create own python poseidon implementation using neptune parameters, python code missing modular reduction and field element conversion in the python-poseidon module

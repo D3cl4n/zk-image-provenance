@@ -392,7 +392,7 @@ class Editor:
         self.g = []
         self.b = []
         self.greyscale_pixels = []
-        self.target = "greyscale.jpg"
+        self.target = "greyscale.png"
 
     # write the pixels to output/greyscale.txt as public input to the circuit (should be extracted from edited image)
     def write_to_output(self):
@@ -403,6 +403,17 @@ class Editor:
                 
                 else:
                     f.write(str(self.greyscale_pixels[i]) + "\n")
+
+        f.close()
+
+    # write the pixel values to a csv for debugging
+    def write_to_csv(self):
+        with open("output/python_pixels.csv", "w") as f:
+            assert len(self.r) == len(self.g)
+            assert len(self.r) == len(self.b)
+
+            for i in range(len(self.r)):
+                f.write(str(self.r[i]) + "," + str(self.g[i]) + "," + str(self.b[i]) + "\n")
 
         f.close()
 
@@ -420,7 +431,7 @@ class Editor:
         # loop over all pixels - going along and then up the rows
         for y in range(height):
             for x in range(width):
-                r_val, g_val, b_val = pixels[x, y]
+                r_val, g_val, b_val = image.getpixel((x, y))
                 self.r.append(r_val)
                 self.g.append(g_val)
                 self.b.append(b_val)
@@ -526,14 +537,15 @@ class Camera:
 # main function
 def main():
     # camera functionality
-    camera = Camera("original.jpg")
+    camera = Camera("original.png")
     camera.keygen()
     camera.sign()
 
     # editor functionality
-    editor = Editor("original.jpg")
+    editor = Editor("original.png")
     editor.greyscale()
     editor.write_to_output()
+    editor.write_to_csv()
 
 
 if __name__ == '__main__':

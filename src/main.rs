@@ -12,7 +12,7 @@ fn main() {
     use halo2_proofs::dev::MockProver;
 
     // original image as private witness
-    let original_img = String::from("original.jpg");
+    let original_img = String::from("original.png");
 
     // parse out rbg values into three vectors
     let mut r: Vec<u8> = vec![];
@@ -56,7 +56,8 @@ fn main() {
         jpeg_vectors: original_img_details
     };
 
-
+    println!("[+] Running MockProver");
     let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
+    println!("[+] Running verifier");
     assert_eq!(prover.verify(), Ok(()));
 }
