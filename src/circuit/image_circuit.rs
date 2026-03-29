@@ -73,27 +73,27 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
         let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
 
-        // populate the lookup table for constraining pixel values to bytes (0-255)
-        layouter.assign_table(
-            || "lookup_table", |mut table| {
-                for i in 0..256 {
-                    table.assign_cell(
-                        || "byte_val",
-                        config.greyscale.table,
-                        i, 
-                        || Value::known(F::from(i as u64))
-                    )?;
-                }
-                Ok(())
-            }
-        )?;
+        // // populate the lookup table for constraining pixel values to bytes (0-255)
+        // layouter.assign_table(
+        //     || "lookup_table", |mut table| {
+        //         for i in 0..256 {
+        //             table.assign_cell(
+        //                 || "byte_val",
+        //                 config.greyscale.table,
+        //                 i, 
+        //                 || Value::known(F::from(i as u64))
+        //             )?;
+        //         }
+        //         Ok(())
+        //     }
+        // )?;
 
-        let greyscale_result = greyscale_chip.greyscale(
-            layouter.namespace(|| "greyscale_namespace"),
-            &self.jpeg_vectors.r,
-            &self.jpeg_vectors.g,
-            &self.jpeg_vectors.b
-        )?;
+        // let greyscale_result = greyscale_chip.greyscale(
+        //     layouter.namespace(|| "greyscale_namespace"),
+        //     &self.jpeg_vectors.r,
+        //     &self.jpeg_vectors.g,
+        //     &self.jpeg_vectors.b
+        // )?;
 
         // expose the greyscale pixel values as public
         // for i in 0..greyscale_result.len() { TODO: uncomment when ready to test greyscale
