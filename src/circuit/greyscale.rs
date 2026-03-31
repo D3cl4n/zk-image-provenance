@@ -95,30 +95,34 @@ impl<F: PrimeField> GreyscaleChip<F> {
         let s_greyscale = meta.complex_selector();
         create_greyscale_gate(meta, advice, s_greyscale);
 
-        // lookups for byte range checks, since we don't use a selector it applies to every row
         meta.lookup(|meta| {
-            let s_greyscale = meta.query_selector(s_greyscale);
+            let s = meta.query_selector(s_greyscale);
             let r = meta.query_advice(advice[0], Rotation::cur());
-            let g = meta.query_advice(advice[1], Rotation::cur());
-            let b = meta.query_advice(advice[2], Rotation::cur());
-            let y = meta.query_advice(advice[3], Rotation::cur());
-
-            vec![
-                (s_greyscale.clone() * r, byte_table),
-                (s_greyscale.clone() * g, byte_table),
-                (s_greyscale.clone() * b, byte_table),
-                (s_greyscale * y, byte_table)
-            ]
+            vec![(s * r, byte_table)]
         });
 
-        // lookup remainder values to enforce range [0, 99]
         meta.lookup(|meta| {
-            let s_greyscale = meta.query_selector(s_greyscale);
-            let rem = meta.query_advice(advice[4], Rotation::cur());
+            let s = meta.query_selector(s_greyscale);
+            let g = meta.query_advice(advice[1], Rotation::cur());
+            vec![(s * g, byte_table)]
+        });
 
-            vec![
-                (s_greyscale * rem, rem_table)
-            ]
+        meta.lookup(|meta| {
+            let s = meta.query_selector(s_greyscale);
+            let b = meta.query_advice(advice[2], Rotation::cur());
+            vec![(s * b, byte_table)]
+        });
+
+        meta.lookup(|meta| {
+            let s = meta.query_selector(s_greyscale);
+            let y = meta.query_advice(advice[3], Rotation::cur());
+            vec![(s * y, byte_table)]
+        });
+
+        meta.lookup(|meta| {
+            let s = meta.query_selector(s_greyscale);
+            let rem = meta.query_advice(advice[4], Rotation::cur());
+            vec![(s * rem, rem_table)]
         });
 
         GreyscaleChipConfig {
@@ -185,21 +189,16 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 // loop over r, g, b values and compute greyscale 
                 let mut y_values: Vec<Self::Num> = vec![];
                 for i in 0..r.len() {
+                    // enable greyscale selector - triggering lookup constraint on all row values
+                    config.s_greyscale.enable(&mut region, offset)?;
+
                     // greyscale computation for writing to fourth advice column
                     let r_curr = r[i] as u32;
                     let g_curr = g[i] as u32;
                     let b_curr = b[i] as u32;
                     let sum = 30 * r_curr + 58 * g_curr + 11 * b_curr;
                     let rem = sum % 100;
-                    let y = (sum / 100) as u32;
-
-                    if r_curr > 255 || g_curr > 255 || b_curr > 255 || y > 255 {
-                        println!("r: {:?}, g: {:?}, b: {:?}, y: {:?}", r[i], g[i], b[i], y);
-                    }
-
-                    if rem > 100 {
-                        println!("rem: {:?}", rem)
-                    }
+                    let y = (sum / 100) as u8;
                     
                     // writing unedited pixels to first three advice columns
                     region.assign_advice(
@@ -237,9 +236,6 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                         offset, 
                         || Value::known(F::from(rem as u64))
                     )?;
-
-                    // enable greyscale selector - triggering lookup constraint on all row values
-                    config.s_greyscale.enable(&mut region, offset)?;
 
                     // add cell to return vector
                     y_values.push(Number(grey_cell.clone()));
