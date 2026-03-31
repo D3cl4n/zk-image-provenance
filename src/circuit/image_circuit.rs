@@ -113,8 +113,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // expose the greyscale pixel values as public
         for i in 0..greyscale_result.len() {
-            let grey_pixel = GreyscaleNumber(greyscale_result[i].clone());
-            greyscale_chip.expose_as_public(&mut layouter, grey_pixel, i)?;
+            greyscale_chip.expose_as_public(&mut layouter, GreyscaleNumber(greyscale_result[i].0.clone()), i)?;
         }
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
@@ -144,10 +143,10 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         }
 
         // squeeze once all blocks are permuted and expose as public
-        let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(&mut layouter, state)?;
+        let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?; // change to use actual row not 0 once testing greyscale
+        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?;
 
         Ok(())
     }

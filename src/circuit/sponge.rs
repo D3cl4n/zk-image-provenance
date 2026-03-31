@@ -126,7 +126,6 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     // squeeze - Sponge I/O
     fn squeeze(
         &self, 
-        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4]
     ) -> Result<AssignedCell<F, F>, Error>; // capacity elements are retained in the sponge
 
@@ -244,7 +243,6 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     // squeeze - Sponge I/O
     fn squeeze(
         &self, 
-        layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4]
     ) -> Result<AssignedCell<F, F>, Error> {
         Ok(state[1].clone()) // match poseidon-hash module and squeeze the 2nd state element
@@ -260,7 +258,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         r: usize
     ) -> Result<Vec<[Value<F>; 3]>, Error> {
         // concatenate input vectors 
-        let mut input: Vec<u8> = r_channel.iter().copied()
+        let input: Vec<u8> = r_channel.iter().copied()
             .chain(g_channel.iter().copied())
             .chain(b_channel.iter().copied())
             .chain(exif.iter().copied())

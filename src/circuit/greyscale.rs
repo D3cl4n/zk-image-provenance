@@ -102,14 +102,22 @@ impl<F: PrimeField> GreyscaleChip<F> {
             let g = meta.query_advice(advice[1], Rotation::cur());
             let b = meta.query_advice(advice[2], Rotation::cur());
             let y = meta.query_advice(advice[3], Rotation::cur());
-            let rem = meta.query_advice(advice[4], Rotation::cur());
 
             vec![
                 (s_greyscale.clone() * r, byte_table),
                 (s_greyscale.clone() * g, byte_table),
                 (s_greyscale.clone() * b, byte_table),
-                (s_greyscale.clone() * rem, rem_table),
                 (s_greyscale * y, byte_table)
+            ]
+        });
+
+        // lookup remainder values to enforce range [0, 99]
+        meta.lookup(|meta| {
+            let s_greyscale = meta.query_selector(s_greyscale);
+            let rem = meta.query_advice(advice[4], Rotation::cur());
+
+            vec![
+                (s_greyscale * rem, rem_table)
             ]
         });
 
@@ -142,7 +150,7 @@ pub trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
         r: &Vec<u8>,
         g: &Vec<u8>,
         b: &Vec<u8>
-    ) -> Result<Vec<AssignedCell<F, F>>, Error>;
+    ) -> Result<Vec<Self::Num>, Error>;
 }
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
@@ -166,7 +174,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
         r: &Vec<u8>,
         g: &Vec<u8>, 
         b: &Vec<u8>
-    ) -> Result<Vec<AssignedCell<F, F>>, Error> {
+    ) -> Result<Vec<Self::Num>, Error> {
         let config = self.config();
 
         // create a region for the lookup table
@@ -175,7 +183,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 let mut offset: usize = 0;
 
                 // loop over r, g, b values and compute greyscale 
-                let mut y_values: Vec<AssignedCell<F, F>> = vec![];
+                let mut y_values: Vec<Self::Num> = vec![];
                 for i in 0..r.len() {
                     // enable greyscale selector - triggering lookup constraint on all row values
                     config.s_greyscale.enable(&mut region, offset)?;
@@ -211,7 +219,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                     )?;
 
                     // map greyscale value to field element and write to fourth advice column
-                    let temp = region.assign_advice(
+                    let grey_cell = region.assign_advice(
                         || "y", 
                         config.advice[3], 
                         offset, 
@@ -226,7 +234,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                     )?;
 
                     // add cell to return vector
-                    y_values.push(temp);
+                    y_values.push(Number(grey_cell.clone()));
 
                     // increase row offset 
                     offset += 1;
