@@ -1,5 +1,5 @@
 use image::{Pixel, ImageDecoder};
-use image::io::Reader as ImageReader;
+use image::ImageReader as ImageReader;
 use std::fs::File;
 use std::io::{Write, BufWriter};
 
@@ -35,6 +35,7 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
 
         // return empty vector on error
         Err(e) => {
+            println!("[!] Error: {}", e);
             vec![]
         }
     }

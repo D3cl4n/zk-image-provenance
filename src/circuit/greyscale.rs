@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::{AssignedCell, Region, Chip, Layouter, SimpleFloorPlanner, Value},
-    plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
+    circuit::{AssignedCell, Chip, Layouter, Value},
+    plonk::{Advice, TableColumn, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
 
@@ -230,7 +230,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                         || Value::known(F::from(y as u64))
                     )?;
 
-                    let rem_cell = region.assign_advice(
+                    region.assign_advice(
                         || "y", 
                         config.advice[4], 
                         offset, 

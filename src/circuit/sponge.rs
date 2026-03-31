@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::{AssignedCell, Region, Chip, Layouter, SimpleFloorPlanner, Value},
-    plonk::{Advice, Fixed, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
+    circuit::{AssignedCell, Chip, Layouter, Value},
+    plonk::{Advice, Column, ConstraintSystem, Error, Instance, Selector},
     poly::Rotation,
 };
 
@@ -55,7 +55,6 @@ fn create_sponge_absorb_gate<F: PrimeField>(
         let input_0 = meta.query_advice(advice[0], Rotation::cur());
         let input_1 = meta.query_advice(advice[1], Rotation::cur());
         let input_2 = meta.query_advice(advice[2], Rotation::cur()); 
-        let input_3 = meta.query_advice(advice[3], Rotation::cur());
         let a0_next = meta.query_advice(advice[0], Rotation::next());
         let a1_next = meta.query_advice(advice[1], Rotation::next());
         let a2_next = meta.query_advice(advice[2], Rotation::next()); 

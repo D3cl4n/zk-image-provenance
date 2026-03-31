@@ -1,9 +1,7 @@
-use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::{AssignedCell, Region, Chip, Layouter, SimpleFloorPlanner, Value},
-    plonk::{Advice, TableColumn, Circuit, Column, ConstraintSystem, Error, Instance, Selector, Expression},
-    poly::Rotation,
+    circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
+    plonk::{Circuit, ConstraintSystem, Error,},
 };
 use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
 use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
