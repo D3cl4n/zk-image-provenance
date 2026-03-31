@@ -44,7 +44,7 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
     }
 }
 
-// helper function to create the greyscale gate TODO: ADD RANGE CHECKS ON r,g,b,y for 0, ..., 255
+// helper function to create the greyscale gate 
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 5],
@@ -71,7 +71,7 @@ fn create_greyscale_gate<F: PrimeField> (
 
         // constraints
         vec![
-            s_greyscale * ((Expression::Constant(F::from(100))*y + remainder) - sum) // enforce 100r' = 100g' = 100b' = 30r+58g+11b
+            s_greyscale * ((Expression::Constant(F::from(100))*y + remainder) - sum)
         ]
     });
 }
@@ -185,17 +185,22 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 // loop over r, g, b values and compute greyscale 
                 let mut y_values: Vec<Self::Num> = vec![];
                 for i in 0..r.len() {
-                    // enable greyscale selector - triggering lookup constraint on all row values
-                    config.s_greyscale.enable(&mut region, offset)?;
-
                     // greyscale computation for writing to fourth advice column
                     let r_curr = r[i] as u32;
                     let g_curr = g[i] as u32;
                     let b_curr = b[i] as u32;
                     let sum = 30 * r_curr + 58 * g_curr + 11 * b_curr;
                     let rem = sum % 100;
-                    let y = (sum / 100) as u8;
+                    let y = (sum / 100) as u32;
 
+                    if r_curr > 255 || g_curr > 255 || b_curr > 255 || y > 255 {
+                        println!("r: {:?}, g: {:?}, b: {:?}, y: {:?}", r[i], g[i], b[i], y);
+                    }
+
+                    if rem > 100 {
+                        println!("rem: {:?}", rem)
+                    }
+                    
                     // writing unedited pixels to first three advice columns
                     region.assign_advice(
                         || "r_init", 
@@ -232,6 +237,9 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                         offset, 
                         || Value::known(F::from(rem as u64))
                     )?;
+
+                    // enable greyscale selector - triggering lookup constraint on all row values
+                    config.s_greyscale.enable(&mut region, offset)?;
 
                     // add cell to return vector
                     y_values.push(Number(grey_cell.clone()));
