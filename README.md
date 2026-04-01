@@ -23,15 +23,11 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
  a new signature for $\text{I}$ the proof will fail since the verifier uses the corresponding $\text{PK}$ from the camera only. 
 
  ## TODO
-- use rpi-png with exif data instead of jpegs since png is lossless and the pixel vals are the same for decoding across libraries
-- generate a 512x512 image -> editor pipeline using Pi properly for testing hash
-- add poseidon hash to camera script to compute `Poseidon(I||metadata)
-- MAKE RAW BYTE EXIFDATA PARSER FOR PYTHON TO MATCH RUST CONSISTENTLY
-- investigate packing greyscale values in the instance columns or only writing 1 greyscale val per pixel instead of 3x for r, g, b
-since the greyscale value is the same for each channel?
-- Use real prover and verifier, calculate minimum number of rows needed
+- edit camera script to embed eXIF chunk in accordance with https://www.w3.org/TR/png-3/#eXIf (use fake data)
+- edit camera script to embed ECDSA signature inside the png
+- make sure exifdata parser for Rust and Python both get the same chunk and replace dummy exif data in code 
+- Use real prover and verifier, calculate minimum number of rows needed. Verifier will need to use camera's public key
 - demonstrate failed threats in the threat analysis section and document
-- embed the signature inside the image, and have the verifier use the camera's public key to access the hash
 - secure storate of the signing key on a chip in the pi somehow (buy a chip)
 - write a paper
 
