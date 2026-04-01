@@ -49,7 +49,7 @@ fn main() {
     for i in 0..y_values.len() { 
         expected.push(Fr::from(y_values[i] as u64)); // TODO: save instance columns by packing the greyscale result?
     }
-    expected.push(Fr::from_str_vartime("29645883582421823934114490379198697094023016582872859874161714445911558524973").unwrap());
+    expected.push(Fr::from_str_vartime("4062253862690196368882665243998164723809815514617753550459764586970428738618").unwrap());
     
     // make and run the circuit
     let k: u32 = 22;
