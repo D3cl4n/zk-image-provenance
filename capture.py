@@ -437,9 +437,8 @@ class Camera:
     def embed_signature(self):
         pass
 
-    # add the metadata into the captured image - since rpicam-still does not yet support exifdata in pngs
+    # build the exifdata since rpicam-still does not yet support exifdata in pngs
     def embed_exifdata(self):
-        header = b"eXIF"
         timestamp = datetime.now().strftime("%Y:%m:d %H:$M:%S")
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
@@ -458,6 +457,10 @@ class Camera:
         exif_block = piexif.dump(exif_dict)
         
         return exif_block # TODO: strip header and replace with PNG spec b"eXIF"
+    
+    # write the exifdata into the captured png image on capture
+    def write_exifdata(self):
+        pass
 
     # compute the digital signature of the original image
     def sign(self):
