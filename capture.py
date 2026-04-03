@@ -1,8 +1,10 @@
 import ecdsa
 import hashlib
 import os
+import piexif
 from PIL import Image
 from sage.all import GF
+from datetime import datetime
 
 '''
 - This script aims to demonstrate what the signing camera would do when taking a photo
@@ -435,6 +437,12 @@ class Camera:
     def embed_signature(self):
         pass
 
+    # add the metadata into the captured image - since rpicam-still does not yet support exifdata in pngs
+    def embed_exifdata(self):
+        timestamp = datetime.now().strftime("%Y:%m:d %H:$M:%S")
+        camera_make = b"RaspberryPi4"
+        camera_model = b"CameraModuleV2"
+        exif_app1_marker = b"\xFF\xE1\x1AExif\x00\x00" + camera_make
 
     # compute the digital signature of the original image
     def sign(self):
