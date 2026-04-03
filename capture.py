@@ -439,10 +439,25 @@ class Camera:
 
     # add the metadata into the captured image - since rpicam-still does not yet support exifdata in pngs
     def embed_exifdata(self):
+        header = b"eXIF"
         timestamp = datetime.now().strftime("%Y:%m:d %H:$M:%S")
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
-        exif_app1_marker = b"\xFF\xE1\x1AExif\x00\x00" + camera_make
+        # two IFDs: 0th and 1st
+        exif_dict = {
+            "0th" : {
+                piexif.ImageIFD.Make: camera_make,
+                piexif.ImageIFD.Model: camera_model,
+                piexif.ImageIFD.DateTime: timestamp.encode()
+            },
+            "1st" : {
+                piexif.ExifIFD.DateTimeOriginal: timestamp.encode()
+            }
+        }
+
+        exif_block = piexif.dump(exif_dict)
+        
+        return exif_block # TODO: strip header and replace with PNG spec b"eXIF"
 
     # compute the digital signature of the original image
     def sign(self):
