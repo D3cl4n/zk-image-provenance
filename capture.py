@@ -468,6 +468,7 @@ class Camera:
                 print("[!] File is not a PNG")
                 exit(-1)
 
+            # TODO: fix the below
             png_footer = b""
             for i in range(len(png_data), 0, -1):
                 if b"IEND" in png_footer:
