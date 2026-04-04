@@ -375,6 +375,7 @@ class Poseidon:
     
     # hash given a padded and packed preimage
     def hash(self, preimage_blocks):
+        print("[*] Computing Poseidon(r||g||b||exif)")
         for block in preimage_blocks:
             self.absorb(block)
             self.permute()
@@ -467,12 +468,14 @@ class Camera:
                 print("[!] File is not a PNG")
                 exit(-1)
 
+            png_footer = b""
+            for i in range(len(png_data), 0, -1):
+                if b"IEND" in png_footer:
+                    f.write(exif_block + png_footer)
+                    break
+                png_footer += png_data[i]
+
         f.close()
-    
-    
-    # write the exifdata into the captured png image on capture
-    def write_exifdata(self):
-        pass
 
     # compute the digital signature of the original image
     def sign(self):
@@ -512,7 +515,7 @@ def main():
     # camera functionality
     camera = Camera("original.png")
     camera.keygen()
-    camera.capture()
+    #camera.capture()
     camera.embed_exifdata()
     camera.sign()
 
