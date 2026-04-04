@@ -409,7 +409,9 @@ class Camera:
 
 
     # implement the padding scheme to match rust code - will shift to Pi
+    # TODO: change this to add Fr(1) + Fr(0) as many times as needed to get to next multiple prevent collisions 
     def pad(self, preimage_packed, rate):
+        print("[*] Padding input elements to closest multiple of the rate")
         rem = len(preimage_packed) % rate
         if rem != 0:
             preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
@@ -419,6 +421,7 @@ class Camera:
 
     # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
     def pack(self, raw_preimage):
+        print("[*] Packing 31 bytes per field element before hashing")
         preimage_elements = [] # list storing all the field elements, each packed with 31 bytes from preimage
         bytes_per_element = 31
         blocks = [raw_preimage[i:i+bytes_per_element] for i in range(0, len(raw_preimage), bytes_per_element)] # 31 byte blocks
@@ -435,10 +438,11 @@ class Camera:
 
     # TODO: method for embedding the signature inside the original jpeg to be done by the camera
     def embed_signature(self):
-        pass
+        print("[*] Embedding digital signature into captured png")
 
     # build the exifdata since rpicam-still does not yet support exifdata in pngs
     def embed_exifdata(self):
+        print("[*] Embedding exifdata into captured png")
         timestamp = datetime.now().strftime("%Y:%m:d %H:$M:%S")
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
@@ -454,9 +458,16 @@ class Camera:
             }
         }
 
-        exif_block = piexif.dump(exif_dict)
-        
-        return exif_block # TODO: strip header and replace with PNG spec b"eXIF"
+        png_signature = b"\x89\x50\x4E\x47"
+        exif_block = b"eXIF" + piexif.dump(exif_dict)[6:]
+        with open(self.image_path, "rb+") as f:
+            png_data = f.read()
+            if not png_data.startswith(png_signature):
+                print("[!] File is not a PNG")
+                exit(-1)
+
+        f.close()
+    
     
     # write the exifdata into the captured png image on capture
     def write_exifdata(self):
@@ -501,6 +512,7 @@ def main():
     camera = Camera("original.png")
     camera.keygen()
     camera.capture()
+    camera.embed_exifdata()
     camera.sign()
 
 
