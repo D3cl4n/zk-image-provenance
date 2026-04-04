@@ -468,13 +468,13 @@ class Camera:
                 print("[!] File is not a PNG")
                 exit(-1)
 
-            # TODO: fix the below
-            png_footer = b""
-            for i in range(len(png_data), 0, -1):
-                if b"IEND" in png_footer:
-                    f.write(exif_block + png_footer)
-                    break
-                png_footer += png_data[i]
+            # write the exifdata in front of the IEND chunk
+            iend_pos = png_data.rfind(b"IEND")
+            if iend_pos == -1:
+                print("[!] No IEND chunk found")
+                exit(-1)
+
+
 
         f.close()
 
