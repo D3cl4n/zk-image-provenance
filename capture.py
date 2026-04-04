@@ -404,6 +404,7 @@ class Camera:
 
     # generate ECDSA keys - only call if keys are not already generated and securely stored
     def keygen(self):
+        # TODO: change this to write to .pem files and only generate if keys not already found 
         self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
         self.vk = self.sk.get_verifying_key()
 
