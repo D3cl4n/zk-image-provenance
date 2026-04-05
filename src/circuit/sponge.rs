@@ -283,7 +283,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .collect();
 
         // divide the vector of packed field elements into slices of 3 and pad
-        // TODO: change this to append a Fr(1) and then as many Fr(0) as needed to get to next multiple of the rate - avoid collisions
+        preimage_elements.push(F::ONE);
         let rem: usize = preimage_elements.len() % r;
         if rem != 0 {
             preimage_elements.resize(preimage_elements.len() + (r - rem), F::ZERO);
