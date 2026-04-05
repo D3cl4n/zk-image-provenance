@@ -462,7 +462,7 @@ class Camera:
 
         png_signature = b"\x89\x50\x4E\x47"
         exif_block = b"eXIF" + piexif.dump(exif_dict)[6:]
-        with open(self.image_path, "rb+") as f:
+        with open(self.image_path, "rb") as f:
             png_data = f.read()
             if not png_data.startswith(png_signature):
                 print("[!] File is not a PNG")
@@ -474,9 +474,15 @@ class Camera:
                 print("[!] No IEND chunk found")
                 exit(-1)
 
+            iend_start = iend_pos - 4
+            exif_chunk = int.to_bytes(len(exif_block), len(exif_block), "little") + exif_block
+            new_png = png_data[:iend_start] + exif_chunk + png_data[iend_start:]
 
+        with open(self.image_path, "wb") as f:
+            f.write(new_png)
 
-        f.close()
+        print("[*] Wrote exifdata into captured png")
+
 
     # compute the digital signature of the original image
     def sign(self):
