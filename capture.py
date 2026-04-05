@@ -412,10 +412,9 @@ class Camera:
 
 
     # implement the padding scheme to match rust code - will shift to Pi
-    # TODO: test the poseidon-hash library for collisions if the make this mistake
-    # TODO: change this to add Fr(1) + Fr(0) as many times as needed to get to next multiple prevent collisions 
     def pad(self, preimage_packed, rate):
         print("[*] Padding input elements to closest multiple of the rate")
+        preimage_packed.append(self.poseidon_instance.field_p(1))
         rem = len(preimage_packed) % rate
         if rem != 0:
             preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
