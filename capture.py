@@ -389,6 +389,7 @@ class Camera:
         self.sk = None
         self.vk = None
         self.image_path = image_path
+        self.exif_data = b""
         self.poseidon_instance = Poseidon(
             0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001, 
             128, # security level in bits
@@ -476,6 +477,7 @@ class Camera:
 
             iend_start = iend_pos - 4
             exif_chunk = int.to_bytes(len(exif_block), len(exif_block), "little") + exif_block
+            self.exif_data = exif_chunk
             new_png = png_data[:iend_start] + exif_chunk + png_data[iend_start:]
 
         with open(self.image_path, "wb") as f:
@@ -494,10 +496,6 @@ class Camera:
         b_vec = []
 
         # extract pixels and exifdata from captured image
-        # exif_vec = image.getexif().tobytes()[6:] + b"\x00\x00" # add two trailing null bytes to match Rust
-        # print(exif_vec) # TODO: remove once done debugging
-        exif_vec = b"\x01\x02\x03"
-
         for y in range(height):
             for x in range(width):
                 r, g, b = pixels[x, y]
@@ -505,7 +503,7 @@ class Camera:
                 g_vec.append(g)
                 b_vec.append(b)
 
-        raw_preimage = r_vec + g_vec + b_vec + list(exif_vec)
+        raw_preimage = r_vec + g_vec + b_vec + list(self.exif_data)
         packed_preimage = self.pack(raw_preimage)
         padded_preimage = self.pad(packed_preimage, 3)
         H = self.poseidon_instance.hash(padded_preimage)
