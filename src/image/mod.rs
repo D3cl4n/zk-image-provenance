@@ -17,6 +17,7 @@ fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
 
 
 // open the image and read the metadata (return vector of bytes for metadata values)
+// TODO: rewrite this to extract based on what python writes in before IEND block
 pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
     let img_reader = ImageReader::open(original_img).expect("[!] Failed to open image");

@@ -3,6 +3,7 @@ use std::io::{self, BufRead, BufReader};
 
 
 // read the greyscale values from the edtior into a vector to be passed to prover
+// TODO: edit this to read the greyscale values from the edited image itself
 pub fn read_greyscale_values(path: &String) -> io::Result<Vec<u8>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
