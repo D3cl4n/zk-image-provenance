@@ -24,8 +24,8 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     let png_signature = b"\x89\x50\x4E\x47";
 
     if !png_data.starts_with(png_signature) {
-        println("[!] Image is not a png");
-        vec![]
+        println!("[!] Image is not a png");
+        return vec![];
     }
 
     vec![0u8]
@@ -33,10 +33,10 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
 
 
 // open the image and store the greyscale values
-pub fn get_image_greyscale_values(original_img: &String) -> Vec<u8> {
+pub fn get_image_greyscale_values(edited_img: &String) -> Vec<u8> {
     println!("[*] Opening edited image and parsing out pixel values...");
-    let grey_img = image::open(original_img).expect("[!] Failed to open image");
-    let rgb = img.to_rgb8();
+    let grey_img = image::open(edited_img).expect("[!] Failed to open image");
+    let rgb = grey_img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
     let mut grey_vals: Vec<u8> = vec![];
