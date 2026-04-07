@@ -11,14 +11,18 @@ fn main() {
     use halo2curves::bls12381::Fr;
     use halo2_proofs::dev::MockProver;
 
-    // original image as private witness
+    // original image as private witness, edited image as public
     let original_img = String::from("original.png");
+    let edited_img = String::from("greyscale.png")
 
     // parse out rbg values into three vectors
     let mut r: Vec<u8> = vec![];
     let mut g: Vec<u8> = vec![];
     let mut b: Vec<u8> = vec![];
     (r, g, b) = image::get_image_rgb_values(&original_img);
+
+    // parse greyscale values from edited image
+    let grey_vals: Vec<u8> = image::get_image_greyscale_values(&edited_img);
 
     // parse the exifdata section from the jpeg
     //let exif: Vec<u8> = image::get_image_exifdata(&original_img);

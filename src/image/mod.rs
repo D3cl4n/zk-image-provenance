@@ -43,6 +43,27 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
 }
 
 
+// open the image and store the greyscale values
+pub fn get_image_greyscale_values(original_img: &String) -> Vec<u8> {
+    println!("[*] Opening edited image and parsing out pixel values...");
+    let grey_img = image::open(original_img).expect("[!] Failed to open image");
+    let rgb = img.to_rgb8();
+    let (width, height) = rgb.dimensions();
+
+    let mut grey_vals: Vec<u8> = vec![];
+    for y in 0..height {
+        for x in 0..width {
+            let grey_pixel_channels = rgb.get_pixel(x, y).channels();
+            if grey_pixel_channels[0] == grey_pixel_channels[1] && grey_pixel_channels[0] == grey_pixel_channels[2] {
+                grey_vals.push(grey_pixel_channels[0]);
+            }
+        }
+    }
+
+    grey_vals
+}
+
+
 // open the image and store the rgb values
 pub fn get_image_rgb_values(original_img: &String) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
     // open image and convert to RGB8
