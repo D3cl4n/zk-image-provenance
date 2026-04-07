@@ -1,12 +1,12 @@
 use image::{Pixel, ImageDecoder};
 use image::ImageReader as ImageReader;
-use std::fs::File;
-use std::io::{Write, BufWriter};
+use std::fs;
+use std::io::{Write, Read, BufWriter};
 
 
 // write the pixels to a csv for checks against python editor scriot
 fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
-    let output_csv = File::create("output/pixels_rust.csv").expect("Failed to create csv");
+    let output_csv = fs::File::create("output/pixels_rust.csv").expect("Failed to create csv");
     let mut writer = BufWriter::new(output_csv);
 
     // loop over the three vectors and write rows [r, g, b]
@@ -20,26 +20,15 @@ fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
 // TODO: rewrite this to extract based on what python writes in before IEND block
 pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
-    let img_reader = ImageReader::open(original_img).expect("[!] Failed to open image");
-    let mut decoder = img_reader.into_decoder().expect("[!] Failed to create image decoder");
+    let png_data = fs::read(original_img).expect("[!] Failed to read image contents");
+    let png_signature = b"\x89\x50\x4E\x47";
 
-    match decoder.exif_metadata() {
-        // if successful return raw bytes for exif section
-        Ok(Some(exif_bytes)) => {
-            exif_bytes
-        }
-
-        // if exif section empty, return empty vector as well
-        Ok(None) => {
-            vec![]
-        }
-
-        // return empty vector on error
-        Err(e) => {
-            println!("[!] Error: {}", e);
-            vec![]
-        }
+    if !png_data.starts_with(png_signature) {
+        println("[!] Image is not a png");
+        vec![]
     }
+
+    vec![0u8]
 }
 
 

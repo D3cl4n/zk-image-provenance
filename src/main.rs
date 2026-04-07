@@ -16,9 +16,9 @@ fn main() {
     let edited_img = String::from("greyscale.png")
 
     // parse out rbg values into three vectors
-    let r: Vec<u8> = vec![];
-    let g: Vec<u8> = vec![];
-    let b: Vec<u8> = vec![];
+    let mut r: Vec<u8> = vec![];
+    let mut g: Vec<u8> = vec![];
+    let mut b: Vec<u8> = vec![];
     (r, g, b) = image::get_image_rgb_values(&original_img);
 
     // parse greyscale values from edited image
