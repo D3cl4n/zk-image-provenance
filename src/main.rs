@@ -16,17 +16,16 @@ fn main() {
     let edited_img = String::from("greyscale.png")
 
     // parse out rbg values into three vectors
-    let mut r: Vec<u8> = vec![];
-    let mut g: Vec<u8> = vec![];
-    let mut b: Vec<u8> = vec![];
+    let r: Vec<u8> = vec![];
+    let g: Vec<u8> = vec![];
+    let b: Vec<u8> = vec![];
     (r, g, b) = image::get_image_rgb_values(&original_img);
 
     // parse greyscale values from edited image
     let grey_vals: Vec<u8> = image::get_image_greyscale_values(&edited_img);
 
-    // parse the exifdata section from the jpeg
-    //let exif: Vec<u8> = image::get_image_exifdata(&original_img);
-    let exif: Vec<u8> = vec![1u8, 2u8, 3u8];
+    // parse the exifdata section from the png
+    let exif: Vec<u8> = image::get_image_exifdata(&original_img);
     
     if exif.len() == 0 {
         println!("[!] exifdata not present or an error has occured");
@@ -51,9 +50,9 @@ fn main() {
     // MockProver for now - testing
     let mut expected = vec![];
     for i in 0..y_values.len() { 
-        expected.push(Fr::from(y_values[i] as u64)); // TODO: save instance columns by packing the greyscale result?
+        expected.push(Fr::from(y_values[i] as u64));
     }
-    expected.push(Fr::from_str_vartime("11843851977609009639066496039218132672586495175272142737210069213891967648847").unwrap());
+    expected.push(Fr::from_str_vartime("3566011618332057031339743203502844274745506337811929250184210502630497826651").unwrap());
     
     // make and run the circuit
     let k: u32 = 22;
