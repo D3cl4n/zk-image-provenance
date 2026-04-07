@@ -462,7 +462,7 @@ class Camera:
         }
 
         png_signature = b"\x89\x50\x4E\x47"
-        exif_block = b"eXIF" + piexif.dump(exif_dict)[6:]
+        exif_block = b"eXIf" + piexif.dump(exif_dict)[6:]
         with open(self.image_path, "rb") as f:
             png_data = f.read()
             if not png_data.startswith(png_signature):
