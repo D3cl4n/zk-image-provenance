@@ -456,7 +456,7 @@ class Camera:
                 piexif.ImageIFD.Model: camera_model,
                 piexif.ImageIFD.DateTime: timestamp.encode()
             },
-            "1st" : {
+            "Exif" : {
                 piexif.ExifIFD.DateTimeOriginal: timestamp.encode()
             }
         }
@@ -476,9 +476,8 @@ class Camera:
                 exit(-1)
 
             iend_start = iend_pos - 4
-            exif_chunk = int.to_bytes(len(exif_block), len(exif_block), "little") + exif_block
-            self.exif_data = exif_chunk
-            new_png = png_data[:iend_start] + exif_chunk + png_data[iend_start:]
+            self.exif_data = exif_block
+            new_png = png_data[:iend_start] + exif_block + png_data[iend_start:]
 
         with open(self.image_path, "wb") as f:
             f.write(new_png)
