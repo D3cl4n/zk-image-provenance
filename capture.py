@@ -446,7 +446,7 @@ class Camera:
     # build the exifdata since rpicam-still does not yet support exifdata in pngs
     def embed_exifdata(self):
         print("[*] Embedding exifdata into captured png")
-        timestamp = datetime.now().strftime("%Y:%m:d %H:$M:%S")
+        timestamp = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
         # two IFDs: 0th and 1st
