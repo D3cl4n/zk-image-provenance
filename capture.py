@@ -2,6 +2,7 @@ import ecdsa
 import hashlib
 import os
 import piexif
+import struct
 from PIL import Image
 from sage.all import GF
 from datetime import datetime
@@ -443,12 +444,13 @@ class Camera:
     def embed_signature(self):
         print("[*] Embedding digital signature into captured png")
 
-    # build the exifdata since rpicam-still does not yet support exifdata in pngs
-    def embed_exifdata(self):
-        print("[*] Embedding exifdata into captured png")
-        timestamp = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+    # construct the eXIf chunk based on the png spec
+    def construct_exif_chunk(self):
+        chunk_type = b"eXIf"
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
+        timestamp = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+
         # two IFDs: 0th and 1st
         exif_dict = {
             "0th" : {
@@ -461,8 +463,15 @@ class Camera:
             }
         }
 
-        png_signature = b"\x89\x50\x4E\x47"
-        exif_block = b"eXIf" + piexif.dump(exif_dict)[6:]
+        exif_data = b"\x4D\x4D" + piexif.dump(exif_dict)[6:] # b"MM" prepended to denote big endian (Motorola)
+        chunk_len = len(exif_data)
+        exif_chunk = 0 # TODO: fix me next time
+
+    # build the exifdata since rpicam-still does not yet support exifdata in pngs
+    def embed_exifdata(self):
+        print("[*] Embedding exifdata into captured png")        
+        png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+
         with open(self.image_path, "rb") as f:
             png_data = f.read()
             if not png_data.startswith(png_signature):
@@ -476,8 +485,8 @@ class Camera:
                 exit(-1)
 
             iend_start = iend_pos - 4
-            self.exif_data = exif_block
-            new_png = png_data[:iend_start] + exif_block + png_data[iend_start:]
+            self.exif_data = self.construct_exif_chunk() # preserve in the object for debugging
+            new_png = png_data[:iend_start] + self.exif_data + png_data[iend_start:]
 
         with open(self.image_path, "wb") as f:
             f.write(new_png)
