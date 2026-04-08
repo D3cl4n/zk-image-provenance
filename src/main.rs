@@ -26,14 +26,6 @@ fn main() {
 
     // parse the exifdata section from the png
     let exif: Vec<u8> = image::get_image_exifdata(&original_img);
-    
-    if exif.len() == 0 {
-        println!("[!] exifdata not present or an error has occured");
-    }
-
-    else {
-        println!("[+] exifdata: {:?}", exif);
-    }
 
     // construct ImageDetails structure from parsed values
     let original_img_details = ImageDetails {

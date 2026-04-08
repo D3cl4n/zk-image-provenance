@@ -22,13 +22,22 @@ pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
     let png_data = fs::read(original_img).expect("[!] Failed to read image contents");
     let png_signature = b"\x89\x50\x4E\x47";
+    
 
     if !png_data.starts_with(png_signature) {
         println!("[!] Image is not a png");
         return vec![];
     }
 
-    vec![0u8]
+    // parse the png bytes for the slide that contains the exif data
+    // TODO: edit this based on making a proper chunk in the python capture code
+    let iend = b"IEND";
+    let iend_pos = png_data.windows(iend.len()).position(|png_data| png_data == iend) - 4;
+
+    let exif = b"eXIf";
+    let exif_pos = png_data.windows(exif.len()).position(|png_data| png_data == exif) - 4;
+    
+    png_data[exif_pos..iend_pos].to_vec()
 }
 
 
