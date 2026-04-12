@@ -18,16 +18,6 @@ class Editor:
         self.greyscale_pixels = []
         self.target = "greyscale.png"
 
-    # write the pixel values to a csv for debugging
-    def write_to_csv(self):
-        with open("output/python_pixels.csv", "w") as f:
-            assert len(self.r) == len(self.g)
-            assert len(self.r) == len(self.b)
-
-            for i in range(len(self.r)):
-                f.write(str(self.r[i]) + "," + str(self.g[i]) + "," + str(self.b[i]) + "\n")
-
-        f.close()
 
     # greyscale the image and save as a new jpg
     def greyscale(self):
