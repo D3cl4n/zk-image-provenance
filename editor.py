@@ -18,18 +18,6 @@ class Editor:
         self.greyscale_pixels = []
         self.target = "greyscale.png"
 
-    # write the pixels to output/greyscale.txt as public input to the circuit (should be extracted from edited image)
-    def write_to_output(self):
-        with open("output/greyscale.txt", "w") as f:
-            for i in range(len(self.greyscale_pixels)):
-                if i == len(self.greyscale_pixels) - 1:
-                    f.write(str(self.greyscale_pixels[i]))
-                
-                else:
-                    f.write(str(self.greyscale_pixels[i]) + "\n")
-
-        f.close()
-
     # write the pixel values to a csv for debugging
     def write_to_csv(self):
         with open("output/python_pixels.csv", "w") as f:
@@ -75,7 +63,6 @@ def main():
     editor = Editor("original.png")
     editor.greyscale()
     editor.write_to_output()
-    editor.write_to_csv()
 
 
 if __name__ == '__main__':

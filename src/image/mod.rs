@@ -21,23 +21,26 @@ fn write_pixels_to_csv(r: &Vec<u8>, g: &Vec<u8>, b: &Vec<u8>) {
 pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
     println!("[*] Opening image and reading exifdata...");
     let png_data = fs::read(original_img).expect("[!] Failed to read image contents");
-    let png_signature = b"\x89\x50\x4E\x47";
+    let png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
     
-
+    // check if image has the correct signature
     if !png_data.starts_with(png_signature) {
         println!("[!] Image is not a png");
         return vec![];
     }
 
-    // parse the png bytes for the slide that contains the exif data
-    // TODO: edit this based on making a proper chunk in the python capture code
-    let iend = b"IEND";
-    let iend_pos = png_data.windows(iend.len()).position(|png_data| png_data == iend) - 4;
+    println!("[*] According to magic bytes image is a png");
+    // parse the png bytes for the slice that contains the exif data
+    for i in 8..png_data.len() { // start at 8 to skip the signature
+        let length = u32::from_be_bytes(png_data[i..i+4].try_into().expect("[!] Failed to convert to bytes")) as usize;
+        let chunk_type = &png_data[i+4..i+8];
 
-    let exif = b"eXIf";
-    let exif_pos = png_data.windows(exif.len()).position(|png_data| png_data == exif) - 4;
-    
-    png_data[exif_pos..iend_pos].to_vec()
+        if chunk_type == b"eXIf" {
+            println!("[*] Located the eXIf chunk");
+        }
+    }
+
+    vec![0u8]
 }
 
 
