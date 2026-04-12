@@ -26,10 +26,6 @@ class Editor:
         width, height = image.size
         pixels = image.load()
 
-        # greyscale image
-        grey_img = Image.new("L", (width, height)) # create a new image to write to - greyscale
-        grey_pixels = grey_img.load()
-
         # loop over all pixels - going along and then up the rows
         for y in range(height):
             for x in range(width):
@@ -41,10 +37,10 @@ class Editor:
                 # greyscale
                 grey_val = (self.r_coeff * r_val + self.g_coeff * g_val + self.b_coeff * b_val) // 100
                 self.greyscale_pixels.append(grey_val)
-                grey_pixels[x, y] = grey_val
+                pixels[x, y] = (grey_val, grey_val, grey_val)
 
         print(f"[*] Saving greyscaled image as: {self.target}")
-        grey_img.save(self.target)
+        image.save(self.target)
 
 
 # main function
@@ -52,7 +48,6 @@ def main():
     # editor functionality
     editor = Editor("original.png")
     editor.greyscale()
-    editor.write_to_output()
 
 
 if __name__ == '__main__':
