@@ -3,6 +3,7 @@ import hashlib
 import os
 import piexif
 import struct
+import zlib
 from PIL import Image
 from sage.all import GF
 from datetime import datetime
@@ -463,9 +464,12 @@ class Camera:
             }
         }
 
-        exif_data = b"\x4D\x4D" + piexif.dump(exif_dict)[6:] # b"MM" prepended to denote big endian (Motorola)
-        chunk_len = len(exif_data)
-        exif_chunk = 0 # TODO: fix me next time
+        exif_data = piexif.dump(exif_dict)[6:]
+        chunk_length = struct.pack(">I", len(exif_data))
+        crc = struct.pack(">I", zlib.crc32(chunk_type + exif_data) & 0xffffffff)
+
+        return chunk_length + chunk_type + exif_data + crc 
+
 
     # build the exifdata since rpicam-still does not yet support exifdata in pngs
     def embed_exifdata(self):
