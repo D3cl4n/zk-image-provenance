@@ -1,3 +1,5 @@
+import struct
+import zlib
 from PIL import Image
 
 '''
@@ -11,6 +13,7 @@ from PIL import Image
 class Editor:
     def __init__(self, image_path):
         self.image_path = image_path
+        self.chunks = []
         self.r_coeff = 30
         self.g_coeff = 58
         self.b_coeff = 11
@@ -45,6 +48,19 @@ class Editor:
         image.save(self.target)
 
 
+    # helper function to read a chunk
+    # TODO: fix this
+    def read_chunk(self, f):
+        chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
+        chunk_data = f.read(chunk_length)
+        expected_crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
+        actual_crc, = struct.unpack(">I", f.read(4))
+        # check the crc for data corruption
+        assert expected_crc == actual_crc
+
+        return chunk_type, chunk_data
+
+
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
     # TODO: follow this guide https://pyokagan.name/blog/2019-10-14-png/ 
     def parse_png(self):
@@ -52,19 +68,25 @@ class Editor:
 
         png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
         with open(self.image_path, "rb") as f:
-            png_data = f.read()
-            if not png_data.startswith(png_signature):
-                print("[!] File is not a PNG")
-                exit(-1) 
+            actual_signature = f.read(8)
+            assert actual_signature == png_signature
 
-        # locate the IDAT chunk
+            # parse all chunks out of the file
+            while True:
+                chunk_type, chunk_data = self.read_chunk(f)
+                self.chunks.append([chunk_type, chunk_data])
+                if chunk_type == b"IEND":
+                    break
+
+            print([chunk[0] for chunk in self.chunks])
+
             
-
 # main function
 def main():
     # editor functionality
     editor = Editor("original.png")
-    editor.greyscale()
+    editor.parse_png()
+    #editor.greyscale()
 
 
 if __name__ == '__main__':
