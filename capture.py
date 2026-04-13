@@ -447,7 +447,7 @@ class Camera:
         print("[*] Embedding digital signature into captured png")
         # lowercase first byte for ancillary chunk, uppercase second byte for public, upper third for version, lower last for safe to copy
         chunk_type = b"sIGn"
-        signature = self.sk.sign_digest(H.to_bytes(32, "big"))
+        signature = self.sk.sign_digest(int(H.lift()).to_bytes(32, "big"))
         chunk_length = struct.pack(">I", len(signature))
         crc = struct.pack(">I", zlib.crc32(chunk_type + signature) & 0xffffffff)
 
