@@ -22,7 +22,7 @@ class Editor:
 
 
     # greyscale the image and save as a new jpg
-    def greyscale(self):
+    def greyscale(self): # TODO: change color type in IHDR chunk to be 0 for greyscale
         print(f"[*] Greyscaling image: {self.image_path}")
         image = Image.open(self.image_path).convert("RGB")
         width, height = image.size
@@ -44,6 +44,21 @@ class Editor:
         print(f"[*] Saving greyscaled image as: {self.target}")
         image.save(self.target)
 
+
+    # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
+    # TODO: follow this guide https://pyokagan.name/blog/2019-10-14-png/ 
+    def parse_png(self):
+        print("[*] Parsing png chunks")
+
+        png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+        with open(self.image_path, "rb") as f:
+            png_data = f.read()
+            if not png_data.startswith(png_signature):
+                print("[!] File is not a PNG")
+                exit(-1) 
+
+        # locate the IDAT chunk
+            
 
 # main function
 def main():
