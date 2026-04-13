@@ -54,3 +54,8 @@ $$ \text{I}', \sigma, \pi $$
 
 
 `scp cdeclan@zk-camera-pi:/home/cdeclan/Desktop/zk-image-provenance/photo.jpeg .`
+
+## PNG Specification Relevant Sections
+- Structure of a PNG chunk: `https://www.w3.org/TR/png-3/#5Chunk-layout`
+- Naming the custom signature chunk: `https://www.w3.org/TR/png-3/#5Chunk-naming-conventions`
+- Embedded the exifdata in a chunk: `https://www.w3.org/TR/png-3/#eXIf`
