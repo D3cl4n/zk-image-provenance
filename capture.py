@@ -392,6 +392,7 @@ class Camera:
         self.vk = None
         self.image_path = image_path
         self.exif_data = b""
+        self.signature = b""
         self.poseidon_instance = Poseidon(
             0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001, 
             128, # security level in bits
@@ -444,6 +445,7 @@ class Camera:
     # define a custom chunk for the signature since png spec doesn't specify
     def construct_signature_chunk(self, H):
         print("[*] Embedding digital signature into captured png")
+        # lowercase first byte for ancillary chunk, uppercase second byte for public, upper third for version, lower last for safe to copy
         chunk_type = b"sIGn"
         signature = self.sk.sign_digest(H.to_bytes(32, "big"))
         chunk_length = struct.pack(">I", len(signature))
@@ -454,8 +456,23 @@ class Camera:
 
     # embed the custom signature chunk into the png
     def embed_signature(self, H):
-        signature_chunk = self.construct_signature_chunk(H)
+        with open(self.image_path, "rb") as f:
+            png_data = self.read()
 
+            # write the exifdata in front of the IEND chunk
+            iend_pos = png_data.rfind(b"IEND")
+            if iend_pos == -1:
+                print("[!] No IEND chunk found")
+                exit(-1)
+
+            iend_start = iend_pos - 4
+            self.signature = self.construct_signature_chunk(H) # preserve in the object for debugging
+            new_png = png_data[:iend_start] + self.signature + png_data[iend_start:]
+
+        with open(self.image_path, "wb") as f:
+            f.write(new_png)
+
+        print("[*] Wrote ECDSA signature into captured png")
 
     # construct the eXIf chunk based on the png spec
     def construct_exif_chunk(self):
