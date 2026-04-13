@@ -2,6 +2,8 @@ from PIL import Image
 
 '''
 - This script aims to demonstrate editor functionality
+- TODO: rewrite this to read image bytes directly and only greyscale pixels from IDATA chunk
+    - need to save all bytes 
 '''
 
 

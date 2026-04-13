@@ -441,9 +441,21 @@ class Camera:
         return preimage_elements
 
 
-    # TODO: method for embedding the signature inside the original jpeg to be done by the camera
-    def embed_signature(self):
+    # define a custom chunk for the signature since png spec doesn't specify
+    def construct_signature_chunk(self, H):
         print("[*] Embedding digital signature into captured png")
+        chunk_type = b"sIGn"
+        signature = self.sk.sign_digest(H.to_bytes(32, "big"))
+        chunk_length = struct.pack(">I", len(signature))
+        crc = struct.pack(">I", zlib.crc32(chunk_type + signature) & 0xffffffff)
+
+        return chunk_length + chunk_type + signature + crc
+
+
+    # embed the custom signature chunk into the png
+    def embed_signature(self, H):
+        signature_chunk = self.construct_signature_chunk(H)
+
 
     # construct the eXIf chunk based on the png spec
     def construct_exif_chunk(self):
@@ -520,6 +532,8 @@ class Camera:
         padded_preimage = self.pad(packed_preimage, 3)
         H = self.poseidon_instance.hash(padded_preimage)
         print(f"[*] Hash of original image: {hex(H)}")
+
+        self.embed_signature(H)
 
 
     # capture a photo (do not call this function unless on the pi)
