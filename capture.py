@@ -457,7 +457,7 @@ class Camera:
     # embed the custom signature chunk into the png
     def embed_signature(self, H):
         with open(self.image_path, "rb") as f:
-            png_data = self.read()
+            png_data = f.read()
 
             # write the exifdata in front of the IEND chunk
             iend_pos = png_data.rfind(b"IEND")
@@ -497,7 +497,7 @@ class Camera:
         chunk_length = struct.pack(">I", len(exif_data))
         crc = struct.pack(">I", zlib.crc32(chunk_type + exif_data) & 0xffffffff)
 
-        return chunk_length + chunk_type + exif_data + crc 
+        return chunk_length + chunk_type + exif_data + crc, exif_data
 
 
     # build the exifdata since rpicam-still does not yet support exifdata in pngs
@@ -518,8 +518,9 @@ class Camera:
                 exit(-1)
 
             iend_start = iend_pos - 4
-            self.exif_data = self.construct_exif_chunk() # preserve in the object for debugging
-            new_png = png_data[:iend_start] + self.exif_data + png_data[iend_start:]
+            exif_chunk, exif_data = self.construct_exif_chunk()
+            self.exif_data =  exif_data # preserve the exifdata in the object for debugging
+            new_png = png_data[:iend_start] + exif_chunk + png_data[iend_start:]
 
         with open(self.image_path, "wb") as f:
             f.write(new_png)
