@@ -60,3 +60,24 @@ $$ \text{I}', \sigma, \pi $$
 - Naming the custom signature chunk: `https://www.w3.org/TR/png-3/#5Chunk-naming-conventions`
 - Embedded the exifdata in a chunk: `https://www.w3.org/TR/png-3/#eXIf`
 - Color type 0 in IHDR for greyscale: `https://www.w3.org/TR/png-3/#3colourType`
+
+
+## Summary
+### Camera Computations
+$$\text{I}, \sigma = \text{SIGN}(\text{SK}, \text{EmbedExif}(\text{Capture}(\text{height}, \text{width})))$$
+
+### Editor Computations
+$$\text{I}' = \text{Greyscale}(\text{I})$$
+$$\text{Greyscale}(\text{I}) = \left( \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right); \; \forall\: \text{r,g,b} \in \text{I}$$
+$$ \text{H} = \text{ExtractSignature}(\text{PK}, \sigma)$$
+
+### Editor Proof Creation / Instance-Witness Relationship
+$$\mathcal{R} := \{(\text{PK}, \text{Greyscale}, \text{I'}, \text{H}) \; ; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}([\text{r, g, b}] \; || \; \text{exifdata}) = \text{H} \}$$
+
+### Verifier
+$$\text{Assert} \; \text{H} = \text{ExtractSignature}(\text{PK}, \sigma)$$
+
+$$\text{Verify}(\pi)$$
+
+- the verifier will not accept an image without a proof of the instance-witness relationship, the edited image with eXIf and sIGn chunks, and the public key of the camera. 
+
