@@ -64,6 +64,7 @@ class Editor:
 
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
     # follows this guide https://pyokagan.name/blog/2019-10-14-png/ 
+    # TODO: change the self.chunks to use a dict so I can lookup chunks by type
     def parse_png(self):
         print("[*] Parsing png chunks")
 
@@ -80,6 +81,12 @@ class Editor:
                     break
 
             print([chunk[0] for chunk in self.chunks])
+
+
+    # flip the IHDR color type field to 0 to indicate greyscale
+    def flip_color_byte(self):
+        print("[*] Flipping IHDR color byte to 0 to indicate greyscaled image")
+
 
             
 # main function
