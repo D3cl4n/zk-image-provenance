@@ -49,13 +49,13 @@ class Editor:
 
 
     # helper function to read a chunk
-    # TODO: fix this
     def read_chunk(self, f):
         chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
         print(f"[*] Chunk type: {chunk_type}, chunk length {chunk_length}")
         chunk_data = f.read(chunk_length)
         expected_crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
         actual_crc, = struct.unpack(">I", f.read(4))
+
         # check the crc for data corruption
         assert expected_crc == actual_crc
 
@@ -63,7 +63,7 @@ class Editor:
 
 
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
-    # TODO: follow this guide https://pyokagan.name/blog/2019-10-14-png/ 
+    # follows this guide https://pyokagan.name/blog/2019-10-14-png/ 
     def parse_png(self):
         print("[*] Parsing png chunks")
 

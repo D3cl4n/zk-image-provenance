@@ -59,3 +59,4 @@ $$ \text{I}', \sigma, \pi $$
 - Structure of a PNG chunk: `https://www.w3.org/TR/png-3/#5Chunk-layout`
 - Naming the custom signature chunk: `https://www.w3.org/TR/png-3/#5Chunk-naming-conventions`
 - Embedded the exifdata in a chunk: `https://www.w3.org/TR/png-3/#eXIf`
+- Color type 0 in IHDR for greyscale: `https://www.w3.org/TR/png-3/#3colourType`
