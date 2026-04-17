@@ -67,17 +67,16 @@ $$ \text{I}', \sigma, \pi $$
 $$\text{I}, \sigma = \text{SIGN}(\text{SK}, \text{EmbedExif}(\text{Capture}(\text{height}, \text{width})))$$
 
 ### Editor Computations
+- since ECDSA cannot allow signature "Extraction" I may need to make the editor recompute the hash of the original image and exif data to provide as public input to the verifier?
 $$\text{I}' = \text{Greyscale}(\text{I})$$
 $$\text{Greyscale}(\text{I}) = \left( \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right); \; \forall\: \text{r,g,b} \in \text{I}$$
-$$ \text{H} = \text{ExtractSignature}(\text{PK}, \sigma)$$
 
 ### Editor Proof Creation / Instance-Witness Relationship
 $$\mathcal{R} := \{(\text{PK}, \text{Greyscale}, \text{I'}, \text{H}) \; ; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}([\text{r, g, b}] \; || \; \text{exifdata}) = \text{H} \}$$
 
-### Verifier
-$$\text{Assert} \; \text{H} = \text{ExtractSignature}(\text{PK}, \sigma)$$
-
-$$\text{Verify}(\pi)$$
+### Verifier Checks
+$$\text{Verify}(\text{PK}, \sigma) == \text{True}$$
+$$\text{Verify}(\pi) == \text{True}$$
 
 - the verifier will not accept an image without a proof of the instance-witness relationship, the edited image with eXIf and sIGn chunks, and the public key of the camera. 
 
