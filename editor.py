@@ -52,7 +52,7 @@ class Editor:
     # TODO: fix this
     def read_chunk(self, f):
         chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
-        print(f"[*] Chumk type: {chunk_type}, chumk lemgth {chunk_length}")
+        print(f"[*] Chunk type: {chunk_type}, chunk length {chunk_length}")
         chunk_data = f.read(chunk_length)
         expected_crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
         actual_crc, = struct.unpack(">I", f.read(4))

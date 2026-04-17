@@ -493,11 +493,14 @@ class Camera:
             }
         }
 
-        exif_data = piexif.dump(exif_dict)[6:]
+        exif_data = piexif.dump(exif_dict)[8:]
         chunk_length = struct.pack(">I", len(exif_data))
         crc = struct.pack(">I", zlib.crc32(chunk_type + exif_data) & 0xffffffff)
+        print(crc)
+        final_chunk = chunk_length + chunk_type + exif_data + crc
+        print(final_chunk)
 
-        return chunk_length + chunk_type + exif_data + crc, exif_data
+        return final_chunk, exif_data
 
 
     # build the exifdata since rpicam-still does not yet support exifdata in pngs
