@@ -393,6 +393,46 @@ class Editor:
         self.b = []
         self.greyscale_pixels = []
         self.target = "greyscale.png"
+        self.poseidon_instance = Poseidon(
+            0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001, 
+            128, # security level in bits
+            5, # alpha for SB
+            3, # rate
+            4, # t (total state size)
+            8, # RF
+            56, # RP
+            NEPTUNE_MDS, # MDS matrix neptune
+            NEPTUNE_CONSTANTS, # round constants neptune
+            255 # modulus bit size
+        )
+
+    # implement the padding scheme to match rust code - will shift to Pi
+    def pad(self, preimage_packed, rate):
+        print("[*] Padding input elements to closest multiple of the rate")
+        preimage_packed.append(self.poseidon_instance.field_p(1))
+        rem = len(preimage_packed) % rate
+        if rem != 0:
+            preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
+
+        return [preimage_packed[i:i+rate] for i in range(0, len(preimage_packed), rate)]
+
+
+    # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
+    def pack(self, raw_preimage):
+        print("[*] Packing 31 bytes per field element before hashing")
+        preimage_elements = [] # list storing all the field elements, each packed with 31 bytes from preimage
+        bytes_per_element = 31
+        blocks = [raw_preimage[i:i+bytes_per_element] for i in range(0, len(raw_preimage), bytes_per_element)] # 31 byte blocks
+        
+        for i in range(len(blocks)):
+            element = self.poseidon_instance.field_p(0)
+            for j in range(len(blocks[i])): # if last block is less then 31 bytes we will naturally stop
+                element += self.poseidon_instance.field_p(blocks[i][j]) * self.poseidon_instance.field_p(256**j)
+
+            preimage_elements.append(element)
+
+        return preimage_elements
+
 
 
     # greyscale the image and save as a new jpg
