@@ -1,5 +1,6 @@
 import struct
 import zlib
+from sage.all import GF
 from PIL import Image
 
 '''
@@ -384,7 +385,7 @@ class Poseidon:
 class Editor:
     def __init__(self, image_path):
         self.image_path = image_path
-        self.chunks = []
+        self.chunks = {} # keys is chunk types, value is data
         self.r_coeff = 30
         self.g_coeff = 58
         self.b_coeff = 11
@@ -432,7 +433,6 @@ class Editor:
             preimage_elements.append(element)
 
         return preimage_elements
-
 
 
     # greyscale the image and save as a new jpg
@@ -487,11 +487,9 @@ class Editor:
             # parse all chunks out of the file
             while True:
                 chunk_type, chunk_data = self.read_chunk(f)
-                self.chunks.append([chunk_type, chunk_data])
+                self.chunks["chunk_type"] = chunk_data
                 if chunk_type == b"IEND":
                     break
-
-            print([chunk[0] for chunk in self.chunks])
 
 
     # flip the IHDR color type field to 0 to indicate greyscale
