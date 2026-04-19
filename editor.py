@@ -74,7 +74,7 @@ class Editor:
         for y in range(height):
             for x in range(width):
                 r, g, b = pixels[x, y]
-                grey_val = (self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) # using integer coefficients not floats
+                grey_val = (self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) // 100 # using integer coefficients not floats
                 grey_pixels[x, y] = grey_val
 
         # save the greyscaled image to a temporary buffer to parse out IDAT chunk
