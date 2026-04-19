@@ -16,6 +16,7 @@ class Editor:
     def __init__(self, image_path):
         self.image_path = image_path
         self.chunks = {} # keys is chunk types, value is data
+        self.greyscale_chunks = {} # for edited chunks only
         self.r_coeff = 30
         self.g_coeff = 58
         self.b_coeff = 11
@@ -29,7 +30,6 @@ class Editor:
     # helper function to read a chunk
     def read_chunk(self, f):
         chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
-        print(f"[*] Chunk type: {chunk_type}, chunk length {chunk_length}")
         chunk_data = f.read(chunk_length)
         expected_crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
         actual_crc, = struct.unpack(">I", f.read(4))
@@ -58,31 +58,56 @@ class Editor:
                 if chunk_type == b"IEND":
                     break
 
+        print(f"[*] Read chunks: {list(self.chunks.keys())}")
+
     
     # greyscale the pixels in the IDAT chunk
     def greyscale(self):
         print("[*] Greyscaling pixels in png")
-        image = Image.open(self.image_path).convert("L")
-        temp = io.BytesIO()
-        image.save(temp, format="PNG")
-        temp.seek(0)
+        image = Image.open(self.image_path).convert("RGB")
+        width, height = image.size
+        pixels = image.load()
 
         new_chunks = {}
         temp.read(8) # skip the png signature
 
+        while True:
+            chunk_type, chunk = self.read_chunk(temp)
+            if chunk_type == None:
+                break
 
-    # reassamble and save the edited png based on dictionary of chunks
+            new_chunks[chunk_type] = chunk
+
+            if chunk_type == b"IEND":
+                break
+
+        return new_chunks
+
+
+    # reassamble and save the edited png based on dictionary of chunks after greyscaling
     def reassemble_png(self):
-        pass
+        print(f"[*] Reassembling edited png as: {self.target}")
 
-            
+        png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+        with open(self.target, "wb") as f:
+            f.write(png_signature)
+            f.write(self.greyscale_chunks[b"IHDR"])
+            f.write(self.greyscale_chunks[b"IDAT"])
+            f.write(self.chunks[b"eXIf"])
+            f.write(self.chunks[b"hASh"])
+            f.write(self.chunks[b"sIGn"])
+            f.write(self.greyscale_chunks[b"IEND"])
+
+        print(f"[*] Saved greyscaled image with preserved custom chunks to {self.target}")
+
+
 # main function
 def main():
     # editor functionality
     editor = Editor("original.png")
     editor.parse_png()
-    editor.flip_color_byte()
-    editor.greyscale()
+    editor.greyscale_chunks = editor.greyscale()
+    editor.reassemble_png()
 
 
 if __name__ == '__main__':
