@@ -82,6 +82,8 @@ class Editor:
                 if chunk_type == b"IEND":
                     break
 
+                print(f"[*] Chunk type: {chunk_type}")
+
 
     # flip the IHDR color type field to 0 to indicate greyscale
     def flip_color_byte(self):

@@ -406,7 +406,7 @@ class PNGUtils:
     def embed_chunk(self, chunk):
         print("[*] Embedding chunk into png")
 
-        with open(self.image, "rb+") as f:
+        with open(self.image, "rb") as f:
             png_data = f.read()
             if not png_data.startswith(self.magic_bytes):
                 print("[!] File is not a PNG")
@@ -420,6 +420,8 @@ class PNGUtils:
             
             iend_start = iend_pos - 4
             new_png = png_data[:iend_start] + chunk + png_data[iend_start:]
+        
+        with open(self.image, "wb") as f:
             f.write(new_png)
 
 
