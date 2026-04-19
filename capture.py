@@ -482,7 +482,6 @@ class Camera:
 
     # construct the eXIf chunk based on the png spec
     def construct_exif_data(self):
-        chunk_type = b"eXIf"
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
         timestamp = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
@@ -510,7 +509,7 @@ class Camera:
         exif_data = self.construct_exif_data()
         self.chunks[b"eXIf"] = self.png_utils.construct_chunk(b"eXIf", exif_data)
         self.chunks[b"hASh"] = self.png_utils.construct_chunk(b"hASh", H)
-        self.chunk[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", self.sk.sign_digest(int(H.lift()).to_bytes(32, "big")))
+        self.chunks[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", self.sk.sign_digest(H))
 
         self.png_utils.embed_chunk(self.chunks[b"eXIf"])
         self.png_utils.embed_chunk(self.chunks[b"hASh"])
@@ -534,11 +533,11 @@ class Camera:
                 g_vec.append(g)
                 b_vec.append(b)
 
-        raw_preimage = r_vec + g_vec + b_vec + list(self.exif_data)
+        raw_preimage = r_vec + g_vec + b_vec + list(self.construct_exif_data())
         packed_preimage = self.pack(raw_preimage)
         padded_preimage = self.pad(packed_preimage, 3)
-        H = self.poseidon_instance.hash(padded_preimage)
-        print(f"[*] Hash of original image: {hex(H)}")
+        H = int(self.poseidon_instance.hash(padded_preimage).lift()).to_bytes(32, "big")
+        print(f"[*] Hash of original image: {H}")
 
         self.embed_chunks(H)
 
@@ -553,8 +552,7 @@ def main():
     # camera functionality
     camera = Camera("original.png")
     camera.keygen()
-    camera.capture()
-    camera.embed_exifdata()
+    #camera.capture()
     camera.sign()
 
 
