@@ -41,6 +41,7 @@ class Editor:
 
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
     # follows this guide https://pyokagan.name/blog/2019-10-14-png/ 
+    # TODO: change this to be able to concatenate multiple IDAT blocks
     def parse_png(self):
         print("[*] Parsing png chunks")
 
@@ -62,7 +63,7 @@ class Editor:
         print("[*] Flipping IHDR color byte to 0 to indicate greyscaled image")
         chunk_data = bytearray(self.chunks[b"IDAT"])
         chunk_data[9] = 0x00
-        self.chunks[b"IDAT"] = bytes(chunk_data)
+        self.chunks[b"IHDR"] = bytes(chunk_data)
 
     
     # greyscale the pixels in the IDAT chunk
@@ -83,7 +84,7 @@ def main():
     editor = Editor("original.png")
     editor.parse_png()
     editor.flip_color_byte()
-    #editor.greyscale()
+    editor.greyscale()
 
 
 if __name__ == '__main__':
