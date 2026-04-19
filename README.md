@@ -64,10 +64,15 @@ $$ \text{I}', \sigma, \pi $$
 
 ## Summary
 ### Camera Computations
-$$\text{I}, \sigma = \text{SIGN}(\text{SK}, \text{EmbedExif}(\text{Capture}(\text{height}, \text{width})))$$
+$$\text{I} = \text{Capture}(\text{(width, height)})$$
+$$\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$$
+$$\sigma = \text{Sign}(\text{SK}, \text{H})$$
+$$\text{ExifChunk} = \text{CustomChunk}(\text{length}(\text{I}_\text{exif}), \text{eXIf}, \text{I}_{\text{exif}})$$
+$$\text{HashChunk} = \text{CustomChunk}(\text{length}(\text{H}), \text{hASh}, \text{H})$$
+$$\text{SignatureChunk} = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn}, \sigma)$$
+$$\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} ||\text{HashChunk}||\text{SignatureChunk})$$
 
 ### Editor Computations
-- since ECDSA cannot allow signature "Extraction" I may need to make the editor recompute the hash of the original image and exif data to provide as public input to the verifier?
 $$\text{I}' = \text{Greyscale}(\text{I})$$
 $$\text{Greyscale}(\text{I}) = \left( \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right); \; \forall\: \text{r,g,b} \in \text{I}$$
 
