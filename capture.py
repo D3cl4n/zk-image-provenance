@@ -384,7 +384,45 @@ class Poseidon:
 
         return self.squeeze()
 
-        
+
+# class for all functionality related to PNG parsing and writing
+class PNGUtils:
+    def __init__(self, image_path):
+        self.image = image_path
+        self.magic_bytes = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
+
+
+    # given data, and chunk type, return a valid png chunk for embedding
+    def construct_chunk(self, chunk_type, chunk_data):
+        print(f"[*] Constructing a {chunk_type} chunk")
+
+        chunk_length = struct.pack(">I", len(chunk_data))
+        chunk_crc = struct.pack(">I", zlib.crc32(chunk_type + chunk_data) & 0xffffffff)
+
+        return chunk_length + chunk_type + chunk_data + chunk_crc
+
+
+    # given a valid png chunk, embed the chunk before the IEND chunk
+    def embed_chunk(self, chunk):
+        print("[*] Embedding chunk into png")
+
+        with open(self.image, "rb+") as f:
+            png_data = f.read()
+            if not png_data.startswith(png_signature):
+                print("[!] File is not a PNG")
+                exit(-1)
+
+            # write the exifdata in front of the IEND chunk
+            iend_pos = png_data.rfind(b"IEND")
+            if iend_pos == -1:
+                print("[!] No IEND chunk found")
+                exit(-1)
+            
+            iend_start = iend_pos - 4
+            new_png = png_data[:iend_start] + chunk + png_data[iend_start:]
+            f.write(new_png)
+
+
 # class for all functionality related to the camera (move to Raspberry Pi once prototype works)
 class Camera:
     def __init__(self, image_path):
@@ -405,6 +443,7 @@ class Camera:
             NEPTUNE_CONSTANTS, # round constants neptune
             255 # modulus bit size
         )
+        self.png_utils = PNGUtils(image_path)
 
 
     # generate ECDSA keys - only call if keys are not already generated and securely stored
@@ -462,21 +501,7 @@ class Camera:
 
     # embed the custom signature chunk into the png
     def embed_signature(self, H):
-        with open(self.image_path, "rb") as f:
-            png_data = f.read()
-
-            # write the exifdata in front of the IEND chunk
-            iend_pos = png_data.rfind(b"IEND")
-            if iend_pos == -1:
-                print("[!] No IEND chunk found")
-                exit(-1)
-
-            iend_start = iend_pos - 4
-            self.signature = self.construct_hash_chunk(H) # preserve in the object for debugging
-            new_png = png_data[:iend_start] + self.signature + png_data[iend_start:]
-
-        with open(self.image_path, "wb") as f:
-            f.write(new_png)
+        print("[*] Writing ECDSA signature into captured png")
 
         print("[*] Wrote ECDSA signature into captured png")
 
@@ -503,7 +528,7 @@ class Camera:
 
 
     # construct the eXIf chunk based on the png spec
-    def construct_exif_chunk(self):
+    def construct_exif_data(self):
         chunk_type = b"eXIf"
         camera_make = b"RaspberryPi4"
         camera_model = b"CameraModuleV2"
@@ -522,42 +547,14 @@ class Camera:
         }
 
         exif_data = piexif.dump(exif_dict)[8:]
-        chunk_length = struct.pack(">I", len(exif_data))
-        crc = struct.pack(">I", zlib.crc32(chunk_type + exif_data) & 0xffffffff)
-        print(crc)
-        final_chunk = chunk_length + chunk_type + exif_data + crc
-        print(final_chunk)
-
-        return final_chunk, exif_data
+        
+        return exif_data
 
 
-    # build the exifdata since rpicam-still does not yet support exifdata in pngs
-    def embed_exifdata(self):
-        print("[*] Embedding exifdata into captured png")        
-        png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
-
-        with open(self.image_path, "rb") as f:
-            png_data = f.read()
-            if not png_data.startswith(png_signature):
-                print("[!] File is not a PNG")
-                exit(-1)
-
-            # write the exifdata in front of the IEND chunk
-            iend_pos = png_data.rfind(b"IEND")
-            if iend_pos == -1:
-                print("[!] No IEND chunk found")
-                exit(-1)
-
-            iend_start = iend_pos - 4
-            exif_chunk, exif_data = self.construct_exif_chunk()
-            self.exif_data =  exif_data # preserve the exifdata in the object for debugging
-            new_png = png_data[:iend_start] + exif_chunk + png_data[iend_start:]
-
-        with open(self.image_path, "wb") as f:
-            f.write(new_png)
-
-        print("[*] Wrote exifdata into captured png")
-
+    # construct and embed all custom chunks at once
+    def embed_chunks(self):
+        print("[*] Embedding signature, hash, and exifdata into png")
+        exif_data = self.construct_exif_data()
 
     # compute the digital signature of the original image
     def sign(self):
