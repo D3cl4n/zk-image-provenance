@@ -454,8 +454,35 @@ class Camera:
         return chunk_length + chunk_type + signature + crc
 
 
+    # define a custom chunk for the hash of the original image - separate from ECDSA signature as public input to verifier
+    def construct_hash_chunk(self, H):
+        print("[*] Embedding hash of image into captured png")
+        chunk_type = b"hASh"
+
+
     # embed the custom signature chunk into the png
     def embed_signature(self, H):
+        with open(self.image_path, "rb") as f:
+            png_data = f.read()
+
+            # write the exifdata in front of the IEND chunk
+            iend_pos = png_data.rfind(b"IEND")
+            if iend_pos == -1:
+                print("[!] No IEND chunk found")
+                exit(-1)
+
+            iend_start = iend_pos - 4
+            self.signature = self.construct_hash_chunk(H) # preserve in the object for debugging
+            new_png = png_data[:iend_start] + self.signature + png_data[iend_start:]
+
+        with open(self.image_path, "wb") as f:
+            f.write(new_png)
+
+        print("[*] Wrote ECDSA signature into captured png")
+
+
+    # embed the custom hash chunk into the png
+    def embed_hash(self, H):
         with open(self.image_path, "rb") as f:
             png_data = f.read()
 
@@ -473,6 +500,7 @@ class Camera:
             f.write(new_png)
 
         print("[*] Wrote ECDSA signature into captured png")
+
 
     # construct the eXIf chunk based on the png spec
     def construct_exif_chunk(self):
