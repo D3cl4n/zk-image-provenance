@@ -554,7 +554,7 @@ def main():
     # camera functionality
     camera = Camera("original.png")
     camera.keygen()
-    #camera.capture()
+    camera.capture()
     camera.sign()
 
 
