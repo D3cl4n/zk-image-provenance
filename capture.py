@@ -513,6 +513,7 @@ class Camera:
         self.chunks[b"hASh"] = self.png_utils.construct_chunk(b"hASh", H)
         self.chunks[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", self.sk.sign_digest(H))
 
+        # TODO: concatenate all chunks and embed as one bytestring
         self.png_utils.embed_chunk(self.chunks[b"eXIf"])
         self.png_utils.embed_chunk(self.chunks[b"hASh"])
         self.png_utils.embed_chunk(self.chunks[b"sIGn"])

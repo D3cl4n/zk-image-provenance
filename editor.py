@@ -1,6 +1,5 @@
 import struct
 import zlib
-from sage.all import GF
 from PIL import Image
 
 '''
@@ -26,30 +25,6 @@ class Editor:
         self.target = "greyscale.png"
 
 
-    # greyscale the image and save as a new jpg
-    def greyscale(self): # TODO: change color type in IHDR chunk to be 0 for greyscale
-        print(f"[*] Greyscaling image: {self.image_path}")
-        image = Image.open(self.image_path).convert("RGB")
-        width, height = image.size
-        pixels = image.load()
-
-        # loop over all pixels - going along and then up the rows
-        for y in range(height):
-            for x in range(width):
-                r_val, g_val, b_val = image.getpixel((x, y))
-                self.r.append(r_val)
-                self.g.append(g_val)
-                self.b.append(b_val)
-
-                # greyscale
-                grey_val = (self.r_coeff * r_val + self.g_coeff * g_val + self.b_coeff * b_val) // 100
-                self.greyscale_pixels.append(grey_val)
-                pixels[x, y] = (grey_val, grey_val, grey_val)
-
-        print(f"[*] Saving greyscaled image as: {self.target}")
-        image.save(self.target)
-
-
     # helper function to read a chunk
     def read_chunk(self, f):
         chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
@@ -66,7 +41,6 @@ class Editor:
 
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
     # follows this guide https://pyokagan.name/blog/2019-10-14-png/ 
-    # TODO: change the self.chunks to use a dict so I can lookup chunks by type
     def parse_png(self):
         print("[*] Parsing png chunks")
 
@@ -78,17 +52,29 @@ class Editor:
             # parse all chunks out of the file
             while True:
                 chunk_type, chunk_data = self.read_chunk(f)
-                self.chunks["chunk_type"] = chunk_data
+                self.chunks[chunk_type] = chunk_data
                 if chunk_type == b"IEND":
                     break
-
-                print(f"[*] Chunk type: {chunk_type}")
 
 
     # flip the IHDR color type field to 0 to indicate greyscale
     def flip_color_byte(self):
         print("[*] Flipping IHDR color byte to 0 to indicate greyscaled image")
+        chunk_data = bytearray(self.chunks[b"IDAT"])
+        chunk_data[9] = 0x00
+        self.chunks[b"IDAT"] = bytes(chunk_data)
 
+    
+    # greyscale the pixels in the IDAT chunk
+    def greyscale(self):
+        print("[*] Greyscaling pixels in png")
+        IDAT_data = zlib.decompress(self.chunks[b"IDAT"])
+        print(IDAT_data)
+
+
+    # reassamble and save the edited png based on dictionary of chunks
+    def reassemble_png(self):
+        pass
 
             
 # main function
@@ -96,6 +82,7 @@ def main():
     # editor functionality
     editor = Editor("original.png")
     editor.parse_png()
+    editor.flip_color_byte()
     #editor.greyscale()
 
 
