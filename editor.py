@@ -1,5 +1,6 @@
 import struct
 import zlib
+import io
 from PIL import Image
 
 '''
@@ -57,20 +58,17 @@ class Editor:
                 if chunk_type == b"IEND":
                     break
 
-
-    # flip the IHDR color type field to 0 to indicate greyscale
-    def flip_color_byte(self):
-        print("[*] Flipping IHDR color byte to 0 to indicate greyscaled image")
-        chunk_data = bytearray(self.chunks[b"IDAT"])
-        chunk_data[9] = 0x00
-        self.chunks[b"IHDR"] = bytes(chunk_data)
-
     
     # greyscale the pixels in the IDAT chunk
     def greyscale(self):
         print("[*] Greyscaling pixels in png")
-        IDAT_data = zlib.decompress(self.chunks[b"IDAT"])
-        print(IDAT_data)
+        image = Image.open(self.image_path).convert("L")
+        temp = io.BytesIO()
+        image.save(temp, format="PNG")
+        temp.seek(0)
+
+        new_chunks = {}
+        temp.read(8) # skip the png signature
 
 
     # reassamble and save the edited png based on dictionary of chunks
