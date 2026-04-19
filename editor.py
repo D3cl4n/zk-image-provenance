@@ -23,7 +23,7 @@ class Editor:
         self.r = []
         self.g = []
         self.b = []
-        self.greyscale_pixels = []
+        self.png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
         self.target = "greyscale.png"
 
 
@@ -43,6 +43,7 @@ class Editor:
     # parse the png and save chunks in separate buffers, consolidate pixels to one buffer
     # follows this guide https://pyokagan.name/blog/2019-10-14-png/ 
     # TODO: change this to be able to concatenate multiple IDAT blocks
+    # TODO: make this abstract to use with the grey image as well
     def parse_png(self):
         print("[*] Parsing png chunks")
 
@@ -67,21 +68,35 @@ class Editor:
         image = Image.open(self.image_path).convert("RGB")
         width, height = image.size
         pixels = image.load()
+        grey_image = Image.new("L", (width, height))
+        grey_pixels = grey_image.load()
 
-        new_chunks = {}
-        temp.read(8) # skip the png signature
+        for y in range(height):
+            for x in range(width):
+                r, g, b = pixels[x, y]
+                grey_val = (self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) # using integer coefficients not floats
+                grey_pixels[x, y] = grey_val
 
+        # save the greyscaled image to a temporary buffer to parse out IDAT chunk
+        temp_buffer = io.BytesIO()
+        grey_image.save(temp_buffer, format="PNG")
+        temp_buffer.seek(0)
+
+        # read out the new IHDR and IDAT chunks for reassembly
+        temp_buffer.read(8) # skip the png signature
         while True:
-            chunk_type, chunk = self.read_chunk(temp)
-            if chunk_type == None:
-                break
+            chunk_length_bytes = temp_buffer.read(4)
+            chunk_length = struct.unpack(">I", chunk_length_bytes)[0]
+            chunk_type = temp_buffer.read(4)
+            chunk_data = temp_buffer.read(chunk_length)
+            chunk_crc = temp_buffer.read(4)
 
-            new_chunks[chunk_type] = chunk
+            self.greyscale_chunks[chunk_type] = chunk_length_bytes + chunk_type + chunk_data + chunk_crc
 
             if chunk_type == b"IEND":
                 break
 
-        return new_chunks
+        print(f"[*] Read chunks: {list(self.greyscale_chunks.keys())}")
 
 
     # reassamble and save the edited png based on dictionary of chunks after greyscaling
@@ -106,7 +121,7 @@ def main():
     # editor functionality
     editor = Editor("original.png")
     editor.parse_png()
-    editor.greyscale_chunks = editor.greyscale()
+    editor.greyscale()
     editor.reassemble_png()
 
 
