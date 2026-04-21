@@ -82,4 +82,7 @@ $$ \text{I}', \sigma, \pi $$
 ### Image Swapping
 - $\text{I}'' = \text{AI.Generate}(\text{width, height, format})$
 - $\text{H}' = \text{Poseidon}(\text{I}''_{R}||\text{I}''_{G}||\text{I}''_{B}||\text{I}''_\text{exif})$
-- $\text{ECDSA.Verify}()$
+- $\sigma'' = \text{ECDSA.Sign}(\text{SK}'', \text{H})$
+
+#### Remediation
+- $\text{ECDSA.Verify}(\text{VK}, \sigma'') = \text{False}$
