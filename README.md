@@ -3,18 +3,6 @@
 ## Problem Statement
 Cameras can use a signing key to digitially sign photos as soon as they are captured. The digital signature provides authenticity that the photo came from a real camera (as opposed to AI generation or vice versa) and integrity of the photo contents + metadata. That said, the original image is often not what is distributed to the public. For example, photos in newspapers are often edited before distributed (greyscaling, cropping, etc.). Recepients of the edited image are not able to verify the digital signature since they do not possess the original image. 
 
-## Setup on Raspberry Pi
-1) $\text{SK}, \text{PK} \leftarrow \text{keygen}()$ 
-2) $\text{PK}$ is stored on the laptop for the prover and verifier to use
-
-## Execution Steps
-1) Python script on the Raspberry Pi executes `os.system("rpi-jpeg --output photo.jpeg --height 512 --width 512")`. We denote the photo taken as $\text{I}$.
-2) The same python script on the Raspberry Pi executes $$\sigma = \text{Sign}_{\text{SK}}(\text{Poseidon}(\text{I}))$$
-3) Laptop uses `scp` to retrieve $\text{I}$ off the Raspberry Pi for editing
-4) Python script on laptop, acting as the editor, computes $$\text{I}' = \text{Greyscale}(\text{I})$$
-5) The same python script acting as the editor runs a Rust binary supplying $\text{I}, \text{I}', \sigma$ (via cli arguments) to a Halo2 circuit. The private witness is $\text{I}$ and the public output is $\text{I}'$ and $\sigma$
-6) The circuit arithmetizes the following statement without revealing $\text{I}$: $$\text{Greyscale}(\text{I}) = \text{I}' \wedge \text{Verify}_{\text{PK}}(\sigma, \text{I}) = 1$$
-
 ## Threat Analysis
 1) Since the photo is signed automatically as soon as it is captured, and only the camera has $\text{SK}$, the editor cannot use $\text{SK}$ to edit the metadata or contents in $\text{I}$ and then re-sign it.
 2) If the editor supplies $\text{I}'' \neq \text{I}'$ to the verifier, the proof will fail since the proof only works with $\text{Greyscale}(I) = \text{I}'$. A separate proof would need to be computed for $\text{I}''$
@@ -62,30 +50,6 @@ $$ \text{I}', \sigma, \pi $$
 - Color type 0 in IHDR for greyscale: `https://www.w3.org/TR/png-3/#3colourType`
 
 
-## Summary
-### Camera Computations
-$$\text{I} = \text{Capture}(\text{(width, height)})$$
-$$\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$$
-$$\sigma = \text{Sign}(\text{SK}, \text{H})$$
-$$\text{ExifChunk} = \text{CustomChunk}(\text{length}(\text{I}_\text{exif}), \text{eXIf}, \text{I}_{\text{exif}})$$
-$$\text{HashChunk} = \text{CustomChunk}(\text{length}(\text{H}), \text{hASh}, \text{H})$$
-$$\text{SignatureChunk} = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn}, \sigma)$$
-$$\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} ||\text{HashChunk}||\text{SignatureChunk})$$
-
-### Editor Computations
-$$\text{I}' = \text{Greyscale}(\text{I})$$
-$$\text{Greyscale}(\text{I}) = \left( \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right); \; \forall\: \text{r,g,b} \in \text{I}$$
-
-### Editor Proof Creation / Instance-Witness Relationship
-$$\mathcal{R} := \{(\text{PK}, \text{Greyscale}, \text{I'}, \text{H}) \; ; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}([\text{r, g, b}] \; || \; \text{exifdata}) = \text{H} \}$$
-$$\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$$
-
-### Verifier Checks
-$$\text{Verify}(\text{PK}, \sigma) == \text{True}$$
-$$\text{Verify}(\pi) == \text{True}$$
-
-- the verifier will not accept an image without a proof of the instance-witness relationship, the edited image with eXIf and sIGn chunks, and the public key of the camera. 
-
 ## Prototype Summary
 ### Camera Computations
 - $\text{SK}, \text{VK} = \text{ECDSA.Keygen}()$
@@ -105,4 +69,11 @@ $$\text{Verify}(\pi) == \text{True}$$
 
 ### ZKP Computed by Editor (Instance-Witness Relationship)
 - $\mathcal{R} := \{(\text{I'}, \text{H}) \; ; \; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}\}$
-- $\pi = \text{Prove}(\text{I}, \text{I}', \text{H})$
+- $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H})$
+
+### Verifier Computations
+- $\text{H} = \text{Extract}(\text{I}', \text{hASh})$
+- $\sigma = \text{Extract}(\text{I}', \text{sIGn})$
+- $\text{ECDSA.Verify}(\text{PK}, \sigma, \text{H}) = \text{True}$
+- $\text{Halo2.Verify}(\pi, \text{I}', \text{H}) = \text{True}$
+
