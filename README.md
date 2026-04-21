@@ -79,10 +79,41 @@ $$ \text{I}', \sigma, \pi $$
 
 ## Threat Analysis Summary
 
-### Image Swapping
+### 1) Image Swapping Without Resigning
 - $\text{I}'' = \text{AI.Generate}(\text{width, height, format})$
+
+#### Remediation From Verifier
+- $\text{Extract}(\text{I}'', \text{sIGn}) = \text{NULL}$
+- Verifier rejects unsigned images
+
+### 2) Image Swapping With Resigning
+#### Valid Camera Computations 
+- $\text{SK}, \text{VK} = \text{ECDSA.Keygen}()$
+- $\text{I} = \text{Capture}(\text{width, height, format})$
+- $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
+- $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
+
+#### Unauthorized Third Party
+- $\text{SK}'', \text{VK}'' = \text{ECDSA.Keygen}(); \; \text{SK}'' \neq \text{SK} \; \wedge \; \text{VK}'' \neq \text{VK}$
+- $\text{I}'' = \text{Capture}(\text{width, height, format})$
 - $\text{H}' = \text{Poseidon}(\text{I}''_{R}||\text{I}''_{G}||\text{I}''_{B}||\text{I}''_\text{exif})$
 - $\sigma'' = \text{ECDSA.Sign}(\text{SK}'', \text{H})$
 
-#### Remediation
+#### Remediation From Verifier
 - $\text{ECDSA.Verify}(\text{VK}, \sigma'') = \text{False}$
+
+### 3) Resigning Original Image
+#### Valid Camera Computations 
+- $\text{SK}, \text{VK} = \text{ECDSA.Keygen}()$
+- $\text{I} = \text{Capture}(\text{width, height, format})$
+- $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
+- $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
+
+#### Unauthorized Third Party
+- $\text{SK}'', \text{VK}'' = \text{ECDSA.Keygen}(); \; \text{SK}'' \neq \text{SK} \; \wedge \; \text{VK}'' \neq \text{VK}$
+- $\sigma
+
+### 4) Signature Swapping
+-
+- $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
+- $\sigma' = \text{ECDSA.Sign}(\text{SK}, \text{H}'); \; \text{H}' \neq \text{H}$
