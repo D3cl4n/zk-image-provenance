@@ -97,3 +97,8 @@ $$\text{Verify}(\pi) == \text{True}$$
 - $\text{HashChunk} = \text{CustomChunk}(\text{length}(\text{H}), \text{hASh})$
 - $\text{SignatureChunk} = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn})$
 - $\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk})$
+
+### Editor Computations
+- $\text{I'}_{\text{IDAT}} = \text{Greyscale}(\text{I}_{\text{IDAT}}) = \left\lfloor \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right\rfloor; \; \forall\: \text{r,g,b} \in \text{I}$
+- $\text{I'}_{\text{IHDR}} = \text{SetToZero}(\text{I}_{\text{IHDR}}[9])$
+- $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
