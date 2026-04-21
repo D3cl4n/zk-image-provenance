@@ -78,6 +78,7 @@ $$\text{Greyscale}(\text{I}) = \left( \frac{30 \times \text{r} + 58 \times \text
 
 ### Editor Proof Creation / Instance-Witness Relationship
 $$\mathcal{R} := \{(\text{PK}, \text{Greyscale}, \text{I'}, \text{H}) \; ; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}([\text{r, g, b}] \; || \; \text{exifdata}) = \text{H} \}$$
+$$\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$$
 
 ### Verifier Checks
 $$\text{Verify}(\text{PK}, \sigma) == \text{True}$$
@@ -85,3 +86,10 @@ $$\text{Verify}(\pi) == \text{True}$$
 
 - the verifier will not accept an image without a proof of the instance-witness relationship, the edited image with eXIf and sIGn chunks, and the public key of the camera. 
 
+## Prototype Summary
+### Camera Computations
+- $\text{SK}, \text{VK} = \text{ECDSA.Keygen}()$
+- $\text{I} = \text{Capture}(\text{width, height, format})$
+- $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
+- $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
+- $\text{CustomChunk}(\text{data}, \text{type}) = \text{length}(\text{data}) || \text{type} || \text{data} || \text{CRC32}(\text{type} || \text{data})$
