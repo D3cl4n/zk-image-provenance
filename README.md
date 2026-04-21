@@ -93,3 +93,7 @@ $$\text{Verify}(\pi) == \text{True}$$
 - $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
 - $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
 - $\text{CustomChunk}(\text{data}, \text{type}) = \text{length}(\text{data}) || \text{type} || \text{data} || \text{CRC32}(\text{type} || \text{data})$
+- $\text{ExifChunk} = \text{CustomChunk}(\text{length}(\text{I}_\text{exif}), \text{eXIf})$
+- $\text{HashChunk} = \text{CustomChunk}(\text{length}(\text{H}), \text{hASh})$
+- $\text{SignatureChunk} = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn})$
+- $\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk})$
