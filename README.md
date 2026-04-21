@@ -63,12 +63,12 @@ $$ \text{I}', \sigma, \pi $$
 - $\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk})$
 
 ### Editor Computations
-- $\text{I'}_{\text{IDAT}} = \text{Greyscale}(\text{I}_{\text{IDAT}}) = \left\lfloor \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right\rfloor; \; \forall\: \text{r,g,b} \in \text{I}$
-- $\text{I'}_{\text{IHDR}} = \text{SetToZero}(\text{I}_{\text{IHDR}}[9])$
+- $\text{I}'_{\text{IDAT}} = \text{Greyscale}(\text{I}_{\text{IDAT}}) = \left\lfloor \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right\rfloor; \; \forall\: \text{r,g,b} \in \text{I}$
+- $\text{I}'_{\text{IHDR}} = \text{SetToZero}(\text{I}_{\text{IHDR}}[9])$
 - $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
 
 ### ZKP Computed by Editor (Instance-Witness Relationship)
-- $\mathcal{R} := \{(\text{I'}, \text{H}) \; ; \; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I'} \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}\}$
+- $\mathcal{R} := \{(\text{I}', \text{H}) \; ; \; (\text{I}) \; :\\ \text{Greyscale}(\text{I}) = \text{I}' \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}\}$
 - $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H})$
 
 ### Verifier Computations
@@ -77,3 +77,9 @@ $$ \text{I}', \sigma, \pi $$
 - $\text{ECDSA.Verify}(\text{PK}, \sigma, \text{H}) = \text{True}$
 - $\text{Halo2.Verify}(\pi, \text{I}', \text{H}) = \text{True}$
 
+## Threat Analysis Summary
+
+### Image Swapping
+- $\text{I}'' = \text{AI.Generate}(\text{width, height, format})$
+- $\text{H}' = \text{Poseidon}(\text{I}''_{R}||\text{I}''_{G}||\text{I}''_{B}||\text{I}''_\text{exif})$
+- $\text{ECDSA.Verify}()$
