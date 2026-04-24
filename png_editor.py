@@ -47,6 +47,10 @@ class PNGUtils:
         assert b"IHDR" in self.chunks
 
         # the color type is the 10th byte in the IHDR chunk
+        chunk = self.chunks[b"IHDR"]
+        chunk_data = chunk[2]
+        chunk_data[9] = b"\x00"
+        self.chunks[b"IHDR"] = [chunk[0], chunk[1], chunk_data, chunk[3]]
 
 
     # reassemble the png given the dictionary of chunks
