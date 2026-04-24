@@ -10,9 +10,9 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 - $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
 - $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
 - $\text{CustomChunk}(\text{data}, \text{type}) = \text{length}(\text{data}) || \text{type} || \text{data} || \text{CRC32}(\text{type} || \text{data})$
-- $\text{ExifChunk} = \text{CustomChunk}(\text{length}(\text{I}_\text{exif}), \text{eXIf})$
-- $\text{HashChunk} = \text{CustomChunk}(\text{length}(\text{H}), \text{hASh})$
-- $\text{SignatureChunk} = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn})$
+- $\text{ExifChunk} = \text{CustomChunk}(\text{I}_\text{exif}, \text{eXIf})$
+- $\text{HashChunk} = \text{CustomChunk}(\text{H}, \text{hASh})$
+- $\text{SignatureChunk} = \text{CustomChunk}(\sigma, \text{sIGn})$
 - $\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk})$
 
 ### Editor Computations
@@ -58,9 +58,9 @@ In this scenario there is a valid, signed image from the camera, but the editor 
 - $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
 
 #### Dishonest Editor (or other third-party)
-- $\text{SK}', \text{VK}' = \text{ECDSA.Keygen}(); \; \text{SK}'' \neq \text{SK} \; \wedge \; \text{VK}'' \neq \text{VK}$
+- $\text{SK}', \text{VK}' = \text{ECDSA.Keygen}(); \; \text{SK}' \neq \text{SK} \; \wedge \; \text{VK}' \neq \text{VK}$
 - $\text{I}' = \text{Capture}(\text{width, height, format}); \text{I} \neq \text{I}'$
-- $\sigma' = \text{ECDSA.Sign}(\text{SK}'', \text{H})$
+- $\sigma' = \text{ECDSA.Sign}(\text{SK}', \text{H})$
 - $\text{SignatureChunk}' = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn})$
 - $\text{I}' = \text{EmbedChunks}(\text{I}', \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk}')$
 
@@ -77,7 +77,7 @@ In this scenario a dishonest editor resigns a valid, signed image from an author
 - $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
 
 #### Dishonest Editor
-- $\text{SK}', \text{VK}' = \text{ECDSA.Keygen}(); \; \text{SK}'' \neq \text{SK} \; \wedge \; \text{VK}'' \neq \text{VK}$
+- $\text{SK}', \text{VK}' = \text{ECDSA.Keygen}(); \; \text{SK}' \neq \text{SK} \; \wedge \; \text{VK}' \neq \text{VK}$
 - $\sigma' = \text{ECDSA.Sign}(\text{SK}', \text{H})$
 - $\text{SignatureChunk}' = \text{CustomChunk}(\text{length}(\sigma), \text{sIGn})$
 - $\text{I}' = \text{EmbedChunks}(\text{I}', \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk}')$
