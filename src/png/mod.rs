@@ -3,12 +3,12 @@ use std::fs;
 
 
 // open the image and read for a specific chunk by type, return (length, type, data, crc)
-
+pub fn get_image
 
 
 
 // open the image and store the greyscale values
-pub fn get_image_greyscale_values(edited_img: &String) -> Vec<u8> {
+pub fn get_png_greyscale_values(edited_img: &String) -> Vec<u8> {
     println!("[*] Opening edited image and parsing out pixel values...");
     let grey_img = image::open(edited_img).expect("[!] Failed to open image");
     let rgb = grey_img.to_rgb8();
@@ -29,7 +29,7 @@ pub fn get_image_greyscale_values(edited_img: &String) -> Vec<u8> {
 
 
 // open the image and store the rgb values
-pub fn get_image_rgb_values(original_img: &String) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
+pub fn get_png_rgb_values(original_img: &String) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
     // open image and convert to RGB8
     println!("[*] Opening image and parsing out rgb values...");
     let img = image::open(original_img).expect("[!] Failed to open image");

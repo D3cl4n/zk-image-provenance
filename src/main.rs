@@ -1,4 +1,3 @@
-mod png;
 mod prover;
 mod verifier;
 
@@ -19,10 +18,10 @@ fn main() {
     let mut r: Vec<u8> = vec![];
     let mut g: Vec<u8> = vec![];
     let mut b: Vec<u8> = vec![];
-    (r, g, b) = png::get_image_rgb_values(&original_img);
+    (r, g, b) = png::get_png_rgb_values(&original_img);
 
     // parse greyscale values from edited image
-    let grey_values: Vec<u8> = png::get_image_greyscale_values(&edited_img);
+    let grey_values: Vec<u8> = png::get_png_greyscale_values(&edited_img);
 
     // parse the exifdata section from the png
     let exif: Vec<u8> = png::get_image_exifdata(&original_img); // TODO: change this to reference all chunks from the original image
