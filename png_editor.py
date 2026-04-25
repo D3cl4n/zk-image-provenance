@@ -61,11 +61,12 @@ class PNGUtils:
 
         with open(target, "wb") as f:
             f.write(self.png_signature)
-            for chunk in self.chunks:
-                new_crc = zlib.crc32(chunk[1] + chunk[2]) & 0xffffffff
-                f.write(struct.pack(">I", chunk[0]))
-                f.write(struct.pack(chunk[1]))
-                f.write(struct.pack(chunk[2]))
+            for _, chunk_info in self.chunks.items():
+                length, type, data, _ = chunk_info
+                new_crc = zlib.crc32(type + data) & 0xffffffff
+                f.write(struct.pack(">I", length))
+                f.write(type)
+                f.write(data)
                 f.write(struct.pack(">I", new_crc))
 
 
