@@ -3,9 +3,9 @@ use halo2_proofs::{
     circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
     plonk::{Circuit, ConstraintSystem, Error,},
 };
-use crate::circuit::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
-use crate::circuit::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
-use crate::circuit::sponge::{SpongeChip, SpongeChipConfig, Number as SpongeNumber, SpongeInstructions};
+use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
+use crate::prover::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
+use crate::prover::sponge::{SpongeChip, SpongeChipConfig, Number as SpongeNumber, SpongeInstructions};
 
 
 // structure to store the image details
@@ -28,7 +28,7 @@ pub struct ImageCircuitConfig<F: PrimeField> {
 // struct for the image provenance circuit config as a whole (hash + greyscale)
 #[derive(Default)]
 pub struct ImageCircuit {
-    pub jpeg_vectors: ImageDetails
+    pub png_vectors: ImageDetails
 }
 
 // implement the Circuit trait for ImageCircuit
@@ -104,9 +104,9 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         let greyscale_result = greyscale_chip.greyscale(
             layouter.namespace(|| "greyscale_namespace"),
-            &self.jpeg_vectors.r,
-            &self.jpeg_vectors.g,
-            &self.jpeg_vectors.b
+            &self.png_vectors.r,
+            &self.png_vectors.g,
+            &self.png_vectors.b
         )?;
 
         // expose the greyscale pixel values as public
@@ -116,10 +116,10 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
-            &self.jpeg_vectors.r, 
-            &self.jpeg_vectors.g, 
-            &self.jpeg_vectors.b, 
-            &self.jpeg_vectors.exif,
+            &self.png_vectors.r, 
+            &self.png_vectors.g, 
+            &self.png_vectors.b, 
+            &self.png_vectors.exif,
             3
         )?;
 

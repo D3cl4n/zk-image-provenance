@@ -1,11 +1,12 @@
-mod image;
-mod circuit;
+mod png;
+mod prover;
+mod verifier;
 
 
 // main function
 fn main() {
     // start with the MockProver and then move to real prover
-    use crate::circuit::image_circuit::{ImageDetails, ImageCircuit};
+    use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
     use ff::PrimeField;
     use halo2curves::bls12381::Fr;
     use halo2_proofs::dev::MockProver;
@@ -18,13 +19,13 @@ fn main() {
     let mut r: Vec<u8> = vec![];
     let mut g: Vec<u8> = vec![];
     let mut b: Vec<u8> = vec![];
-    (r, g, b) = image::get_image_rgb_values(&original_img);
+    (r, g, b) = png::get_image_rgb_values(&original_img);
 
     // parse greyscale values from edited image
-    let grey_values: Vec<u8> = image::get_image_greyscale_values(&edited_img);
+    let grey_values: Vec<u8> = png::get_image_greyscale_values(&edited_img);
 
     // parse the exifdata section from the png
-    let exif: Vec<u8> = image::get_image_exifdata(&original_img);
+    let exif: Vec<u8> = png::get_image_exifdata(&original_img); // TODO: change this to reference all chunks from the original image
 
     // construct ImageDetails structure from parsed values
     let original_img_details = ImageDetails {
@@ -44,7 +45,7 @@ fn main() {
     // make and run the circuit
     let k: u32 = 22;
     let circuit = ImageCircuit {
-        jpeg_vectors: original_img_details
+        png_vectors: original_img_details
     };
 
     println!("[+] Running MockProver");

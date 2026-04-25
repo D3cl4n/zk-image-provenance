@@ -1,35 +1,10 @@
-use image::{Pixel, ImageDecoder};
-use image::ImageReader as ImageReader;
+use image::Pixel;
 use std::fs;
-use std::io::{Write, Read, BufWriter};
 
 
-// open the image and read the metadata (return vector of bytes for metadata values)
-// TODO: rewrite this to extract based on what python writes in before IEND block
-pub fn get_image_exifdata(original_img: &String) -> Vec<u8> {
-    println!("[*] Opening image and reading exifdata...");
-    let png_data = fs::read(original_img).expect("[!] Failed to read image contents");
-    let png_signature = b"\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
-    
-    // check if image has the correct signature
-    if !png_data.starts_with(png_signature) {
-        println!("[!] Image is not a png");
-        return vec![];
-    }
+// open the image and read for a specific chunk by type, return (length, type, data, crc)
 
-    println!("[*] According to magic bytes image is a png");
-    // parse the png bytes for the slice that contains the exif data
-    for i in 8..png_data.len() { // start at 8 to skip the signature
-        let length = u32::from_be_bytes(png_data[i..i+4].try_into().expect("[!] Failed to convert to bytes")) as usize;
-        let chunk_type = &png_data[i+4..i+8];
 
-        if chunk_type == b"eXIf" {
-            println!("[*] Located the eXIf chunk");
-        }
-    }
-
-    vec![0u8]
-}
 
 
 // open the image and store the greyscale values
