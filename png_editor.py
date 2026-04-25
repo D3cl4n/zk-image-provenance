@@ -101,6 +101,7 @@ class EditorUtils:
         
         raw_data = bytearray()
         for y in range(height):
+            raw_data.append(0) # add filter type 0 to each row
             for x in range(width):
                 r, g, b = pixels[x, y]
                 raw_data.append((self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) // 100) # using integer coefficients not floats
