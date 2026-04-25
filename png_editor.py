@@ -41,7 +41,6 @@ class PNGUtils:
                     break
 
         print(f"[*] Read chunks: {list(self.chunks.keys())}")
-        # print(self.chunks[b"IDAT"]) - expected length 6210
 
 
     # flip the color type field of the IHDR chunk to 0 to indicate a greyscaled image
@@ -57,8 +56,17 @@ class PNGUtils:
 
 
     # reassemble the png given the dictionary of chunks
-    def reassemble_png(self):
+    def reassemble_png(self, target):
         print("[*] Reassembling the png from the dictionary of chunks")
+
+        with open(target, "wb") as f:
+            f.write(self.png_signature)
+            for chunk in self.chunks:
+                new_crc = zlib.crc32(chunk[1] + chunk[2]) & 0xffffffff
+                f.write(struct.pack(">I", chunk[0]))
+                f.write(struct.pack(chunk[1]))
+                f.write(struct.pack(chunk[2]))
+                f.write(struct.pack(">I", new_crc))
 
 
 # class for the editor functionality
@@ -71,6 +79,12 @@ class EditorUtils:
         self.g_coeff = 58
         self.b_coeff = 11
         self.png_utils = PNGUtils(self.image)
+
+
+    # reconstruct the IDAT chunk after computing raw greyscale values
+    def reconstruct_IDAT(self, raw_data):
+        compressed_data = zlib.compress(raw_data)
+        self.png_utils.chunks[b"IDAT"] = [len(compressed_data), b"IDAT", compressed_data, 0] # update crc in file reconstruction
 
 
     # greyscale the pixels in the IDAT chunk(s) - after IDAT chunks are aggregated
@@ -90,7 +104,8 @@ class EditorUtils:
                 r, g, b = pixels[x, y]
                 raw_data.append((self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) // 100) # using integer coefficients not floats
 
-        print(len(raw_data))
+        self.reconstruct_IDAT(raw_data)
+        self.png_utils.reassemble_png(self.target)
 
 
 # main function
