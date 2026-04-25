@@ -40,6 +40,9 @@ class PNGUtils:
                 if chunk_type == b"IEND":
                     break
 
+        print(f"[*] Read chunks: {list(self.chunks.keys())}")
+        # print(self.chunks[b"IDAT"]) - expected length 6210
+
 
     # flip the color type field of the IHDR chunk to 0 to indicate a greyscaled image
     def flip_color_type(self):
@@ -48,8 +51,8 @@ class PNGUtils:
 
         # the color type is the 10th byte in the IHDR chunk
         chunk = self.chunks[b"IHDR"]
-        chunk_data = chunk[2]
-        chunk_data[9] = b"\x00"
+        chunk_data = bytearray(chunk[2])
+        chunk_data[9] = 0x00
         self.chunks[b"IHDR"] = [chunk[0], chunk[1], chunk_data, chunk[3]]
 
 
@@ -73,11 +76,20 @@ class EditorUtils:
     # greyscale the pixels in the IDAT chunk(s) - after IDAT chunks are aggregated
     def greyscale(self):
         print(f"[*] Applying greyscale transformation to: {self.image}")
+        self.png_utils.read_all_chunks()
+        self.png_utils.flip_color_type()
+
+        # access the pixel channels
+        image = Image.open(self.image).convert("RGB")
+        width, height = image.size
+        pixels = image.load()
+        print(f"[*] Dimensions: {self.image} is {width}x{height} pixels")
 
 
 # main function
 def main():
-    pass
+    editor = EditorUtils("original.png")
+    editor.greyscale()
 
 
 if __name__ == '__main__':
