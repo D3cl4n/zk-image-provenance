@@ -83,7 +83,14 @@ class EditorUtils:
         image = Image.open(self.image).convert("RGB")
         width, height = image.size
         pixels = image.load()
-        print(f"[*] Dimensions: {self.image} is {width}x{height} pixels")
+        
+        raw_data = bytearray()
+        for y in range(height):
+            for x in range(width):
+                r, g, b = pixels[x, y]
+                raw_data.append((self.r_coeff * r + self.g_coeff * g + self.b_coeff * b) // 100) # using integer coefficients not floats
+
+        print(len(raw_data))
 
 
 # main function
