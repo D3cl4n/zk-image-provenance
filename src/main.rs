@@ -14,4 +14,8 @@ fn main() {
     // original image as private witness, edited image as public
     let original_img = String::from("original.png");
     let edited_img = String::from("greyscale.png");
+
+    // prover functionality
+
+    // verifier functionality
 }
