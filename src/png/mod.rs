@@ -84,7 +84,6 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
 }
 
 
-
 // open the image and store the greyscale values
 pub fn get_png_greyscale_values(edited_img: &String) -> Vec<u8> {
     println!("[*] Opening edited image and parsing out pixel values...");

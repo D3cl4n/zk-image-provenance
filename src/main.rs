@@ -16,7 +16,7 @@ fn main() {
     let edited_img = String::from("greyscale.png");
 
     // prover functionality
-    prover::construct_witness(&original_img);
+    let circuit = prover::construct_circuit_struct(&original_img);
 
     // verifier functionality
 }

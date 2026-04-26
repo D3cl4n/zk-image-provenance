@@ -7,7 +7,7 @@ use crate::png;
 
 
 // construct the byte sequence for the private witness r||g||b||exif from original image
-pub fn construct_witness(original_img: &String) -> Vec<u8> {
+fn construct_witness(original_img: &String) -> image_circuit::ImageDetails {
     let (r, g, b): (Vec<u8>, Vec<u8>, Vec<u8>) = png::get_png_rgb_values(original_img);
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(original_img);
     
@@ -18,17 +18,20 @@ pub fn construct_witness(original_img: &String) -> Vec<u8> {
         .chunk_data
         .clone();
 
-    let mut witness = vec![];
-    witness.extend(r);
-    witness.extend(g);
-    witness.extend(b);
-    witness.extend(exif_data);
-
-    witness
+    image_circuit::ImageDetails {
+        r, 
+        g,
+        b,
+        exif: exif_data
+    }
 }
 
 
 // construct the circuit structure for prover
-// fn construct_circuit_struct() -> ImageCircuit {
+pub fn construct_circuit_struct(original_img: &String) -> image_circuit::ImageCircuit {
+    let png_vectors: image_circuit::ImageDetails = construct_witness(original_img);
 
-//}
+    image_circuit::ImageCircuit {
+        png_vectors
+    }
+}

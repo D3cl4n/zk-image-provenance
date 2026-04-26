@@ -264,9 +264,9 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .collect();
 
         // pack 31 bytes into each field element then pad and construct blocks
-        let bytes_per_block: usize = 31;
+        let bytes_per_element: usize = 31;
         let mut preimage_elements: Vec<F> = input
-            .chunks(bytes_per_block) // split input vector into slides of size bytes_per_block
+            .chunks(bytes_per_element) // split input vector into slides of size bytes_per_element
             .map(|chunk| { // for each slice execute a closure to produce a packed field element
                 let mut element: F = F::ZERO;
                 let mut base: F = F::ONE;
