@@ -2,8 +2,18 @@ use image::Pixel;
 use std::fs;
 
 
-// open the image and read for a specific chunk by type, return (length, type, data, crc)
-pub fn get_image
+// structure to hold a png chunk
+struct png_chunk {
+    chunk_length: [u8; 4],
+    chunk_type: [u8; 4],
+    chunk_data: Vec<u8>,
+    crc: u32
+}
+
+// // open the image and read for a specific chunk by type, return (length, type, data, crc)
+// pub fn get_image_chunks(image_path: &String) -> Vec<png_chunk> {
+    
+// }
 
 
 
