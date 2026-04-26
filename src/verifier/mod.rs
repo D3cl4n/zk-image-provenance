@@ -50,3 +50,14 @@ fn extract_hash_from_png<F: PrimeField>(edited_img: &String) -> F {
 }
 
 // combine the hash and packed grey pixels into vector of expected field elements
+pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
+    let grey_vec: Vec<F> = pack_grey_pixels(edited_img);
+    let hash_element: F = extract_hash_from_png(edited_img);
+
+    let mut expected: Vec<F> = vec![];
+
+    expected.extend(grey_vec);
+    expected.push(hash_element);
+
+    expected
+}
