@@ -38,12 +38,14 @@ fn read_single_chunk<R: Read>(buf_reader: &mut R) -> std::io::Result<PngChunk> {
 
     assert_eq!(actual_crc, expected_crc, "[!] CRC mismatch");
 
-    Ok(PngChunk {
+    Ok(
+        PngChunk {
             chunk_length,
             chunk_type: type_buf,
             chunk_data,
             crc: actual_crc
-    })
+        }
+    )
 }
 
 
@@ -65,7 +67,13 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
     loop {
         let chunk = read_single_chunk(&mut buf_reader).unwrap();
         let is_iend: bool = &chunk.chunk_type == b"IEND";
+
+        // print the chunk type read for debugging
+        let chunk_type_str = std::str::from_utf8(&chunk.chunk_type).unwrap();
+        println!("[*] Read chunk: {}", chunk_type_str);
+        
         chunks.push(chunk);
+
 
         if is_iend {
             break;

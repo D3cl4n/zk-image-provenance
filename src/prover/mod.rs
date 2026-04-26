@@ -10,6 +10,7 @@ use crate::png;
 pub fn construct_witness(original_img: &String) -> Vec<u8> {
     let mut witness: Vec<u8> = vec![];
     let rgb: (Vec<u8>, Vec<u8>, Vec<u8>) = png::get_png_rgb_values(original_img);
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(original_img);
 
     witness
 }
