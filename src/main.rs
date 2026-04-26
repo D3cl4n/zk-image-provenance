@@ -19,4 +19,5 @@ fn main() {
     let circuit = prover::construct_circuit_struct(&original_img);
 
     // verifier functionality
+    let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
 }
