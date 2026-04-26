@@ -32,13 +32,21 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
     let mut buf_reader = BufReader::new(file);
 
     // check the signature on the opened file
-    let mut expected_signature_buf: [u8; 8] = [0u8; 8];
-    buf_reader.read_exact(&mut expected_signature_buf);
-    assert_eq!(*png_signature, expected_signature_buf, "[!] PNG signature is invalid");
+    let mut signature_buf: [u8; 8] = [0u8; 8];
+    buf_reader.read_exact(&mut signature_buf).unwrap();
+    assert_eq!(png_signature, &signature_buf, "[!] PNG signature is invalid");
 
     // read all chunks from png into a vector of PngChunks
     let mut chunks: Vec<PngChunk> = vec![];
-    //chunks.push(read_single_chunk(&mut buf_reader)); // TODO: turn this into a loop
+    loop {
+        let chunk = read_single_chunk(&mut buf_reader);
+        let is_iend: bool = &chunk.chunk_type == b"IEND";
+        chunks.push(chunk);
+
+        if is_iend {
+            break;
+        }
+    }
 
     chunks
 }
