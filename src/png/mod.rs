@@ -5,7 +5,7 @@ use crc32fast::Hasher;
 
 
 // structure to hold a png chunk
-struct PngChunk {
+pub struct PngChunk {
     chunk_length: u32,
     chunk_type: [u8; 4],
     chunk_data: Vec<u8>,
@@ -14,12 +14,36 @@ struct PngChunk {
 
 
 // read a single chunk from the png
-fn read_single_chunk<R: Read>(buf_reader: &mut R) -> PngChunk {
+fn read_single_chunk<R: Read>(buf_reader: &mut R) -> std::io::Result<PngChunk> {
     let mut len_buf: [u8; 4] = [0u8; 4];
     let mut type_buf: [u8; 4] = [0u8; 4];
+    let mut crc_buf: [u8; 4] = [0u8; 4];
 
-    // start reading the chunk fields and data
-    buf_reader.read_exact(&mut len_buf);
+    // read the chunk length and chunk type
+    buf_reader.read_exact(&mut len_buf)?;
+    buf_reader.read_exact(&mut type_buf)?;
+
+    // read the chunk data based on the length
+    let chunk_length: u32 = u32::from_be_bytes(len_buf);
+    let mut chunk_data = vec![0u8; chunk_length as usize];
+    buf_reader.read_exact(&mut chunk_data)?;
+
+    // read the crc, calculate expected crc and compare
+    buf_reader.read_exact(&mut crc_buf)?;
+    let actual_crc: u32 = u32::from_be_bytes(crc_buf);
+    let mut hasher = Hasher::new();
+    hasher.update(&type_buf);
+    hasher.update(&chunk_data);
+    let expected_crc = hasher.finalize();
+
+    assert_eq!(actual_crc, expected_crc, "[!] CRC mismatch");
+
+    Ok(PngChunk {
+            chunk_length,
+            chunk_type: type_buf,
+            chunk_data,
+            crc: actual_crc
+    })
 }
 
 
@@ -39,7 +63,7 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
     // read all chunks from png into a vector of PngChunks
     let mut chunks: Vec<PngChunk> = vec![];
     loop {
-        let chunk = read_single_chunk(&mut buf_reader);
+        let chunk = read_single_chunk(&mut buf_reader).unwrap();
         let is_iend: bool = &chunk.chunk_type == b"IEND";
         chunks.push(chunk);
 
