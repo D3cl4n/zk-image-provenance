@@ -15,11 +15,11 @@ struct PngChunk {
 
 // read a single chunk from the png
 fn read_single_chunk<R: Read>(buf_reader: &mut R) -> PngChunk {
-    let mut len_buf: [u32; 4] = [0u8; 4];
-    let mut type_buf: [u32; 4] = [0u8; 4];
+    let mut len_buf: [u8; 4] = [0u8; 4];
+    let mut type_buf: [u8; 4] = [0u8; 4];
 
     // start reading the chunk fields and data
-    buf_reader.read_exact(&mut len_buf)?;
+    buf_reader.read_exact(&mut len_buf);
 }
 
 
@@ -32,13 +32,15 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
     let mut buf_reader = BufReader::new(file);
 
     // check the signature on the opened file
-    let mut expected_signature_buf: [u32; 8] = [0u8; 8];
-    buf_reader.read_exact(&mut signature_buf)?;
-    assert_eq!(&png_signature, expected_signature_buf, "[!] PNG signature is invalid");
+    let mut expected_signature_buf: [u8; 8] = [0u8; 8];
+    buf_reader.read_exact(&mut expected_signature_buf);
+    assert_eq!(*png_signature, expected_signature_buf, "[!] PNG signature is invalid");
 
     // read all chunks from png into a vector of PngChunks
     let mut chunks: Vec<PngChunk> = vec![];
-    chunks.push(read_single_chunk(&mut buf_reader)); // TODO: turn this into a loop
+    //chunks.push(read_single_chunk(&mut buf_reader)); // TODO: turn this into a loop
+
+    chunks
 }
 
 
