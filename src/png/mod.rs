@@ -5,11 +5,12 @@ use crc32fast::Hasher;
 
 
 // structure to hold a png chunk
+#[derive(Clone)]
 pub struct PngChunk {
-    chunk_length: u32,
-    chunk_type: [u8; 4],
-    chunk_data: Vec<u8>,
-    crc: u32
+    pub chunk_length: u32,
+    pub chunk_type: [u8; 4],
+    pub chunk_data: Vec<u8>,
+    pub crc: u32
 }
 
 
@@ -70,10 +71,9 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
 
         // print the chunk type read for debugging
         let chunk_type_str = std::str::from_utf8(&chunk.chunk_type).unwrap();
-        println!("[*] Read chunk: {}", chunk_type_str);
-        
-        chunks.push(chunk);
+        println!("\t[*] Read chunk: {} with length: {}", chunk_type_str, &chunk.chunk_length);
 
+        chunks.push(chunk);
 
         if is_iend {
             break;
