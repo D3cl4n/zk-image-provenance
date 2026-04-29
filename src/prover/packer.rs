@@ -43,3 +43,15 @@ impl<F: PrimeField> Chip<F> for PackingChip<F> {
         &()
     }
 }
+
+
+// helper function to create the packing gate (accumulator_{i+1} = accumulator_{i}*256+byte)
+fn create_packing_accumulation_gate<F: PrimeField> (
+    meta: &mut ConstraintSystem<F>,
+    advice: [Column<Advice>; 2],
+    s_pack: Selector
+) {
+    meta.create_gate("packing_accumulation_gate" |meta| {
+        let s_pack = meta.query_selector(s_pack);
+    })
+}
