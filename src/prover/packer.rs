@@ -7,8 +7,11 @@ use halo2_proofs::{
 };
 
 
-// structure for the packer chip config
+// structure for the packing chip config
 #[derive(Clone, Debug)]
-pub struct PackerChipConfig {
-
+pub struct PackingChipConfig {
+    advice: [Column<Advice>; 2], // one advice column for the accumulator (encodes position) one column for the byte being packed
+    s_pack: Selector
 }
+
+// structure for the packing chip
