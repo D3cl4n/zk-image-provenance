@@ -109,24 +109,15 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.png_vectors.b
         )?;
 
-        // pack the grey pixels into field elements
+        // pack the grey pixels into field elements inside circuit so it is constrained properly
+        let mut result: Vec<GreyscaleNumber<F>> = vec![];
         let bytes_per_element: usize = 31;
-        let result: Vec<F> = greyscale_result
-            .chunks(bytes_per_element)
-            .map(|chunk| {
-                let mut element: F = F::ZERO;
-                let mut base: F = F::ONE;
-                let base_256: F = F::from(256 as u64);
 
-                // iterate over each byte in slice and pack into position based on powers of 256
-                for &byte in chunk {
-                    element += F::from(byte.0.value() as u64) * base; // pack
-                    base *= base_256;
-                } 
+        // iterate over each 31 byte chunk and pack into result
+        for chunk in greyscale_result.chunks(bytes_per_element) {
 
-                element
-            })
-            .collect();
+        }
+
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
