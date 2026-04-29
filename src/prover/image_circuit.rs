@@ -115,7 +115,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // iterate over each 31 byte chunk and pack into result
         for chunk in greyscale_result.chunks(bytes_per_element) {
-
+            // TODO: implement a packing chip that takes the results, packs, returns field element and constrains 
         }
 
 
