@@ -53,5 +53,20 @@ fn create_packing_accumulation_gate<F: PrimeField> (
 ) {
     meta.create_gate("packing_accumulation_gate" |meta| {
         let s_pack = meta.query_selector(s_pack);
-    })
+        let accumulator_curr = meta.query_advice(advice[0], Rotation::cur());
+        let byte = meta.query_advice(advice[1], Rotation::cur());
+
+        vec![
+            s_pack * (accumulator_curr * 256 + byte)
+        ]
+    });
+}
+
+
+// implementation of additional methods for the PackingChip
+trait<F: PrimeField> PackingChip<F> {
+    // constructor
+    pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
+        PackingChip {config, _marker: PhantomData}
+    }
 }
