@@ -109,10 +109,24 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.png_vectors.b
         )?;
 
-        // expose the greyscale pixel values as public
-        for i in 0..greyscale_result.len() {
-            greyscale_chip.expose_as_public(&mut layouter, GreyscaleNumber(greyscale_result[i].0.clone()), i)?;
-        }
+        // pack the grey pixels into field elements
+        let bytes_per_element: usize = 31;
+        let result: Vec<F> = greyscale_result
+            .chunks(bytes_per_element)
+            .map(|chunk| {
+                let mut element: F = F::ZERO;
+                let mut base: F = F::ONE;
+                let base_256: F = F::from(256 as u64);
+
+                // iterate over each byte in slice and pack into position based on powers of 256
+                for &byte in chunk {
+                    element += F::from(byte.0.value() as u64) * base; // pack
+                    base *= base_256;
+                } 
+
+                element
+            })
+            .collect();
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
@@ -144,7 +158,13 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        sponge_chip.expose_as_public(&mut layouter, SpongeNumber(digest_cell.clone()), greyscale_result.len())?;
+        result.push(digest_cell.value().copied());
+
+        // expose each field element in the result vector
+        for i in 0..result.len() {
+            sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+        }
+       
 
         Ok(())
     }
