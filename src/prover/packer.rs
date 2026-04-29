@@ -14,4 +14,32 @@ pub struct PackingChipConfig {
     s_pack: Selector
 }
 
+
 // structure for the packing chip
+#[derive(Clone, Debug)]
+pub struct PackingChip<F: PrimeField> {
+    config: PackingChipConfig,
+    _marker: PhantomData<F>
+}
+
+
+// structure to store numbers in cells
+#[derive(Clone)]
+pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
+
+
+// implement the chip trait for PackingChip
+impl<F: PrimeField> Chip<F> for PackingChip<F> {
+    type Config = PackingChipConfig;
+    type Loaded = ();
+
+    // getter for the chip config 
+    fn config(&self) -> &Self::Config {
+        &self.config
+    }
+
+    // getter for the Loaded field
+    fn loaded(&self) -> &Self::Loaded {
+        &()
+    }
+}
