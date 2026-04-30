@@ -58,7 +58,7 @@ fn create_packing_accumulation_gate<F: PrimeField> (
         let byte = meta.query_advice(advice[1], Rotation::cur());
 
         vec![
-            s_pack * (accumulator_next - (accumulator_curr * 256 + byte))
+            s_pack * (accumulator_next - (accumulator_curr * Expression::Constant(F::from(256 as u64)) + byte))
         ]
     });
 }
