@@ -51,7 +51,7 @@ fn create_packing_accumulation_gate<F: PrimeField> (
     advice: [Column<Advice>; 2],
     s_pack: Selector
 ) {
-    meta.create_gate("packing_accumulation_gate" |meta| {
+    meta.create_gate("packing_accumulation_gate", |meta| {
         let s_pack = meta.query_selector(s_pack);
         let accumulator_curr = meta.query_advice(advice[0], Rotation::cur());
         let accumulator_next = meta.query_advice(advice[1], Rotation::next());
@@ -117,7 +117,7 @@ impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
 
         // iterate over 31 byte chunks of the input
         for chunk in bytes.chunks(bytes_per_element) {
-            layouter.assign_region(|| "packing_region", |mut region| {
+            let packed_element = layouter.assign_region(|| "packing_region", |mut region| {
                 let mut row_offset: usize = 0;
                 let mut accumulator_cell: AssignedCell<F, F> = region.assign_advice(
                     || "accumulator_init",
@@ -152,8 +152,10 @@ impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
                     accumulator_cell = accumulator_next_cell;
                     row_offset += 1;
                 }
+                Ok(Number(accumulator_cell))
             }
-        )
-        } //TODO: make sure the return values are correct once I add them in
+            result.push(packed_element);
+        }
+        Ok(result)
     }
 }
