@@ -116,10 +116,30 @@ impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
         let mut result: Vec<Number<F>> = vec![];
 
         // iterate over 31 byte chunks of the input
-        layouter.assign_region(
-            || "packing_region", |mut region| {
+        for chunk in bytes.chunks(bytes_per_element) {
+            layouter.assign_region(|| "packing_region", |mut region| {
+                let mut row_offset: usize = 0;
+                let mut accumulator_cell: AssignedCell<F, F> = region.assign_advice(
+                    || "accumulator_init",
+                    config.advice[0], 
+                    row_offset,
+                    || Value::known(F::ZERO)
+                )?;
 
+                // iterate over each byte in the 31 byte chunk
+                for byte in chunk {
+                    let byte_cell: AssignedCell<F, F> = region.assign_advice(
+                        || "byte",
+                        config.advice[1],
+                        row_offset,
+                        || Value::known(F::from(byte as u64))
+                    )?;
+
+                    // enable the packing gate
+                    config.s_pack.enable(&mut region, row_offset)?;
+                }
             }
         )
+        }
     }
 }
