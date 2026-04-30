@@ -93,7 +93,7 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
     // function signature for pack
-    pub fn pack(
+    fn pack(
         &self, 
         layouter: &mut impl Layouter<F>,
         bytes: &Vec<Self::Num>
@@ -106,7 +106,7 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     type Num = Number<F>;
 
     // pack function definition
-    pub fn pack(
+    fn pack(
         &self,
         layouter: &mut impl Layouter<F>, 
         bytes: &Vec<Self::Num>
@@ -153,7 +153,7 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                     row_offset += 1;
                 }
                 Ok(Number(accumulator_cell))
-            }
+            })?;
             result.push(packed_element);
         }
         Ok(result)
