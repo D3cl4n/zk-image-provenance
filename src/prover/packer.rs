@@ -102,7 +102,7 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
 
 
 // implement the PackingChipInstructions trait for PackingChip
-impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
+impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     type Num = Number<F>;
 
     // pack function definition
