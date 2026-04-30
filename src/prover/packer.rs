@@ -54,7 +54,7 @@ fn create_packing_accumulation_gate<F: PrimeField> (
     meta.create_gate("packing_accumulation_gate", |meta| {
         let s_pack = meta.query_selector(s_pack);
         let accumulator_curr = meta.query_advice(advice[0], Rotation::cur());
-        let accumulator_next = meta.query_advice(advice[1], Rotation::next());
+        let accumulator_next = meta.query_advice(advice[0], Rotation::next());
         let byte = meta.query_advice(advice[1], Rotation::cur());
 
         vec![
