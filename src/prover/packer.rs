@@ -137,6 +137,20 @@ impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
 
                     // enable the packing gate
                     config.s_pack.enable(&mut region, row_offset)?;
+
+                    // calculate the next value by adding byte into the correct position (next power of 256)
+                    let accumulator_next_val = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| {
+                        *a * F::from(256 as u64) + *b
+                    });
+                    let accumulator_next_cell: AssignedCell<F, F> = region.assign_advice(
+                        || "accumulator_next",
+                        config.advice[0],
+                        row_offset + 1,
+                        || accumulator_next_val
+                    )?;
+
+                    accumulator_cell = accumulator_next_cell;
+                    row_offset += 1;
                 }
             }
         )
