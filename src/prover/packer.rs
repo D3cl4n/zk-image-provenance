@@ -54,10 +54,11 @@ fn create_packing_accumulation_gate<F: PrimeField> (
     meta.create_gate("packing_accumulation_gate" |meta| {
         let s_pack = meta.query_selector(s_pack);
         let accumulator_curr = meta.query_advice(advice[0], Rotation::cur());
+        let accumulator_next = meta.query_advice(advice[1], Rotation::next());
         let byte = meta.query_advice(advice[1], Rotation::cur());
 
         vec![
-            s_pack * (accumulator_curr * 256 + byte)
+            s_pack * (accumulator_next - (accumulator_curr * 256 + byte))
         ]
     });
 }
@@ -76,6 +77,33 @@ trait<F: PrimeField> PackingChip<F> {
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 2]
     ) -> <Self as Chip<F>>::Config {
+        let s_pack = meta.selector();
+        create_packing_accumulation_gate(meta, advice, s_pack);
 
+        PackingChipConfig {
+            advice,
+            s_pack
+        }
     }
+}
+
+
+// trait for sub-functions of this chip
+pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
+    type Num;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error>;
+
+    // greyscale - what type should argument and return be?
+    fn pack(
+        &self, 
+        layouter: impl Layouter<F>,
+        bytes: &Vec<Self::Num>
+    ) -> Result<Vec<F>, Error>;
 }
