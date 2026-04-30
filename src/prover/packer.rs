@@ -92,18 +92,17 @@ impl<F: PrimeField> PackingChip<F> {
 pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
-    // expose output as public
-    fn expose_as_public(
-        &self, 
-        layouter: &mut impl Layouter<F>, 
-        num: Self::Num, 
-        row: usize
-    ) -> Result<(), Error>;
-
     // greyscale - what type should argument and return be?
-    fn pack(
+    pub fn pack(
         &self, 
-        layouter: impl Layouter<F>,
+        layouter: &mut impl Layouter<F>,
         bytes: &Vec<Self::Num>
-    ) -> Result<Vec<F>, Error>;
+    ) -> Result<Vec<Number<F>>, Error>;
+}
+
+
+// implement the PackingChipInstructions trait for PackingChip
+impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
+    type Num = Number<F>;
+
 }
