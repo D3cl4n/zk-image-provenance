@@ -154,6 +154,6 @@ impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
                 }
             }
         )
-        }
+        } //TODO: make sure the return values are correct once I add them in
     }
 }
