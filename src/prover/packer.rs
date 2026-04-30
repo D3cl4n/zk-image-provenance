@@ -92,7 +92,7 @@ impl<F: PrimeField> PackingChip<F> {
 pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
-    // greyscale - what type should argument and return be?
+    // function signature for pack
     pub fn pack(
         &self, 
         layouter: &mut impl Layouter<F>,
@@ -105,4 +105,21 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
 impl<F: PrimeField> PackingChipInstructions for PackingChip<F> {
     type Num = Number<F>;
 
+    // pack function definition
+    pub fn pack(
+        &self,
+        layouter: &mut impl Layouter<F>, 
+        bytes: &Vec<Self::Num>
+    ) -> Result<Vec<Number<F>>, Error> {
+        let config = self.config();
+        let bytes_per_element: usize = 31;
+        let mut result: Vec<Number<F>> = vec![];
+
+        // iterate over 31 byte chunks of the input
+        layouter.assign_region(
+            || "packing_region", |mut region| {
+
+            }
+        )
+    }
 }
