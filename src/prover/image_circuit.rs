@@ -6,6 +6,7 @@ use halo2_proofs::{
 use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
 use crate::prover::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
 use crate::prover::sponge::{SpongeChip, SpongeChipConfig, Number as SpongeNumber, SpongeInstructions};
+use crate::prover::packer::{PackingChip, PackingChipConfig};
 
 
 // structure to store the image details
@@ -117,7 +118,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // use the packing chip to pack greyscale results
         let packed_elements = packing_chip.pack(&mut layouter, &greyscale_result)?;
-        for p in packed_pixels {
+        for p in packed_elements {
             result.push(SpongeNumber(p.0));
         }
 
