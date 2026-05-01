@@ -157,9 +157,9 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         result.push(Number(digest_cell));
 
         // expose each field element in the result vector
-        // for i in 0..result.len() {
-        //     sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
-        // }
+        for i in 0..result.len() {
+            sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+        }
 
         Ok(())
     }
