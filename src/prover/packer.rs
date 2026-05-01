@@ -5,6 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, TableColumn, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
+use crate::prover::number::Number;
 
 
 // structure for the packing chip config
@@ -21,11 +22,6 @@ pub struct PackingChip<F: PrimeField> {
     config: PackingChipConfig,
     _marker: PhantomData<F>
 }
-
-
-// structure to store numbers in cells
-#[derive(Clone)]
-pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 
 // implement the chip trait for PackingChip

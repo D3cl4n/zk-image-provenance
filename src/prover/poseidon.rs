@@ -5,6 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, Fixed, Column, ConstraintSystem, Error, Selector, Expression},
     poly::Rotation,
 };
+use crate::prover::number::Number;
 
 // PARAMETERS TO USE TO MATCH PYTHON MODULE
 // def case_neptune():
@@ -301,8 +302,6 @@ pub struct PoseidonChip<F: PrimeField> {
     _marker: PhantomData<F>,
 }
 
-// structure to store numbers in cells
-pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the Chip trait for PoseidonChip
 impl<F: PrimeField> Chip<F> for PoseidonChip<F> {

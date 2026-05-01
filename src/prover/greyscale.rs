@@ -5,6 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, TableColumn, Column, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
+use crate::prover::number::Number;
 
 
 // structure for the ciruit's greyscale chip config
@@ -24,9 +25,6 @@ pub struct GreyscaleChip<F: PrimeField> {
     _marker: PhantomData<F>
 } 
 
-// structure to store numbers in cells
-#[derive(Clone)]
-pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the chip trait for GreyscaleChip
 impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {

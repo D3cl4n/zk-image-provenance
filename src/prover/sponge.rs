@@ -5,6 +5,7 @@ use halo2_proofs::{
     plonk::{Advice, Column, ConstraintSystem, Error, Instance, Selector},
     poly::Rotation,
 };
+use crate::prover::number::Number;
 
 
 // structure for sponge construction chip configuration
@@ -21,8 +22,6 @@ pub struct SpongeChip<F: PrimeField> {
     _marker: PhantomData<F>
 }
 
-// structure to store numbers in cells
-pub struct Number<F: PrimeField>(pub AssignedCell<F, F>);
 
 // implement the Chip trait for SpongeChip
 impl<F: PrimeField> Chip<F> for SpongeChip<F> {

@@ -3,9 +3,11 @@ use halo2_proofs::{
     circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
     plonk::{Circuit, ConstraintSystem, Error,},
 };
-use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, Number as GreyscaleNumber, GreyscaleInstructions};
+
+use crate::prover::number::Number;
+use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, GreyscaleInstructions};
 use crate::prover::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
-use crate::prover::sponge::{SpongeChip, SpongeChipConfig, Number as SpongeNumber, SpongeInstructions};
+use crate::prover::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
 use crate::prover::packer::{PackingChip, PackingChipConfig, PackingChipInstructions};
 
 
@@ -114,12 +116,12 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         )?;
 
         // pack the grey pixels into field elements inside circuit so it is constrained properly
-        let mut result: Vec<SpongeNumber<F>> = vec![];
+        let mut result: Vec<Number<F>> = vec![];
 
         // use the packing chip to pack greyscale results
         let packed_elements = packing_chip.pack(&mut layouter, &greyscale_result)?;
         for p in packed_elements {
-            result.push(SpongeNumber(p.0));
+            result.push(Number(p.0));
         }
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
@@ -152,7 +154,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        result.push(SpongeNumber(digest_cell));
+        result.push(Number(digest_cell));
 
         // expose each field element in the result vector
         // for i in 0..result.len() {
