@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, TableColumn, Column, ConstraintSystem, Error, Instance, Selector, Expression},
+    plonk::{Advice, Column, ConstraintSystem, Error, Selector, Expression},
     poly::Rotation,
 };
 use crate::prover::number::Number;
@@ -124,11 +124,11 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
 
                 // iterate over each byte in the 31 byte chunk
                 for byte in chunk {
-                    let byte_cell: AssignedCell<F, F> = region.assign_advice(
+                    let byte_cell: AssignedCell<F, F> = byte.0.copy_advice(
                         || "byte",
+                        &mut region,
                         config.advice[1],
-                        row_offset,
-                        || Value::known(F::from(byte as u64))
+                        row_offset
                     )?;
 
                     // enable the packing gate
