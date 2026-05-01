@@ -112,9 +112,10 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
         let mut result: Vec<Number<F>> = vec![];
 
         // iterate over 31 byte chunks of the input
-        for chunk in bytes.chunks(bytes_per_element) {
-            let packed_element = layouter.assign_region(|| "packing_region", |mut region| {
-                let mut row_offset: usize = 0;
+        layouter.assign_region(|| "packing_region", |mut region| {
+            let mut row_offset: usize = 0;
+
+            for chunk in bytes.chunks(bytes_per_element) {
                 let mut accumulator_cell: AssignedCell<F, F> = region.assign_advice(
                     || "accumulator_init",
                     config.advice[0], 
@@ -123,7 +124,7 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                 )?;
 
                 // iterate over each byte in the 31 byte chunk
-                for byte in chunk {
+                for (i, byte) in chunk.iter().enumerate() {
                     let byte_cell: AssignedCell<F, F> = byte.0.copy_advice(
                         || "byte",
                         &mut region,
@@ -133,7 +134,7 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
 
                     // enable the packing gate
                     config.s_pack.enable(&mut region, row_offset)?;
-
+                    
                     // calculate the next value by adding byte into the correct position (next power of 256)
                     let accumulator_next_val = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| {
                         *a * F::from(256 as u64) + *b
@@ -148,10 +149,13 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                     accumulator_cell = accumulator_next_cell;
                     row_offset += 1;
                 }
-                Ok(Number(accumulator_cell))
-            })?;
-            result.push(packed_element);
-        }
-        Ok(result)
+                result.push(Number(accumulator_cell.clone()));
+                row_offset += 1;
+            }
+
+            Ok(())
+       })?;
+
+       Ok(result)
     }
 }
