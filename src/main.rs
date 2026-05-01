@@ -9,6 +9,7 @@ fn main() {
     // start with the MockProver and then move to real prover
     use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
     use halo2curves::bls12381::Fr;
+    use halo2_proofs::dev::MockProver;
 
     // original image as private witness, edited image as public
     let original_img = String::from("original.png");
@@ -19,4 +20,9 @@ fn main() {
 
     // verifier functionality
     let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
+    
+    // MockProver for now
+    let k: u32 = 15;
+    let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
+    assert_eq!(prover.verify(), Ok(()));
 }
