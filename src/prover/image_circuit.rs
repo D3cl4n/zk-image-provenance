@@ -22,7 +22,8 @@ pub struct ImageDetails {
 pub struct ImageCircuitConfig<F: PrimeField> {
     pub greyscale: GreyscaleChipConfig,
     pub poseidon: PoseidonChipConfig<F>,
-    pub sponge: SpongeChipConfig
+    pub sponge: SpongeChipConfig,
+    pub packer: PackingChipConfig
 }
 
 // struct for the image provenance circuit config as a whole (hash + greyscale)
@@ -62,7 +63,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         ImageCircuitConfig {
             greyscale: GreyscaleChip::configure(meta, advice, instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
-            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance)
+            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
+            packer: PackingChip::configure(meta, [advice[0], advice[1]])
         }
     }
 
@@ -71,6 +73,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let greyscale_chip = GreyscaleChip::construct(config.greyscale.clone());
         let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
         let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
+        let packing_chip: PackingChip = PackingChip::construct(config.packer.clone());
 
         // // populate the lookup table for constraining pixel values to bytes (0-255)
         layouter.assign_table(
@@ -111,7 +114,6 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // pack the grey pixels into field elements inside circuit so it is constrained properly
         let mut result: Vec<GreyscaleNumber<F>> = vec![];
-        let bytes_per_element: usize = 31;
 
         // iterate over each 31 byte chunk and pack into result
         for chunk in greyscale_result.chunks(bytes_per_element) {
