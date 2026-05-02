@@ -22,7 +22,7 @@ fn main() {
     let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
     
     // MockProver for now
-    let k: u32 = 18;
+    let k: u32 = 23;
     let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
     assert_eq!(prover.verify(), Ok(()));
 }
