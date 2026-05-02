@@ -98,6 +98,7 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
 
 
 // implement the PackingChipInstructions trait for PackingChip
+// TODO: debug this
 impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     type Num = Number<F>;
 
@@ -125,11 +126,11 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
 
                 // iterate over each byte in the 31 byte chunk
                 for (i, byte) in chunk.iter().enumerate() {
-                    let byte_cell: AssignedCell<F, F> = byte.0.copy_advice(
+                    let byte_cell: AssignedCell<F, F> = region.assign_advice(
                         || "byte",
-                        &mut region,
                         config.advice[1],
-                        row_offset
+                        row_offset,
+                        || byte.0.value().copied()
                     )?;
 
                     // enable the packing gate
