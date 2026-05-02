@@ -21,7 +21,7 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 - $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
 
 #### ZKP Computed by Editor (Instance-Witness Relationship)
-##### TODO: edit this and edit code to hash grey packed pixels too
+##### TODO: edit this and edit code to hash grey packed pixels too in the circuit and verifier
 - $\mathcal{R} := \{(\text{H}_{0}, \text{H}_{1}) \; ; \; (\text{I}) \; :\\ \text{Poseidon}(\text{Greyscale}(\text{I})) = \text{H}_{0} \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}_{1}\}$
 - $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H})$
 
