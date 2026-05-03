@@ -114,10 +114,10 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     
         layouter.assign_region(|| "packing_region", |mut region| {
             let mut row_offset = 0;
-            let base_256: Value<F> = Value::known(F::from(256 as u64));
+            let base_256: F = F::from(256 as u64);
             // iterate over each chunk - adds one packed element to packed_elements vector each iterations
             for chunk in bytes.chunks(bytes_per_element) {
-                let mut last_cell: AssignedCell<F, F> = None;
+                let mut last_cell = None;
                 let mut accumulator_val: Value<F> = Value::known(F::ZERO);
                 // iterate over each of the 31 bytes in the chunk and pack
                 for byte in chunk.iter() {
@@ -125,9 +125,15 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                     let accumulator_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_curr", config.advice[0], row_offset, || accumulator_val)?;
                     let byte_cell: AssignedCell<F, F> = region.assign_advice(|| "byte_cell", config.advice[1], row_offset, || byte.0.value().copied())?;
                     let accumulator_next: Value<F> = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| *a * base_256 + *b);
+                    let accumulator_next_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_next", config.advice[0], row_offset + 1, || accumulator_next)?;
+                    last_cell = Some(accumulator_next_cell);
+                    accumulator_val = accumulator_next;
+                    row_offset += 1;
                 }
-                packed_elements.push(Number(last_cell.unwrap()));
+                packed_elements.push(Number(last_cell.expect("[!] Fauled to unwrap")));
             }
-        });? // end of region assignment
+            Ok(())
+        })?; // end of region assignment
+        Ok(packed_elements)
     } // end of the pack function need to return Vec<Number<F>> above here
 } // end of implementation
