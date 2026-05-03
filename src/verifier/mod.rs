@@ -56,7 +56,7 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
 
     let mut expected: Vec<F> = vec![];
 
-    expected.extend(grey_vec);
+    //expected.extend(grey_vec);
     expected.push(hash_element);
 
     expected

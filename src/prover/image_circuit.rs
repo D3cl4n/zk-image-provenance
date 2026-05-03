@@ -154,12 +154,13 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
         // print the digest here for debugging
         println!("[+] Hash: {:?}", digest_cell.value().copied());
-        result.push(Number(digest_cell));
+        //result.push(Number(digest_cell));
 
         // expose each field element in the result vector
-        for i in 0..result.len() {
-            sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
-        }
+        sponge_chip.expose_as_public(&mut layouter, Number(digest_cell), 0);
+        // for i in 0..result.len() {
+        //     sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+        // }
 
         Ok(())
     }
