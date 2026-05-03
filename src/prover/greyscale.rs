@@ -45,7 +45,7 @@ impl<F: PrimeField> Chip<F> for GreyscaleChip<F> {
 // helper function to create the greyscale gate 
 fn create_greyscale_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
-    advice: [Column<Advice>; 5],
+    advice: [Column<Advice>; 6],
     s_greyscale: Selector
 ) {
     meta.create_gate("greyscale_gate", |meta| {
