@@ -16,8 +16,7 @@ fn pack_grey_pixels<F: PrimeField>(edited_img: &String) -> Vec<F> {
 
             // iterate over each byte in slice and pack into position based on powers of 256
             for &byte in chunk {
-                element += F::from(byte as u64) * base; // pack
-                base *= base_256;
+                element = element * base_256 + F::from(byte as u64);
             } 
 
             element

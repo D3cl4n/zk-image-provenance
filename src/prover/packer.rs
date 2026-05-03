@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, Column, ConstraintSystem, Error, Selector, Expression},
+    plonk::{Advice, Instance, Column, ConstraintSystem, Error, Selector, Expression},
     poly::Rotation,
 };
 use crate::prover::number::Number;
@@ -12,6 +12,7 @@ use crate::prover::number::Number;
 #[derive(Clone, Debug)]
 pub struct PackingChipConfig {
     advice: [Column<Advice>; 2], // one advice column for the accumulator (encodes position) one column for the byte being packed
+    instance: Column<Instance>,
     s_pack: Selector
 }
 
@@ -71,13 +72,15 @@ impl<F: PrimeField> PackingChip<F> {
     // configure the chip including all gates, constraints and selectors
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
-        advice: [Column<Advice>; 2]
+        advice: [Column<Advice>; 2],
+        instance: Column<Instance>
     ) -> <Self as Chip<F>>::Config {
         let s_pack = meta.selector();
         create_packing_accumulation_gate(meta, advice, s_pack);
 
         PackingChipConfig {
             advice,
+            instance,
             s_pack
         }
     }
@@ -87,6 +90,14 @@ impl<F: PrimeField> PackingChip<F> {
 // trait for sub-functions of this chip
 pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
     type Num;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error>;
 
     // function signature for pack
     fn pack(
@@ -101,6 +112,17 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
 // TODO: debug this
 impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     type Num = Number<F>;
+
+    // expose output as public
+    fn expose_as_public(
+        &self, 
+        layouter: &mut impl Layouter<F>, 
+        num: Self::Num, 
+        row: usize
+    ) -> Result<(), Error> {
+        let config = self.config();
+        layouter.constrain_instance(num.0.cell(), config.instance, row)
+    }
 
     // pack function definition
     fn pack(
@@ -120,8 +142,10 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                 let mut last_cell = None;
                 let mut accumulator_val: Value<F> = Value::known(F::ZERO);
                 // iterate over each of the 31 bytes in the chunk and pack
-                for byte in chunk.iter() {
-                    config.s_pack.enable(&mut region, row_offset)?;
+                for (i, byte) in chunk.iter().enumerate() {
+                    if i < chunk.len() - 1 {
+                        config.s_pack.enable(&mut region, row_offset)?;
+                    }
                     let accumulator_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_curr", config.advice[0], row_offset, || accumulator_val)?;
                     let byte_cell: AssignedCell<F, F> = region.assign_advice(|| "byte_cell", config.advice[1], row_offset, || byte.0.value().copied())?;
                     let accumulator_next: Value<F> = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| *a * base_256 + *b);
@@ -130,7 +154,7 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                     accumulator_val = accumulator_next;
                     row_offset += 1;
                 }
-                packed_elements.push(Number(last_cell.expect("[!] Fauled to unwrap")));
+                packed_elements.push(Number(last_cell.expect("[!] Failed to unwrap")));
             }
             Ok(())
         })?; // end of region assignment

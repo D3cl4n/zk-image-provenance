@@ -64,10 +64,10 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
+            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
             sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
-            packer: PackingChip::configure(meta, [advice[5], advice[6]])
+            packer: PackingChip::configure(meta, [advice[5], advice[6]], instance)
         }
     }
 
@@ -156,7 +156,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // expose each field element in the result vector
         for i in 0..result.len() {
-            sponge_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+            packing_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
         }
 
         Ok(())
