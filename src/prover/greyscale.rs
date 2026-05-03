@@ -11,7 +11,7 @@ use crate::prover::number::Number;
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
-    advice: [Column<Advice>; 5], // advice columns for: [r, g, b, g] values where g = greyscale(r, g, b)
+    advice: [Column<Advice>; 6], // advice columns for: [r, g, b, y, rem, accumulator] values where y = greyscale(r, g, b)
     pub byte_table: TableColumn, // one fixed column for byte values for lookups
     pub rem_table: TableColumn,
     instance: Column<Instance>,
@@ -59,6 +59,10 @@ fn create_greyscale_gate<F: PrimeField> (
         let y = meta.query_advice(advice[3], Rotation::cur());
         let remainder = meta.query_advice(advice[4], Rotation::cur());
 
+        // packing the greyscale elements
+        let accumulator_curr = meta.query_advice(advice[5], Rotation::cur());
+        let accumulator_next = meta.query_advice(advice[5], Rotation::next());
+
         // constants for greyscale formula coefficients
         let r_coeff = Expression::Constant(F::from(30));
         let g_coeff = Expression::Constant(F::from(58));
@@ -69,10 +73,12 @@ fn create_greyscale_gate<F: PrimeField> (
 
         // constraints
         vec![
+            s_greyscale.clone() * (accumulator_next - (accumulator_curr * Expression::Constant(F::from(256)) + y.clone())),
             s_greyscale * ((Expression::Constant(F::from(100))*y + remainder) - sum)
         ]
     });
 }
+
 
 // implementation of additional methods for GreyscaleChip
 impl<F: PrimeField> GreyscaleChip<F> {
@@ -84,7 +90,7 @@ impl<F: PrimeField> GreyscaleChip<F> {
     // configure the chip including all gates, constraints, and selectors
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        advice: [Column<Advice>; 5],
+        advice: [Column<Advice>; 6],
         instance: Column<Instance>,
         byte_table: TableColumn,
         rem_table: TableColumn

@@ -2,7 +2,6 @@ pub mod image_circuit;
 pub mod poseidon;
 pub mod greyscale;
 pub mod sponge;
-pub mod packer;
 pub mod number;
 
 use crate::png;

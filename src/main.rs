@@ -2,7 +2,6 @@ mod png;
 mod prover;
 mod verifier;
 
-// TODO: edit the image circuit to pack computed hash and grey values in the same way the verifier expects
 
 // main function
 fn main() {
