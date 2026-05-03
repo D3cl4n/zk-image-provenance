@@ -110,9 +110,19 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     ) -> Result<Vec<Number<F>>, Error> {
         let config = self.config();
         let bytes_per_element: usize = 31;
+        let mut packed_elements: Vec<Number<F>> = vec![];
     
         layouter.assign_region(|| "packing_region", |mut region| {
-
+            let mut row_offset = 0;
+            // iterate over each chunk - adds one packed element to packed_elements vector each iterations
+            for chunk in bytes.chunks(bytes_per_element) {
+                let mut last_cell: AssignedCell<F, F> = None;
+                // iterate over each of the 31 bytes in the chunk and pack
+                for b in chunk.iter() {
+                    
+                }
+                packed_elements.push(Number(last_cell.unwrap()));
+            }
         });? // end of region assignment
     } // end of the pack function need to return Vec<Number<F>> above here
 } // end of implementation

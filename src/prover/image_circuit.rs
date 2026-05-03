@@ -118,11 +118,9 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         // pack the grey pixels into field elements inside circuit so it is constrained properly
         let mut result: Vec<Number<F>> = vec![];
 
-        // use the packing chip to pack greyscale results
+        // use the packing chip to pack greyscale results and add to expected results
         let packed_elements = packing_chip.pack(&mut layouter, &greyscale_result)?;
-        for p in packed_elements {
-            result.push(Number(p.0));
-        }
+        result.extend(packed_elements);
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
