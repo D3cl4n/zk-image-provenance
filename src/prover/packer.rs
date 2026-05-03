@@ -114,12 +114,17 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     
         layouter.assign_region(|| "packing_region", |mut region| {
             let mut row_offset = 0;
+            let base_256: Value<F> = Value::known(F::from(256 as u64));
             // iterate over each chunk - adds one packed element to packed_elements vector each iterations
             for chunk in bytes.chunks(bytes_per_element) {
                 let mut last_cell: AssignedCell<F, F> = None;
+                let mut accumulator_val: Value<F> = Value::known(F::ZERO);
                 // iterate over each of the 31 bytes in the chunk and pack
-                for b in chunk.iter() {
-                    
+                for byte in chunk.iter() {
+                    config.s_pack.enable(&mut region, row_offset)?;
+                    let accumulator_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_curr", config.advice[0], row_offset, || accumulator_val)?;
+                    let byte_cell: AssignedCell<F, F> = region.assign_advice(|| "byte_cell", config.advice[1], row_offset, || byte.0.value().copied())?;
+                    let accumulator_next: Value<F> = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| *a * base_256 + *b);
                 }
                 packed_elements.push(Number(last_cell.unwrap()));
             }
