@@ -46,7 +46,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
     // configure function for the circuit
     fn configure(meta: &mut ConstraintSystem<F>) -> Self::Config {
-        let advice = [meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column()];
+        let advice = [meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column(), meta.advice_column()];
         let fixed = [meta.fixed_column(), meta.fixed_column(), meta.fixed_column(), meta.fixed_column()];
         let instance = meta.instance_column();
         let byte_table = meta.lookup_table_column();
@@ -64,10 +64,10 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, advice, instance, byte_table, rem_table),
+            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
             sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
-            packer: PackingChip::configure(meta, [advice[0], advice[1]])
+            packer: PackingChip::configure(meta, [advice[5], advice[6]])
         }
     }
 
