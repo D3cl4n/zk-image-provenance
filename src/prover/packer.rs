@@ -62,7 +62,6 @@ fn create_packing_accumulation_gate<F: PrimeField> (
 
 
 // implementation of additional methods for the PackingChip
-// TODO: figure out if I need a lookup table here to constrain byte values
 impl<F: PrimeField> PackingChip<F> {
     // constructor
     pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
