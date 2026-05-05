@@ -109,7 +109,6 @@ pub trait PackingChipInstructions<F: PrimeField>: Chip<F> {
 
 
 // implement the PackingChipInstructions trait for PackingChip
-// TODO: debug this
 impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     type Num = Number<F>;
 
@@ -132,40 +131,32 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     ) -> Result<Vec<Number<F>>, Error> {
         let config = self.config();
         let bytes_per_element: usize = 31;
-        let mut packed_elements: Vec<Number<F>> = vec![];
 
-        layouter.assign_region(|| "packing_region", |mut region| {
+        let packed_elements = layouter.assign_region(|| "packing_region", |mut region| {
             let mut row_offset = 0;
             let base_256: F = F::from(256u64);
+            let mut local_packed: Vec<Number<F>> = vec![];
 
+            // iterate over each 31 byte chunk
             for chunk in bytes.chunks(bytes_per_element) {
                 let mut accumulator_val: Value<F> = Value::known(F::ZERO);
 
+                // iterate over each byte per chunk and pack into 1 field element
                 for (i, byte) in chunk.iter().enumerate() {
                     let is_last = i == chunk.len() - 1;
 
-                    // enable selector on all rows except the last in the chunk
                     if !is_last {
                         config.s_pack.enable(&mut region, row_offset)?;
                     }
 
-                    // assign current accumulator value
-                    region.assign_advice(
-                        || format!("acc_curr_{}", row_offset),
-                        config.advice[0],
-                        row_offset,
-                        || accumulator_val
-                    )?;
-
-                    // assign the byte
-                    let byte_cell = region.assign_advice(
+                    region.assign_advice(|| format!("acc_curr_{}", row_offset), config.advice[0], row_offset, || accumulator_val)?;
+                    let byte_cell: AssignedCell<F, F> = region.assign_advice(
                         || format!("byte_{}", row_offset),
-                        config.advice[1],
+                        config.advice[1], 
                         row_offset,
                         || byte.0.value().copied()
                     )?;
 
-                    // compute next accumulator value
                     accumulator_val = accumulator_val
                         .zip(byte_cell.value().copied())
                         .map(|(a, b)| a * base_256 + b);
@@ -173,21 +164,18 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                     row_offset += 1;
                 }
 
-                // assign the final accumulated value in the row after the chunk
-                let packed_cell = region.assign_advice(
+                let packed_cell: AssignedCell<F, F> = region.assign_advice(
                     || format!("packed_result_{}", row_offset),
                     config.advice[0],
                     row_offset,
                     || accumulator_val
                 )?;
 
-                // advance past this result row so the next chunk doesn't overwrite it
                 row_offset += 1;
-
-                packed_elements.push(Number(packed_cell));
+                local_packed.push(Number(packed_cell));
             }
 
-            Ok(())
+            Ok(local_packed)
         })?;
 
         Ok(packed_elements)
