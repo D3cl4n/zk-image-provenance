@@ -127,37 +127,69 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
     // pack function definition
     fn pack(
         &self,
-        layouter: &mut impl Layouter<F>, 
+        layouter: &mut impl Layouter<F>,
         bytes: &Vec<Self::Num>
     ) -> Result<Vec<Number<F>>, Error> {
         let config = self.config();
         let bytes_per_element: usize = 31;
         let mut packed_elements: Vec<Number<F>> = vec![];
-    
+
         layouter.assign_region(|| "packing_region", |mut region| {
             let mut row_offset = 0;
-            let base_256: F = F::from(256 as u64);
-            // iterate over each chunk - adds one packed element to packed_elements vector each iterations
+            let base_256: F = F::from(256u64);
+
             for chunk in bytes.chunks(bytes_per_element) {
-                let mut last_cell = None;
                 let mut accumulator_val: Value<F> = Value::known(F::ZERO);
-                // iterate over each of the 31 bytes in the chunk and pack
+
                 for (i, byte) in chunk.iter().enumerate() {
-                    if i < chunk.len() - 1 {
+                    let is_last = i == chunk.len() - 1;
+
+                    // enable selector on all rows except the last in the chunk
+                    if !is_last {
                         config.s_pack.enable(&mut region, row_offset)?;
                     }
-                    let accumulator_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_curr", config.advice[0], row_offset, || accumulator_val)?;
-                    let byte_cell: AssignedCell<F, F> = region.assign_advice(|| "byte_cell", config.advice[1], row_offset, || byte.0.value().copied())?;
-                    let accumulator_next: Value<F> = accumulator_cell.value().zip(byte_cell.value()).map(|(a, b)| *a * base_256 + *b);
-                    let accumulator_next_cell: AssignedCell<F, F> = region.assign_advice(|| "acc_next", config.advice[0], row_offset + 1, || accumulator_next)?;
-                    last_cell = Some(accumulator_next_cell);
-                    accumulator_val = accumulator_next;
+
+                    // assign current accumulator value
+                    region.assign_advice(
+                        || format!("acc_curr_{}", row_offset),
+                        config.advice[0],
+                        row_offset,
+                        || accumulator_val
+                    )?;
+
+                    // assign the byte
+                    let byte_cell = region.assign_advice(
+                        || format!("byte_{}", row_offset),
+                        config.advice[1],
+                        row_offset,
+                        || byte.0.value().copied()
+                    )?;
+
+                    // compute next accumulator value
+                    accumulator_val = accumulator_val
+                        .zip(byte_cell.value().copied())
+                        .map(|(a, b)| a * base_256 + b);
+
                     row_offset += 1;
                 }
-                packed_elements.push(Number(last_cell.expect("[!] Failed to unwrap")));
+
+                // assign the final accumulated value in the row after the chunk
+                let packed_cell = region.assign_advice(
+                    || format!("packed_result_{}", row_offset),
+                    config.advice[0],
+                    row_offset,
+                    || accumulator_val
+                )?;
+
+                // advance past this result row so the next chunk doesn't overwrite it
+                row_offset += 1;
+
+                packed_elements.push(Number(packed_cell));
             }
+
             Ok(())
-        })?; // end of region assignment
+        })?;
+
         Ok(packed_elements)
-    } // end of the pack function need to return Vec<Number<F>> above here
+    }
 } // end of implementation

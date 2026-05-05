@@ -19,6 +19,7 @@ fn main() {
 
     // verifier functionality
     let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
+    println!("[+] Expected instance length: {}", expected.len());
     
     // MockProver for now
     let k: u32 = 23;
