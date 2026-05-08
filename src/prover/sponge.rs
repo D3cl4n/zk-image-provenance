@@ -99,14 +99,6 @@ impl<F: PrimeField> SpongeChip<F> {
 pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
     type Num;
 
-    // expose the squeezed elements as public in the instance column
-    fn expose_as_public(
-        &self, 
-        layouter: &mut impl Layouter<F>, 
-        num: Self::Num, 
-        row: usize
-    ) -> Result<(), Error>;
-
     // initialize the sponge permutation's internal state to all 0
     fn initialize(
         &self, 
@@ -144,17 +136,6 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
 // implement the SpongeInstructions trait for the SpongeChip
 impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
     type Num = Number<F>;
-
-    // expose output as public
-    fn expose_as_public(
-        &self, 
-        layouter: &mut impl Layouter<F>, 
-        num: Self::Num, 
-        row: usize
-    ) -> Result<(), Error> {
-        let config = self.config();
-        layouter.constrain_instance(num.0.cell(), config.instance, row)
-    }
 
     // initialize the internal state to all 0s per Poseidon paper
     fn initialize(

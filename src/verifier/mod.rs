@@ -1,4 +1,5 @@
 use ff::PrimeField;
+use secp256k1::{Secp256k1};
 use crate::png;
 
 
@@ -59,4 +60,12 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     expected.push(hash_element);
 
     expected
+}
+
+
+// extract the bytes of the ECDSA signature from the edited png
+fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
+    println!("[*] Extracting ECDSA signature from edited png");
+
+    [0u8; 64]
 }
