@@ -64,8 +64,14 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
 
 
 // extract the bytes of the ECDSA signature from the edited png
-fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
+fn extract_signature_from_png(edited_img: &String) -> Vec<u8> {
     println!("[*] Extracting ECDSA signature from edited png");
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
-    [0u8; 64]
+    // extract the hash value from the chunks
+    image_chunks.iter()
+        .find(|c| &c.chunk_type == b"sIGn")
+        .expect("[!] No hASh chunk found")
+        .chunk_data
+        .clone()
 }
