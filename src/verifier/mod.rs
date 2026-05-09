@@ -1,5 +1,5 @@
 use ff::PrimeField;
-use secp256k1::{Secp256k1, Message};
+use secp256k1::{Secp256k1, Message, PublicKey};
 use crate::png;
 
 
@@ -98,11 +98,20 @@ fn ecdsa_message_from_digest(edited_img: &String) -> Message {
 }
 
 
+// load the verifying key from the .bin file
+fn verifying_key_from_bin(vk_bin: &String) -> PublicKey {
+    let vk_bytes = std::fs::read(vk_bin).expect("[!] Failed to read verifying key");
+
+    PublicKey::from_slice(&vk_bytes).expect("[!] Failed to construct PublicKey")
+}
+
+
 // verify the ECDSA signature off-circuit given the public key
 fn verify_ecdsa_signature(edited_img: &String, public_key: &String) -> bool {
     println!("[*] Verifying ECDSA signature");
     let message: Message = ecdsa_message_from_digest(edited_img);
     let secp: Secp256k1 = Secp256k1::new();
+
 
     true
 } 
