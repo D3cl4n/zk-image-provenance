@@ -114,11 +114,10 @@ In this scenario there is a valid, signed image from an authorized camera. A dis
 - Color type 0 in IHDR for greyscale: `https://www.w3.org/TR/png-3/#3colourType`
 
  ## TODO
-- implement a packing chip inside the prover to pack greyscaled pixels into field elements
 - change all code to use constant powers of 256 to save computation
-- store public key for camera in .pem readable by the verifier code
-- make sure exifdata parser for Rust and Python both get the same chunk and replace dummy exif data in code 
 - Use real prover and verifier, calculate minimum number of rows needed. Verifier will need to use camera's public key
 - demonstrate failed threats in the threat analysis section and document
 - secure storate of the signing key on a chip in the pi somehow (buy a chip)
 - write a paper
+
+https://docs.rs/halo2_proofs/latest/halo2_proofs/plonk/fn.create_proof.html
