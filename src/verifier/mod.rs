@@ -94,7 +94,7 @@ fn construct_ecdsa_message(edited_img: &String) -> Message {
 
     let hash_slice: [u8; 32] = hash.try_into().expect("[!] Vector is not 32 elements long");
 
-    Message::from_digest(&hash_slice)
+    Message::from_digest(hash_slice)
 }
 
 
