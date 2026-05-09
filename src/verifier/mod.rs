@@ -81,7 +81,7 @@ fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
 
 
 // extract hash bytes as a slice and construct a Message struct
-fn construct_ecdsa_message(edited_img: &String) -> Message {
+fn ecdsa_message_from_digest(edited_img: &String) -> Message {
     println!("[*] Extracting Poseidon hash from edited png");
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
@@ -99,6 +99,8 @@ fn construct_ecdsa_message(edited_img: &String) -> Message {
 
 
 // verify the ECDSA signature off-circuit given the public key
-fn verify_ecdsa_signature(public_key: &String) -> bool {
+fn verify_ecdsa_signature(edited_img: &String, public_key: &String) -> bool {
+    println!("[*] Verifying ECDSA signature");
+    let message: Message = ecdsa_message_from_digest(edited_img);
     true
 } 
