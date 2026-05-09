@@ -1,5 +1,5 @@
 use ff::PrimeField;
-use secp256k1::{Secp256k1};
+use secp256k1::{Secp256k1, Message};
 use crate::png;
 
 
@@ -49,6 +49,7 @@ fn extract_hash_from_png<F: PrimeField>(edited_img: &String) -> F {
     element
 }
 
+
 // combine the hash and packed grey pixels into vector of expected field elements
 pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     let grey_vec: Vec<F> = pack_grey_pixels(edited_img);
@@ -64,14 +65,40 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
 
 
 // extract the bytes of the ECDSA signature from the edited png
-fn extract_signature_from_png(edited_img: &String) -> Vec<u8> {
+fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
     println!("[*] Extracting ECDSA signature from edited png");
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
     // extract the hash value from the chunks
-    image_chunks.iter()
+    let signature: Vec<u8> = image_chunks.iter()
         .find(|c| &c.chunk_type == b"sIGn")
+        .expect("[!] No sIGn chunk found")
+        .chunk_data
+        .clone();
+
+    signature.try_into().expect("[!] Vector is not 64 elements long")
+}
+
+
+// extract hash bytes as a slice and construct a Message struct
+fn construct_ecdsa_message(edited_img: &String) -> Message {
+    println!("[*] Extracting Poseidon hash from edited png");
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
+
+    // extract the hash value from the chunks
+    let hash: Vec<u8> = image_chunks.iter()
+        .find(|c| &c.chunk_type == b"hASh")
         .expect("[!] No hASh chunk found")
         .chunk_data
-        .clone()
+        .clone();
+
+    let hash_slice: [u8; 32] = hash.try_into().expect("[!] Vector is not 32 elements long");
+
+    Message::from_digest(&hash_slice)
 }
+
+
+// verify the ECDSA signature off-circuit given the public key
+fn verify_ecdsa_signature(public_key: &String) -> bool {
+    true
+} 
