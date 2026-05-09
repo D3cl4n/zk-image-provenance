@@ -449,16 +449,16 @@ class Camera:
 
     # generate ECDSA keys - only call if keys are not already generated and securely stored
     def keygen(self):
-        if not os.path.isfile("verifying_key.pem") or not os.path.isfile("signing_key.pem"):
+        if not os.path.isfile("verifying_key.bin") or not os.path.isfile("signing_key.bin"):
             self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
             self.vk = self.sk.get_verifying_key()
 
             # write the signing and verifying keys to .pems (insecure key storage for POC)
-            with open("verifying_key.pem", "wb") as f:
-                f.write(self.vk.to_pem(format="PKCS8"))
+            with open("verifying_key.bin", "wb") as f:
+                f.write(self.vk.to_string())
 
-            with open("signing_key.pem", "wb") as f:
-                f.write(self.sk.to_pem(format="PKCS8"))
+            with open("signing_key.bin", "wb") as f:
+                f.write(self.sk.to_string())
 
 
     # implement the padding scheme to match rust code - will shift to Pi
