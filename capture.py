@@ -450,7 +450,7 @@ class Camera:
     # generate ECDSA keys - only call if keys are not already generated and securely stored
     def keygen(self):
         if not os.path.isfile("verifying_key.bin") or not os.path.isfile("signing_key.bin"):
-            self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1, hashfunc=hashlib.sha256)
+            self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
             self.vk = self.sk.get_verifying_key()
 
             # write the signing and verifying keys to .pems (insecure key storage for POC)

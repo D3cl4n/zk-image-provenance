@@ -109,12 +109,12 @@ fn verifying_key_from_bin(vk_bin: &String) -> PublicKey {
 
 
 // verify the ECDSA signature off-circuit given the public key
-pub fn verify_ecdsa_signature(edited_img: &String, public_key: &String) -> bool {
+pub fn verify_ecdsa_signature(edited_img: &String, public_key: &String) {
     println!("[*] Verifying ECDSA signature");
     let message: Message = ecdsa_message_from_digest(edited_img);
     let secp = Secp256k1::new();
     let vk: PublicKey = verifying_key_from_bin(public_key);
     let signature: Signature = extract_signature_from_png(edited_img);
 
-    secp.verify_ecdsa(message, &signature, &vk).is_ok()
+    assert!(secp.verify_ecdsa(message, &signature, &vk).is_ok());
 } 
