@@ -515,9 +515,13 @@ class Camera:
     # construct and embed all custom chunks at once
     def embed_chunks(self, H, exif_data):
         print("[*] Embedding signature, hash, and exifdata into png")
+        print(f"[*] H being signed: {H.hex()}")
+        signature = self.sk.sign_deterministic(H)
+        print(f"[*] Signature length: {len(signature)}")
+        print(f"[*] Signature hex: {signature.hex()}")
         self.chunks[b"eXIf"] = self.png_utils.construct_chunk(b"eXIf", exif_data)
         self.chunks[b"hASh"] = self.png_utils.construct_chunk(b"hASh", H)
-        self.chunks[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", self.sk.sign_digest_deterministic(H))
+        self.chunks[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", signature)
 
         # TODO: concatenate all chunks and embed as one bytestring
         self.png_utils.embed_chunk(self.chunks[b"eXIf"])
