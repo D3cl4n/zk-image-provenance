@@ -18,6 +18,7 @@ fn main() {
     let circuit = prover::construct_circuit_struct(&original_img);
 
     // verifier functionality
+    verifier::verify_ecdsa_signature(&edited_img);
     let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
     println!("[+] Expected instance length: {}", expected.len());
     
