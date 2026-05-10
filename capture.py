@@ -513,9 +513,8 @@ class Camera:
 
 
     # construct and embed all custom chunks at once
-    def embed_chunks(self, H):
+    def embed_chunks(self, H, exif_data):
         print("[*] Embedding signature, hash, and exifdata into png")
-        exif_data = self.construct_exif_data()
         self.chunks[b"eXIf"] = self.png_utils.construct_chunk(b"eXIf", exif_data)
         self.chunks[b"hASh"] = self.png_utils.construct_chunk(b"hASh", H)
         self.chunks[b"sIGn"] = self.png_utils.construct_chunk(b"sIGn", self.sk.sign_digest_deterministic(H))
@@ -543,13 +542,14 @@ class Camera:
                 g_vec.append(g)
                 b_vec.append(b)
 
-        raw_preimage = r_vec + g_vec + b_vec + list(self.construct_exif_data())
+        exif_data = list(self.construct_exif_data())
+        raw_preimage = r_vec + g_vec + b_vec + exif_data)
         packed_preimage = self.pack(raw_preimage)
         padded_preimage = self.pad(packed_preimage, 3)
         H = int(self.poseidon_instance.hash(padded_preimage).lift()).to_bytes(32, "big")
         print(f"[*] Hash of original image: {H}")
 
-        self.embed_chunks(H)
+        self.embed_chunks(H, exif_data)
 
 
     # capture a photo (do not call this function unless on the pi)

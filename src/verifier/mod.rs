@@ -54,6 +54,7 @@ fn extract_hash_from_png<F: PrimeField>(edited_img: &String) -> F {
 pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     let grey_vec: Vec<F> = pack_grey_pixels(edited_img);
     let hash_element: F = extract_hash_from_png(edited_img);
+    println!("[*] Expected hash element: {:?}", hash_element);
 
     let mut expected: Vec<F> = vec![];
 

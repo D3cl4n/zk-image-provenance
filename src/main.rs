@@ -24,7 +24,7 @@ fn main() {
     println!("[+] Expected instance length: {}", expected.len());
     
     // MockProver for now
-    let k: u32 = 18;
+    let k: u32 = 20;
     let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
     assert_eq!(prover.verify(), Ok(()));
 }
