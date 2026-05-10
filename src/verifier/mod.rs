@@ -1,5 +1,5 @@
 use ff::PrimeField;
-use secp256k1::{Secp256k1, Message, PublicKey};
+use secp256k1::{Secp256k1, Message, PublicKey, ecdsa::Signature};
 use crate::png;
 
 
@@ -65,7 +65,7 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
 
 
 // extract the bytes of the ECDSA signature from the edited png
-fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
+fn extract_signature_from_png(edited_img: &String) -> Signature {
     println!("[*] Extracting ECDSA signature from edited png");
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
@@ -76,7 +76,9 @@ fn extract_signature_from_png(edited_img: &String) -> [u8; 64] {
         .chunk_data
         .clone();
 
-    signature.try_into().expect("[!] Vector is not 64 elements long")
+    let signature_bytes: [u8; 64] = signature.try_into().expect("[!] Vector is not 64 elements long");
+
+    Signature::from_compact(&signature_bytes).expect("[!] Signature is incorrect length")
 }
 
 
@@ -112,6 +114,7 @@ fn verify_ecdsa_signature(edited_img: &String, public_key: &String) -> bool {
     let message: Message = ecdsa_message_from_digest(edited_img);
     let secp = Secp256k1::new();
     let vk: PublicKey = verifying_key_from_bin(public_key);
+    let signature: Signature = extract_signature_from_png(edited_img);
 
-    true
+    secp.verify_ecdsa(message, &signature, &vk).is_ok()
 } 
