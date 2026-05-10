@@ -455,7 +455,7 @@ class Camera:
 
             # write the signing and verifying keys to .pems (insecure key storage for POC)
             with open("verifying_key.bin", "wb") as f:
-                f.write(self.vk.to_string("uncompressed"))
+                f.write(self.vk.to_string())
 
             with open("signing_key.bin", "wb") as f:
                 f.write(self.sk.to_string())
