@@ -1,5 +1,5 @@
 use ff::PrimeField;
-use secp256k1::{Secp256k1, Message, PublicKey, ecdsa::Signature};
+use secp256k1::{Secp256k1, Message, PublicKey, ecdsa::{Signature}};
 use crate::png;
 
 
