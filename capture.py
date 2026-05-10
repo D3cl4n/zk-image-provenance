@@ -542,8 +542,8 @@ class Camera:
                 g_vec.append(g)
                 b_vec.append(b)
 
-        exif_data = list(self.construct_exif_data())
-        raw_preimage = r_vec + g_vec + b_vec + exif_data
+        exif_data = self.construct_exif_data()
+        raw_preimage = r_vec + g_vec + b_vec + list(exif_data)
         packed_preimage = self.pack(raw_preimage)
         padded_preimage = self.pad(packed_preimage, 3)
         H = int(self.poseidon_instance.hash(padded_preimage).lift()).to_bytes(32, "big")
