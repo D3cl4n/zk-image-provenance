@@ -245,20 +245,13 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
 
         // pack 31 bytes into each field element then pad and construct blocks
         let bytes_per_element: usize = 31;
+        let base_256: F = F::from(256 as u64);
         let mut preimage_elements: Vec<F> = input
-            .chunks(bytes_per_element) // split input vector into slides of size bytes_per_element
-            .map(|chunk| { // for each slice execute a closure to produce a packed field element
-                let mut element: F = F::ZERO;
-                let mut base: F = F::ONE;
-                let base_256: F = F::from(256 as u64);
-
-                // iterate over each byte in slice and pack into position based on powers of 256
-                for &byte in chunk {
-                    element += F::from(byte as u64) * base; // pack
-                    base *= base_256;
-                } 
-
-                element
+            .chunks(bytes_per_element)
+            .map(|chunk| {
+                chunk.iter().fold(F::ZERO, |acc, &byte| {
+                    acc * base_256 + F::from(byte as u64)
+                })
             })
             .collect();
 
