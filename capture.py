@@ -481,7 +481,7 @@ class Camera:
         
         for block in range(len(blocks)):
             element = self.poseidon_instance.field_p(0)
-            for byte in range(len(block)): # if last block is less then 31 bytes we will naturally stop
+            for byte in block: # if last block is less then 31 bytes we will naturally stop
                 element = element * self.poseidon_instance.field_p(256) + self.poseidon_instance.field_p(byte)
 
             preimage_elements.append(element)
