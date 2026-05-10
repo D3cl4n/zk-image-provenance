@@ -1,5 +1,4 @@
 import ecdsa
-import hashlib
 import os
 import piexif
 import struct
@@ -516,7 +515,7 @@ class Camera:
     def embed_chunks(self, H, exif_data):
         print("[*] Embedding signature, hash, and exifdata into png")
         print(f"[*] H being signed: {H.hex()}")
-        signature = self.sk.sign_deterministic(H)
+        signature = self.sk.sign_digest_deterministic(H)
         print(f"[*] Signature length: {len(signature)}")
         print(f"[*] Signature hex: {signature.hex()}")
         self.chunks[b"eXIf"] = self.png_utils.construct_chunk(b"eXIf", exif_data)

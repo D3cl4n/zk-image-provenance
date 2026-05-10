@@ -104,8 +104,6 @@ fn ecdsa_message_from_digest(edited_img: &String) -> Message {
 // load the verifying key from the .bin file
 fn verifying_key_from_bin(vk_bin: &String) -> PublicKey {
     let vk_bytes = std::fs::read(vk_bin).expect("[!] Failed to read verifying key");
-    println!("[*] Verifying key length: {}", vk_bytes.len());
-    println!("[*] Verifying key prefix: {}", vk_bytes[0]);
 
     PublicKey::from_slice(&vk_bytes).expect("[!] Failed to construct PublicKey")
 }
@@ -118,9 +116,11 @@ pub fn verify_ecdsa_signature(edited_img: &String, public_key: &String) {
     let secp = Secp256k1::new();
     let vk: PublicKey = verifying_key_from_bin(public_key);
     let signature: Signature = extract_signature_from_png(edited_img);
+    let mut sig = signature;
+    sig.normalize_s();
 
     println!("[*] Verifying key hex: {}", hex::encode(vk.serialize_uncompressed()));
     println!("[*] H being verified: {}", hex::encode(message.as_ref()));
     println!("[*] Signature hex: {}", hex::encode(signature.serialize_compact()));
-    assert!(secp.verify_ecdsa(message, &signature, &vk).is_ok());
+    assert!(secp.verify_ecdsa(message, &sig, &vk).is_ok());
 } 
