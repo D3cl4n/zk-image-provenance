@@ -7,7 +7,7 @@ mod verifier;
 fn main() {
     // start with the MockProver and then move to real prover
     use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
-    use halo2curves::bls12_381::{Bls12, Fr, G1Affine};
+    use halo2curves::bls12381::{Fr, G1Affine};
     use halo2_proofs::{
         plonk::{create_proof, keygen_pk, keygen_vk, verify_proof},
         poly::{
