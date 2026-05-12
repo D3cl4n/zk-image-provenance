@@ -28,4 +28,5 @@ fn main() {
     // setup the proof generation
     println!("[*] Generating IPA parameters");
     let k: u32 = 15;
+    let params: Params<EqAffine> = Params::new(k);
 }
