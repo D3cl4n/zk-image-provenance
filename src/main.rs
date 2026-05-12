@@ -7,13 +7,13 @@ mod verifier;
 fn main() {
     // start with the MockProver and then move to real prover
     use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
-    use halo2curves::bls12381::Fr;
     use halo2_proofs::{
-        plonk::{create_proof, verify_proof, keygen_vk, keygen_pk},
+        pasta::{EqAffine, Fp},
+        plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, SingleVerifier},
         poly::commitment::Params,
-        transcript::{Blake2bRead, Blake2bWrite, Challenge255}
+        transcript::{Blake2bRead, Blake2bWrite, Challenge255},
     };
-    use halo2_proofs::dev::MockProver;
+    use rand::rngs::OsRng;
 
     // original image as private witness, edited image as public, verifying key is public but used off-circuit
     let original_img = String::from("original.png");
@@ -22,7 +22,7 @@ fn main() {
 
     // verifier functionality off-circuit and prover circuit struct creation
     verifier::verify_ecdsa_signature(&edited_img, &public_key);
-    let expected: Vec<Fr> = verifier::construct_expected_value(&edited_img);
+    let expected: Vec<Fp> = verifier::construct_expected_value(&edited_img);
     let circuit = prover::construct_circuit_struct(&original_img);
 
     // setup the proof generation

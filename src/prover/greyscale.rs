@@ -92,31 +92,31 @@ impl<F: PrimeField> GreyscaleChip<F> {
         let s_greyscale = meta.complex_selector();
         create_greyscale_gate(meta, advice, s_greyscale);
 
-        meta.lookup("lookup_r", |meta| {
+        meta.lookup(|meta| {
             let s = meta.query_selector(s_greyscale);
             let r = meta.query_advice(advice[0], Rotation::cur());
             vec![(s * r, byte_table)]
         });
 
-        meta.lookup("lookup_g", |meta| {
+        meta.lookup(|meta| {
             let s = meta.query_selector(s_greyscale);
             let g = meta.query_advice(advice[1], Rotation::cur());
             vec![(s * g, byte_table)]
         });
 
-        meta.lookup("lookup_b", |meta| {
+        meta.lookup(|meta| {
             let s = meta.query_selector(s_greyscale);
             let b = meta.query_advice(advice[2], Rotation::cur());
             vec![(s * b, byte_table)]
         });
 
-        meta.lookup("lookup_y", |meta| {
+        meta.lookup(|meta| {
             let s = meta.query_selector(s_greyscale);
             let y = meta.query_advice(advice[3], Rotation::cur());
             vec![(s * y, byte_table)]
         });
 
-        meta.lookup("lookup_rem", |meta| {
+        meta.lookup(|meta| {
             let s = meta.query_selector(s_greyscale);
             let rem = meta.query_advice(advice[4], Rotation::cur());
             vec![(s * rem, rem_table)]
