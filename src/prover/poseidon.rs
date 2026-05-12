@@ -457,7 +457,7 @@ impl<F: PrimeField> PoseidonChip<F> {
         PoseidonChip {config, _marker: PhantomData}
     }
 
-    // configure the chip including all gates and constraints TODO: add lookup argument here too
+    // configure the chip including all gates and constraints 
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 4],
