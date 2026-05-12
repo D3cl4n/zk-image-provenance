@@ -7,22 +7,13 @@ mod verifier;
 fn main() {
     // start with the MockProver and then move to real prover
     use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
-    use halo2curves::bls12381::{Fr, G1Affine};
+    use halo2curves::bls12381::Fr;
     use halo2_proofs::{
-        plonk::{create_proof, keygen_pk, keygen_vk, verify_proof},
-        poly::{
-            kzg::{
-                commitment::{KZGCommitmentScheme, ParamsKZG},
-                multiopen::{ProverSHPLONK, VerifierSHPLONK},
-                strategy::SingleStrategy,
-            },
-        },
-        transcript::{
-            Blake2bRead, Blake2bWrite, Challenge255,
-            TranscriptReadBuffer, TranscriptWriterBuffer,
-        },
+        plonk::{create_proof, verify_proof, keygen_vk, keygen_pk},
+        poly::commitment::Params,
+        transcript::{Blake2bRead, Blake2bWrite, Challenge255}
     };
-    use rand::rngs::OsRng;
+    use halo2_proofs::dev::MockProver;
 
     // original image as private witness, edited image as public, verifying key is public but used off-circuit
     let original_img = String::from("original.png");
@@ -35,8 +26,11 @@ fn main() {
     let circuit = prover::construct_circuit_struct(&original_img);
 
     // setup the proof generation
-    println!("[*] Generating KZG parameters");
+    println!("[*] Generating IPA parameters");
 
-    // size of evaluation domain 2^k
+    
+    // MockProver for now
     let k: u32 = 15;
+    let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
+    assert_eq!(prover.verify(), Ok(()));
 }
