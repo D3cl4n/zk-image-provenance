@@ -12,7 +12,6 @@ fn pack_grey_pixels<F: PrimeField>(edited_img: &String) -> Vec<F> {
         .chunks(bytes_per_element)
         .map(|chunk| {
             let mut element: F = F::ZERO;
-            let mut base: F = F::ONE;
             let base_256: F = F::from(256 as u64);
 
             // iterate over each byte in slice and pack into position based on powers of 256

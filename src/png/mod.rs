@@ -5,7 +5,6 @@ use crc32fast::Hasher;
 
 
 // structure to hold a png chunk
-#[derive(Clone)]
 pub struct PngChunk {
     pub chunk_length: u32,
     pub chunk_type: [u8; 4],
