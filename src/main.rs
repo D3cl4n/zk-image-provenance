@@ -30,4 +30,8 @@ fn main() {
     let k: u32 = 15;
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("[!] keygen_vk failed");
+    let pk = keygen_pk(&params, vk.clone(), &circuit).expect("[!] keygen_pk failed");
+
+    // creating the proof
+    let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
 }
