@@ -336,10 +336,10 @@ fn create_arc_gate<F: PrimeField>(
         let a1_next = meta.query_advice(advice[1], Rotation::next());
         let a2_next = meta.query_advice(advice[2], Rotation::next());
         let a3_next = meta.query_advice(advice[3], Rotation::next());
-        let rc0 = meta.query_fixed(fixed[0], Rotation::cur()); // query_fixed reads from current row when gate is active
-        let rc1 = meta.query_fixed(fixed[1], Rotation::cur());
-        let rc2 = meta.query_fixed(fixed[2], Rotation::cur());
-        let rc3 = meta.query_fixed(fixed[3], Rotation::cur());
+        let rc0 = meta.query_fixed(fixed[0]); // query_fixed reads from current row when gate is active
+        let rc1 = meta.query_fixed(fixed[1]);
+        let rc2 = meta.query_fixed(fixed[2]);
+        let rc3 = meta.query_fixed(fixed[3]);
 
         // constraint should be vec![0, 0, 0, 0]
         vec![

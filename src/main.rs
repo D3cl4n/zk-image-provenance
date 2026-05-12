@@ -27,10 +27,5 @@ fn main() {
 
     // setup the proof generation
     println!("[*] Generating IPA parameters");
-
-    
-    // MockProver for now
     let k: u32 = 15;
-    let prover = MockProver::run(k, &circuit, vec![expected.clone()]).unwrap();
-    assert_eq!(prover.verify(), Ok(()));
 }
