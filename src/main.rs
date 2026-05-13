@@ -37,4 +37,7 @@ fn main() {
     create_proof(&params, &pk, &[circuit], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
     let proof = transcript.finalize();
     println!("[*] Proof size: {}", proof.len());
+
+    // write the proof to a .bin file
+    std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
 }
