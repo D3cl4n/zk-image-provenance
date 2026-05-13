@@ -34,4 +34,7 @@ fn main() {
 
     // creating the proof
     let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
+    create_proof(&params, &pk, &[circuit], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
+    let proof = transcript.finalize();
+    println!("[*] Proof size: {}", proof.len());
 }
