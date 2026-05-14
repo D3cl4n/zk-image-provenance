@@ -21,26 +21,27 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 - $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
 
 #### ZKP Computed by Editor (Instance-Witness Relationship)
-- $\mathcal{R} := \{(\text{H}_{0}, \text{H}_{1}) \; ; \; (\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \; :\\ \text{I}' = \text{Greyscale}(\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}_{1}\}$
+- $\mathcal{R} := \{(\text{H}, \text{I}') \; ; \; (\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \; :\\ \text{I}' = \text{Greyscale}(\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}\}$
 - $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H}_{0}, \text{H}_{1})$
 
 ### Verifier Computations
 - $\text{H}_{0} = \text{Poseidon}(\text{I}'_{R}||\text{I}'_{G}||\text{I}'_{B}||\text{I}'_{\text{exif}})$
 - $\text{H}_{1} = \text{Extract}(\text{I}', \text{hASh})$
 - $\sigma = \text{Extract}(\text{I}', \text{sIGn})$
-- $\text{ECDSA.Verify}(\text{PK}, \sigma, \text{H}) = \text{True}$
+- $\text{ECDSA.Verify}(\text{PK}, \sigma, \text{H}) = \text{True}$ 
 - $\text{Halo2.Verify}(\pi, \text{I}', \text{H}) = \text{True}$
 
 
-## PNG Specification Relevant Sections
-- Structure of a PNG chunk: `https://www.w3.org/TR/png-3/#5Chunk-layout`
-- Naming the custom signature chunk: `https://www.w3.org/TR/png-3/#5Chunk-naming-conventions`
-- Embedded the exifdata in a chunk: `https://www.w3.org/TR/png-3/#eXIf`
-- Color type 0 in IHDR for greyscale: `https://www.w3.org/TR/png-3/#3colourType`
+## Threat Model
+### Hash Swapping
 
- ## TODO
-- demonstrate failed threats in the threat analysis section and document
-- secure storate of the signing key on a chip in the pi somehow (buy a chip)
-- write a paper
+### Signature Swapping
 
-https://docs.rs/halo2_proofs/latest/halo2_proofs/plonk/fn.create_proof.html
+### Unauthorized Image Transformation After Signing
+
+### Exifdata Tampering
+
+### Alternate Greyscale Linear Combinations
+
+### Original Image Dictionary Attack
+
