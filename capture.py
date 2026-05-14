@@ -424,7 +424,7 @@ class PNGUtils:
             f.write(new_png)
 
 
-# class for all functionality related to the camera (move to Raspberry Pi once prototype works)
+# class for all functionality related to the camera
 class Camera:
     def __init__(self, image_path):
         self.sk = None
