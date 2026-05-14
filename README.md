@@ -21,7 +21,7 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 - $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
 
 #### ZKP Computed by Editor (Instance-Witness Relationship)
-- $\mathcal{R} := \{(\text{H}_{0}, \text{H}_{1}) \; ; \; (\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \; :\\ \text{I}' = \text{Greyscale}(\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \wedge \text{Poseidon}(\text{I}'_\text{grey}||\text{I}'_\text{exif}) = \text{H}_{0} \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}_{1}\}$
+- $\mathcal{R} := \{(\text{H}_{0}, \text{H}_{1}) \; ; \; (\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \; :\\ \text{I}' = \text{Greyscale}(\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}_{1}\}$
 - $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H}_{0}, \text{H}_{1})$
 
 ### Verifier Computations
