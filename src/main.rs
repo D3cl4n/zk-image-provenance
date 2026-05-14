@@ -40,4 +40,12 @@ fn main() {
 
     // write the proof to a .bin file
     std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
+
+    // verify the proof
+    println!("[*] Verifying proof");
+    let strategy = SingleVerifier::new(&params);
+    let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
+    verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
+
+    println!("[*] Proof verified successfully");
 }
