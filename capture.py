@@ -432,7 +432,7 @@ class Camera:
         self.image_path = image_path
         self.chunks = {}
         self.poseidon_instance = Poseidon(
-            0x73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001, 
+            0x40000000000000000000000000000000224698fc094cf91b992d30ed00000001, 
             128, # security level in bits
             5, # alpha for SB
             3, # rate
