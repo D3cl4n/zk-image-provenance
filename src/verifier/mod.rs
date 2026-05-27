@@ -48,40 +48,6 @@ fn extract_hash_from_png<F: PrimeField>(edited_img: &String) -> F {
     element
 }
 
-
-// combine the hash and packed grey pixels into vector of expected field elements
-pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
-    let grey_vec: Vec<F> = pack_grey_pixels(edited_img);
-    let hash_element: F = extract_hash_from_png(edited_img);
-    println!("[*] Expected hash element: {:?}", hash_element);
-
-    let mut expected: Vec<F> = vec![];
-
-    expected.extend(grey_vec);
-    expected.push(hash_element);
-
-    expected
-}
-
-
-// extract the bytes of the ECDSA signature from the edited png
-fn extract_signature_from_png(edited_img: &String) -> Signature {
-    println!("[*] Extracting ECDSA signature from edited png");
-    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
-
-    // extract the hash value from the chunks
-    let signature: Vec<u8> = image_chunks.iter()
-        .find(|c| &c.chunk_type == b"sIGn")
-        .expect("[!] No sIGn chunk found")
-        .chunk_data
-        .clone();
-
-    let signature_bytes: [u8; 64] = signature.try_into().expect("[!] Vector is not 64 elements long");
-
-    Signature::from_compact(&signature_bytes).expect("[!] Signature is incorrect length")
-}
-
-
 // pack a vector of u8s into field elements
 fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
     let bytes_per_element: usize = 31;
@@ -110,6 +76,34 @@ fn extract_chunk_data(edited_img: &String, chunk_name: &[u8; 4]) -> Vec<u8> {
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
     image_chunks.iter().find(|c| &c.chunk_type == chunk_name).expect("[!] No chunk found").chunk_data.clone()
+}
+
+
+// combine the hash and packed grey pixels into vector of expected field elements
+pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
+    let mut vec_bytes: Vec<u8> = png::get_png_greyscale_values(edited_img);
+    vec_bytes.extend(extract_chunk_data(edited_img, b"hASh"));
+    vec_bytes.extend(extract_chunk_data(edited_img, b"eXIf"));
+
+    pack_into_field_elements(vec_bytes)
+}
+
+
+// extract the bytes of the ECDSA signature from the edited png
+fn extract_signature_from_png(edited_img: &String) -> Signature {
+    println!("[*] Extracting ECDSA signature from edited png");
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
+
+    // extract the hash value from the chunks
+    let signature: Vec<u8> = image_chunks.iter()
+        .find(|c| &c.chunk_type == b"sIGn")
+        .expect("[!] No sIGn chunk found")
+        .chunk_data
+        .clone();
+
+    let signature_bytes: [u8; 64] = signature.try_into().expect("[!] Vector is not 64 elements long");
+
+    Signature::from_compact(&signature_bytes).expect("[!] Signature is incorrect length")
 }
 
 
