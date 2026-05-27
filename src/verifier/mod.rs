@@ -82,6 +82,15 @@ fn extract_signature_from_png(edited_img: &String) -> Signature {
 }
 
 
+// extract a chunk's data based on chunk type
+fn extract_chunk_data(edited_img: &String, chunk_name: &[u8; 4]) -> Vec<u8> {
+    println!("[*] Extracting {:?} chunk from edited png", chunk_name);
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
+
+    image_chunks.iter().find(|c| &c.chunk_type == chunk_name).expect("[!] No chunk found").chunk_data.clone()
+}
+
+
 // extract hash bytes as a slice and construct a Message struct
 fn ecdsa_message_from_digest(edited_img: &String) -> Message {
     println!("[*] Extracting Poseidon hash from edited png");
