@@ -82,6 +82,28 @@ fn extract_signature_from_png(edited_img: &String) -> Signature {
 }
 
 
+// pack a vector of u8s into field elements
+fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
+    let bytes_per_element: usize = 31;
+    
+    // pack bytes of hash into field element- reversed to match big endian
+    data
+        .chunks(bytes_per_element)
+        .map(|chunk| {
+            let mut element: F = F::ZERO;
+            let base_256: F = F::from(256 as u64);
+
+            // iterate over each byte in slice and pack into position based on powers of 256
+            for &byte in chunk {
+                element = element * base_256 + F::from(byte as u64);
+            } 
+
+            element
+        })
+        .collect()
+}
+
+
 // extract a chunk's data based on chunk type
 fn extract_chunk_data(edited_img: &String, chunk_name: &[u8; 4]) -> Vec<u8> {
     println!("[*] Extracting {:?} chunk from edited png", chunk_name);
