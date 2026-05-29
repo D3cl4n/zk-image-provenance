@@ -14,11 +14,7 @@ fn construct_witness(original_img: &String) -> image_circuit::ImageDetails {
     let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(original_img);
     
     // extract the exif data from the chunks
-    let exif_data: Vec<u8> = image_chunks.iter()
-        .find(|c| &c.chunk_type == b"eXIf")
-        .expect("[!] No eXIf chunk found")
-        .chunk_data
-        .clone();
+    let exif_data: Vec<u8> = png::extract_chunk_data(original_img, b"eXIf");
 
     image_circuit::ImageDetails {
         r, 

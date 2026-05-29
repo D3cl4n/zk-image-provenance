@@ -2,6 +2,7 @@ use image::Pixel;
 use std::fs::File;
 use std::io::{Read, BufReader};
 use crc32fast::Hasher;
+use crate::png;
 
 
 // structure to hold a png chunk
@@ -80,6 +81,14 @@ pub fn get_image_chunks(image_path: &String) -> Vec<PngChunk> {
     }
 
     chunks
+}
+
+// extract a chunk's data based on chunk type
+pub fn extract_chunk_data(edited_img: &String, chunk_name: &[u8; 4]) -> Vec<u8> {
+    println!("[*] Extracting {:?} chunk from edited png", chunk_name);
+    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
+
+    image_chunks.iter().find(|c| &c.chunk_type == chunk_name).expect("[!] No chunk found").chunk_data.clone()
 }
 
 
