@@ -28,8 +28,8 @@ fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
 // combine the hash and packed grey pixels into vector of expected field elements
 pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     let mut vec_bytes: Vec<u8> = png::get_png_greyscale_values(edited_img);
-    vec_bytes.extend(png::extract_chunk_data(edited_img, b"hASh"));
     vec_bytes.extend(png::extract_chunk_data(edited_img, b"eXIf"));
+    vec_bytes.extend(png::extract_chunk_data(edited_img, b"hASh"));
 
     pack_into_field_elements(vec_bytes)
 }
