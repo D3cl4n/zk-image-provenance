@@ -122,6 +122,27 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let packed_elements = packing_chip.pack(&mut layouter, &greyscale_result)?;
         result.extend(packed_elements);
 
+        // write exifdata to a region and pass Numbers to the packing chip
+        let exif_numbers: Vec<Number<F>> = layouter.assign_region(
+            || "exif_bytes", |mut region| {
+                self.png_vectors.exif
+                .iter()
+                .enumerate()
+                .map(|(i, byte)| {
+                    region.assign_advice(
+                        || "byte_val_cell",
+                        config.packer.advice[1],
+                        i,
+                        || Value::known(F::from(*byte as u64)),
+                    ).map(Number)
+                })
+                .collect()
+            }
+        )?;
+
+        let packed_exif = packing_chip.pack(&mut layouter, &exif_numbers)?;
+        result.extend(packed_exif);
+
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
             &self.png_vectors.r, 

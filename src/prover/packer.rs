@@ -11,7 +11,7 @@ use crate::prover::number::Number;
 // structure for the packing chip config
 #[derive(Clone, Debug)]
 pub struct PackingChipConfig {
-    advice: [Column<Advice>; 2], // one advice column for the accumulator (encodes position) one column for the byte being packed
+    pub advice: [Column<Advice>; 2], // one advice column for the accumulator (encodes position) one column for the byte being packed
     instance: Column<Instance>,
     s_pack: Selector
 }
@@ -121,6 +121,9 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
         let config = self.config();
         layouter.constrain_instance(num.0.cell(), config.instance, row)
     }
+
+    // load bytes into columns to be packed
+
 
     // pack function definition
     fn pack(
