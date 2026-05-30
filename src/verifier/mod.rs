@@ -35,10 +35,19 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     expected.extend(pack_into_field_elements::<F>(
         png::extract_chunk_data(edited_img, b"eXIf")
     ));
-    expected.extend(pack_into_field_elements::<F>(
-        png::extract_chunk_data(edited_img, b"hASh")
-    ));
+    
+    let hash_bytes: Vec<u8> = png::extract_chunk_data(edited_img, b"hASh");
+    let hash_element: F = {
+        let mut element: F = F::ZERO;
+        let base = F::from(264 as u64);
+        for byte in &hash_bytes {
+            element = element * base + F::from(*byte as u64);
+        }
 
+        element
+    };
+
+    expected.push(hash_element);
     println!("[*] Verifier expected len {:?}", expected.len());
 
     expected
