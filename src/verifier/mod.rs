@@ -37,19 +37,19 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     ));
     
     let hash_bytes: Vec<u8> = png::extract_chunk_data(edited_img, b"hASh");
-    let hash_element: F = {
-        let mut element: F = F::ZERO;
-        let mut base: F = F::ONE;
-        let base_256 = F::from(264 as u64);
-        for byte in hash_bytes.iter().rev() {
-            element += F::from(*byte as u64) * base;
-            base *= base_256;
-        }
+    
+    // pack bytes of hash into field element- reversed to match big endian
+    let mut element: F = F::ZERO;
+    let mut base: F = F::ONE;
+    let base_256: F = F::from(256u64);
 
-        element
-    };
+    for byte in hash_bytes.iter().rev() {
+        element += F::from(*byte as u64) * base;
+        base *= base_256;
+    }
 
-    expected.push(hash_element);
+    expected.push(element);
+    println!("[*] Verifier expected hash {:?}", element);
     println!("[*] Verifier expected len {:?}", expected.len());
 
     expected
