@@ -44,5 +44,3 @@ Cameras can use a signing key to digitially sign photos as soon as they are capt
 ### Alternate Greyscale Linear Combinations
 
 ### Original Image Dictionary Attack
-
-## TODO: add exif data to column and pack with packing chip, then expose into the instance column
