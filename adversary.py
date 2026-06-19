@@ -34,6 +34,9 @@ class Adversary:
     def __init__(self, image):
         self.image = image
         self.png_utils = PNGUtils(self.image)
+        self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
+        self.vk = self.sk.get_verifying_key()
+        self.chunks = self.png_utils.read_all_chunks()
 
     
     # construct a chunk for embedding in the target image
@@ -66,9 +69,11 @@ class Adversary:
         print("[*] Resigning PNG using non-trusted device signing key")
 
 
+
 # main function
 def main():
-    pass
+    adversary = Adversary("original.png")
+    adversary.signature_swap()
 
 
 if __name__ == '__main__':
