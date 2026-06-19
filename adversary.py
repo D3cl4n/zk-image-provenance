@@ -92,13 +92,11 @@ class Adversary:
         self.png_utils.read_all_chunks()
         original_hash = self.png_utils.chunks[b"hASh"][2]
         signature = self.sk.sign_digest_deterministic(original_hash)
-        signature_chunk = self.make_chunk_tuple(b"sIGn", signature)
+        modified_signature_chunk = self.make_chunk_tuple(b"sIGn", signature)
 
         # swap the original signature chunk for the forged one and reconstruct image
-        self.png_utils.chunks[b"sIGn"] = signature_chunk
-        #print(self.png_utils.chunks)
+        self.png_utils.chunks[b"sIGn"] = modified_signature_chunk
         self.reconstruct_image(self.png_utils.chunks, "original_sig_swap.png")
-
 
 
     # hash swapping attack
@@ -110,6 +108,11 @@ class Adversary:
         modified_hash = b"\xAA" + original_hash[1:] # modify the first byte and confirm inequality
 
         assert modified_hash != original_hash
+
+        modified_hash_chunk = self.make_chunk_tuple(b"hASh", modified_hash)
+        # swap the original hash chunk of the forged one and reconstruct image
+        self.png_utils.chunks[b"hASh"] = modified_hash_chunk
+        self.reconstruct_image(self.png_utils.chunks, "original_hash_swap.png")
 
 
 # main function
