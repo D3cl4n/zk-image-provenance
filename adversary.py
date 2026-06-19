@@ -1,7 +1,8 @@
 import struct
 import zlib
 import ecdsa
-from PIL import Image
+import piexif
+from datetime import datetime
 
 
 # class for PNG parsing and I/O
@@ -115,11 +116,48 @@ class Adversary:
         self.reconstruct_image(self.png_utils.chunks, "original_hash_swap.png")
 
 
+    # construct the forged exif data
+    def construct_fake_exif_data(self):
+        camera_make = b"Nikon"
+        camera_model = b"D7500 DSLR"
+        timestamp = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+
+        # two IFDs: 0th and 1st
+        exif_dict = {
+            "0th" : {
+                piexif.ImageIFD.Make: camera_make,
+                piexif.ImageIFD.Model: camera_model,
+                piexif.ImageIFD.DateTime: timestamp.encode()
+            },
+            "Exif" : {
+                piexif.ExifIFD.DateTimeOriginal: timestamp.encode()
+            }
+        }
+
+        exif_data = piexif.dump(exif_dict)[8:]
+        
+        return exif_data
+    
+
+    # exifdata forging attack
+    def exifdata_forge(self):
+        print("[*] Swapping exifdata in original png")
+
+        self.png_utils.read_all_chunks()
+        original_exif = self.png_utils.chunks[b"eXIf"][2]
+        forged_exif = self.construct_fake_exif_data()
+
+        assert original_exif != forged_exif
+
+        modified_exif_chunk = self.make_chunk_tuple(b"eXIf", forged_exif)
+
+
 # main function
 def main():
     adversary = Adversary("original.png")
     adversary.signature_swap()
     adversary.hash_swap()
+    adversary.exifdata_forge()
 
 
 if __name__ == '__main__':
