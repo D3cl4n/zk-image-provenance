@@ -112,7 +112,7 @@ class EditorUtils:
 
 # main function
 def main():
-    editor = EditorUtils("original.png")
+    editor = EditorUtils("original_sig_swap.png")
     editor.greyscale()
 
 

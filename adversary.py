@@ -12,6 +12,20 @@ class PNGUtils:
         # {chunk_type : (length, chunk_type, data, crc)}
         self.chunks = {} 
 
+
+    # helper function to read a single chunk from the image
+    def read_single_chunk(self, f):
+        chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
+        chunk_data = f.read(chunk_length)
+        expected_crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
+        actual_crc, = struct.unpack(">I", f.read(4))
+
+        # check the crc for data corruption
+        assert expected_crc == actual_crc
+
+        return chunk_type, chunk_data, actual_crc
+    
+
     # read all chunks from the PNG
     def read_all_chunks(self):
         print(f"[*] Reading all chunks from: {self.image}")
@@ -36,7 +50,7 @@ class Adversary:
         self.png_utils = PNGUtils(self.image)
         self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
         self.vk = self.sk.get_verifying_key()
-        self.chunks = self.png_utils.read_all_chunks()
+        self.png_utils.read_all_chunks()
 
     
     # construct a chunk for embedding in the target image
@@ -47,6 +61,13 @@ class Adversary:
         chunk_crc = struct.pack(">I", zlib.crc32(chunk_type + chunk_data) & 0xffffffff)
 
         return chunk_length + chunk_type + chunk_data + chunk_crc
+    
+
+    # make a chunk into a list for embedding properly
+    def make_chunk_tuple(self, chunk_type, chunk_data):
+        crc = zlib.crc32(chunk_type + chunk_data) & 0xffffffff
+
+        return [len(chunk_data), chunk_type, chunk_data, crc]
 
 
     # reconstruct the image given the edited chunks
@@ -54,7 +75,7 @@ class Adversary:
         print(f"[*] Reconstructing chunks into: {new_image}")
 
         with open(new_image, "wb") as f:
-            f.write(self.png_signature)
+            f.write(self.png_utils.png_signature)
             for _, chunk_info in chunks.items():
                 length, type, data, _ = chunk_info
                 new_crc = zlib.crc32(type + data) & 0xffffffff
@@ -67,7 +88,15 @@ class Adversary:
     # signature swapping attack
     def signature_swap(self):
         print("[*] Resigning PNG using non-trusted device signing key")
+        print("[*] Signing original hash from PNG")
+        original_hash = self.png_utils.chunks[b"hASh"][2]
+        signature = self.sk.sign_digest_deterministic(original_hash)
+        signature_chunk = self.make_chunk_tuple(b"sIGn", signature)
 
+        # swap the original signature chunk for the forged one and reconstruct image
+        self.png_utils.chunks[b"sIGn"] = signature_chunk
+        #print(self.png_utils.chunks)
+        self.reconstruct_image(self.png_utils.chunks, "original_sig_swap.png")
 
 
 # main function
