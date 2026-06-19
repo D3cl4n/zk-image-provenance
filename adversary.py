@@ -50,7 +50,6 @@ class Adversary:
         self.png_utils = PNGUtils(self.image)
         self.sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
         self.vk = self.sk.get_verifying_key()
-        self.png_utils.read_all_chunks()
 
     
     # construct a chunk for embedding in the target image
@@ -89,6 +88,8 @@ class Adversary:
     def signature_swap(self):
         print("[*] Resigning PNG using non-trusted device signing key")
         print("[*] Signing original hash from PNG")
+
+        self.png_utils.read_all_chunks()
         original_hash = self.png_utils.chunks[b"hASh"][2]
         signature = self.sk.sign_digest_deterministic(original_hash)
         signature_chunk = self.make_chunk_tuple(b"sIGn", signature)
@@ -99,10 +100,23 @@ class Adversary:
         self.reconstruct_image(self.png_utils.chunks, "original_sig_swap.png")
 
 
+
+    # hash swapping attack
+    def hash_swap(self):
+        print("[*] Swapping the hASh embedded in original png")
+
+        self.png_utils.read_all_chunks()
+        original_hash = self.png_utils.chunks[b"hASh"][2]
+        modified_hash = b"\xAA" + original_hash[1:] # modify the first byte and confirm inequality
+
+        assert modified_hash != original_hash
+
+
 # main function
 def main():
     adversary = Adversary("original.png")
     adversary.signature_swap()
+    adversary.hash_swap()
 
 
 if __name__ == '__main__':
