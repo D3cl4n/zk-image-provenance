@@ -112,7 +112,7 @@ class EditorUtils:
 
 # main function
 def main():
-    editor = EditorUtils("original_hash_swap.png")
+    editor = EditorUtils("original_exif_swap.png")
     editor.greyscale()
 
 

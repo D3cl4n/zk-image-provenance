@@ -147,9 +147,11 @@ class Adversary:
         original_exif = self.png_utils.chunks[b"eXIf"][2]
         forged_exif = self.construct_fake_exif_data()
 
+        # ensure inequality 
         assert original_exif != forged_exif
-
         modified_exif_chunk = self.make_chunk_tuple(b"eXIf", forged_exif)
+        self.png_utils.chunks[b"eXIf"] = modified_exif_chunk
+        self.reconstruct_image(self.png_utils.chunks, "original_exif_swap.png")
 
 
 # main function
