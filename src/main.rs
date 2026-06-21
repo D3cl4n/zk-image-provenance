@@ -50,11 +50,15 @@ fn main() {
     // write the proof to a .bin file
     std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
 
-    // verify the proof
+    // verify the proof and time the verifier 
     println!("[*] Verifying proof");
+
+    let start_verifier = Instant::now();
     let strategy = SingleVerifier::new(&params);
     let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
     verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
+    let end_verifier = start_verifier.elapsed();
+    println!("[*] Verifier runtime: {} ms", end_verifier.as_millis());
 
     println!("[*] Proof verified successfully");
 }
