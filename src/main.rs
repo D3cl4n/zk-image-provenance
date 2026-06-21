@@ -5,7 +5,7 @@ mod verifier;
 
 // main function
 fn main() {
-    // start with the MockProver and then move to real prover
+    use std::time::{Instant, Duration};
     use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
     use halo2_proofs::{
         pasta::{EqAffine, Fp},
@@ -23,19 +23,28 @@ fn main() {
     // verifier functionality off-circuit and prover circuit struct creation
     verifier::verify_ecdsa_signature(&edited_img, &public_key);
     let expected: Vec<Fp> = verifier::construct_expected_value(&edited_img);
+
+    // start timer for measuring setup time
+    let start_setup = Instant::now();
     let circuit = prover::construct_circuit_struct(&original_img);
 
     // setup the proof generation
-    println!("[*] Generating IPA parameters");
     let k: u32 = 15;
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("[!] keygen_vk failed");
     let pk = keygen_pk(&params, vk.clone(), &circuit).expect("[!] keygen_pk failed");
+    let end_setup = start_setup.elapsed();
+    println!("[*] Setup runtime: {} ms", end_setup.as_millis());
 
-    // creating the proof
+    // creating the proof and starting the time for prover runtime measurement
+    let start_prover = Instant::now();
     let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
     create_proof(&params, &pk, &[circuit], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
     let proof = transcript.finalize();
+
+    // end time for measuring prover time
+    let end_prover = start_prover.elapsed();
+    println!("[*] Prover runtime: {} ms", end_prover.as_millis());
     println!("[*] Proof size: {}", proof.len());
 
     // write the proof to a .bin file
