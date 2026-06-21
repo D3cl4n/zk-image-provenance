@@ -16,7 +16,7 @@ fn main() {
     use rand::rngs::OsRng;
 
     // original image as private witness, edited image as public, verifying key is public but used off-circuit
-    let original_img = String::from("original_exif_swap.png");
+    let original_img = String::from("original.png");
     let edited_img = String::from("greyscale.png");
     let public_key = String::from("verifying_key.bin");
 
