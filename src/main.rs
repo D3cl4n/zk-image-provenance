@@ -26,9 +26,9 @@ fn main() {
 
     // start timer for measuring setup time
     let start_setup = Instant::now();
-    let circuit = prover::construct_circuit_struct(&original_img);
 
     // setup the proof generation
+    let circuit = prover::construct_circuit_struct(&original_img);
     let k: u32 = 15;
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("[!] keygen_vk failed");
@@ -36,29 +36,37 @@ fn main() {
     let end_setup = start_setup.elapsed();
     println!("[*] Setup runtime: {} ms", end_setup.as_millis());
 
-    // creating the proof and starting the time for prover runtime measurement
-    let start_prover = Instant::now();
-    let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
-    create_proof(&params, &pk, &[circuit], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
-    let proof = transcript.finalize();
+    // vectors storing the prover and verifier runtimes as well as proof sizes
+    let mut prover_runtimes = vec![];
+    let mut verifier_runtimes = vec![];
+    let mut proof_sizes = vec![];
 
-    // end time for measuring prover time
-    let end_prover = start_prover.elapsed();
-    println!("[*] Prover runtime: {} ms", end_prover.as_millis());
-    println!("[*] Proof size: {}", proof.len());
+    // for loop of 30 iterations to get accurate runtimes for prover and verifier
+    for i in 0..30 {
+        // fresh witness assignment per iteration of prover
+        let circuit_trial = prover::construct_circuit_struct(&original_img);
+        // creating the proof and starting the time for prover runtime measurement
+        let start_prover = Instant::now();
+        let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
+        create_proof(&params, &pk, &[circuit_trial], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
+        let proof = transcript.finalize();
+        proof_sizes.push(proof.len());
 
-    // write the proof to a .bin file
-    std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
+        // end time for measuring prover time
+        prover_runtimes.push(start_prover.elapsed().as_millis());
 
-    // verify the proof and time the verifier 
-    println!("[*] Verifying proof");
+        // write the proof to a .bin file
+        std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
 
-    let start_verifier = Instant::now();
-    let strategy = SingleVerifier::new(&params);
-    let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
-    verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
-    let end_verifier = start_verifier.elapsed();
-    println!("[*] Verifier runtime: {} ms", end_verifier.as_millis());
+        // verify the proof and time the verifier 
+        println!("[*] Verifying proof");
 
-    println!("[*] Proof verified successfully");
+        let start_verifier = Instant::now();
+        let strategy = SingleVerifier::new(&params);
+        let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
+        verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
+        verifier_runtimes.push(start_verifier.elapsed().as_millis());
+
+        println!("[*] Proof verified successfully");
+    }
 }
