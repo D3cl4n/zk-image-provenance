@@ -59,14 +59,15 @@ fn main() {
         std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
 
         // verify the proof and time the verifier 
-        println!("[*] Verifying proof");
-
         let start_verifier = Instant::now();
         let strategy = SingleVerifier::new(&params);
         let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
         verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
         verifier_runtimes.push(start_verifier.elapsed().as_millis());
+    }
 
-        println!("[*] Proof verified successfully");
+    // print all the runtimes neatly
+    for i in 0..30 {
+        println!("[*] Trial {}: prover {} ms, verifier {} ms", i, prover_runtimes[i], verifier_runtimes[i]);
     }
 }
