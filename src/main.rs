@@ -65,7 +65,7 @@ fn main() {
     verifier_runtimes.push(start_verifier.elapsed().as_millis());
 
     // print all the runtimes neatly
-    for i in 0..30 {
+    for i in 0..prover_runtimes.len() {
         println!("[*] Trial {}: prover {} ms, verifier {} ms, proof size {} bytes", i, prover_runtimes[i], verifier_runtimes[i], proof_sizes[i]);
     }
 }
