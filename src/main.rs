@@ -68,6 +68,6 @@ fn main() {
 
     // print all the runtimes neatly
     for i in 0..30 {
-        println!("[*] Trial {}: prover {} ms, verifier {} ms", i, prover_runtimes[i], verifier_runtimes[i]);
+        println!("[*] Trial {}: prover {} ms, verifier {} ms, proof size {} bytes", i, prover_runtimes[i], verifier_runtimes[i], proof_sizes[i]);
     }
 }
