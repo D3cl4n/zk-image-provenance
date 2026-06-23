@@ -459,6 +459,15 @@ class Camera:
             with open("signing_key.bin", "wb") as f:
                 f.write(self.sk.to_string())
 
+        else:
+            with open("signing_key.bin", "rb") as f:
+                sk_bytes = f.read()
+                self.sk = ecdsa.SigningKey.from_string(sk_bytes, curve=ecdsa.SECP256k1)
+
+            with open("verifying_key.bin", "rb") as f:
+                vk_bytes= f.read()
+                self.vk = ecdsa.VerifyingKey.from_string(vk_bytes, curve=ecdsa.SECP256k1)
+
 
     # implement the padding scheme to match rust code - will shift to Pi
     def pad(self, preimage_packed, rate):
