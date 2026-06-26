@@ -16,8 +16,8 @@ fn main() {
     use rand::rngs::OsRng;
 
     // original image as private witness, edited image as public, verifying key is public but used off-circuit
-    let original_img = String::from("original_32.png");
-    let edited_img = String::from("greyscale.png");
+    let original_img = String::from("photos/original_64.png");
+    let edited_img = String::from("photos/greyscale.png");
     let public_key = String::from("verifying_key.bin");
 
     // verifier functionality off-circuit and prover circuit struct creation
@@ -29,7 +29,7 @@ fn main() {
 
     // setup the proof generation
     let circuit = prover::construct_circuit_struct(&original_img);
-    let k: u32 = 12;
+    let k: u32 = 15;
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("[!] keygen_vk failed");
     let pk = keygen_pk(&params, vk.clone(), &circuit).expect("[!] keygen_pk failed");

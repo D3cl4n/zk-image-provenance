@@ -156,7 +156,7 @@ class Adversary:
 
 # main function
 def main():
-    adversary = Adversary("original.png")
+    adversary = Adversary("photos/original.png")
     adversary.signature_swap()
     adversary.hash_swap()
     adversary.exifdata_forge()
