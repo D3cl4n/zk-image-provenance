@@ -762,6 +762,8 @@ impl<F: PrimeField> PermutationInstructions<F> for PoseidonChip<F> {
                     )?;
                 }
 
+                println!("[*] Poseidon permutation chip rows used: {}", row_offset);
+
                 Ok(state)
             }
         )

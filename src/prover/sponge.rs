@@ -214,6 +214,8 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
                     )?
                 ];
 
+                println!("[*] Sponge chip absorb rows used: {}", row_offset);
+
                 Ok(next_state)
             }
         )

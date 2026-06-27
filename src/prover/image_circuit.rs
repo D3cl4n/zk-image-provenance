@@ -169,6 +169,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             )?;
         }
 
+        println!("[*] Number of state vectors absorbed: {}", preimage.len());
+
         // squeeze once all blocks are permuted and expose as public
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
         // print the digest here for debugging

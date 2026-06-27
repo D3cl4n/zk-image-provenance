@@ -74,7 +74,7 @@ class PNGUtils:
 class EditorUtils:
     def __init__(self, image_path):
         self.image = image_path
-        self.target = "greyscale.png"
+        self.target = "photos/greyscale.png"
         # coefficients are rounded to the nearest integer to work in a circuit
         self.r_coeff = 30
         self.g_coeff = 58

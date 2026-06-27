@@ -122,9 +122,6 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
         layouter.constrain_instance(num.0.cell(), config.instance, row)
     }
 
-    // load bytes into columns to be packed
-
-
     // pack function definition
     fn pack(
         &self,
@@ -176,6 +173,8 @@ impl<F: PrimeField> PackingChipInstructions<F> for PackingChip<F> {
                 row_offset += 1;
                 local_packed.push(Number(packed_cell));
             }
+
+            println!("[*] Packing chip rows used: {}", row_offset);
 
             Ok(local_packed)
         })?;

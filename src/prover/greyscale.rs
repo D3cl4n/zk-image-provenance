@@ -221,6 +221,8 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                     offset += 1;
                 }
 
+                println!("[*] Greyscale chip rows used: {}", offset);
+
                 // return value
                 Ok(y_values)
             }
