@@ -1,0 +1,8 @@
+image dimensions: 256x256
+k = 19
+greyscale chip rows used: 65536
+packing chip rows used: 67798
+poseidon permutation chip rows used: 192 per permutation call
+sponge chip rows used: 2 per absorb call
+number of permutations: 2116
+number of absorbs: 2116
