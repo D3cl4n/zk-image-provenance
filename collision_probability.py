@@ -28,10 +28,17 @@ def count_colliding_pairs(y_distribution):
 # main function
 def main():
     N = 256**3
+
+    # probability for two RGB pixels colliding
     distribution = count()
     colliding_pairs = count_colliding_pairs(distribution)
     prob = colliding_pairs / (N*(N-1))
 
+    print(prob)
+    
+    # probability for two random KxK images colliding
+    K = 64**2
+    prob = prob**K
     print(prob)
 
 
