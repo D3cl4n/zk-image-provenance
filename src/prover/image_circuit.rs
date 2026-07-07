@@ -8,7 +8,6 @@ use crate::prover::number::Number;
 use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, GreyscaleInstructions};
 use crate::prover::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
 use crate::prover::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
-use crate::prover::packer::{PackingChip, PackingChipConfig, PackingChipInstructions};
 
 
 // structure to store the image details
@@ -25,8 +24,7 @@ pub struct ImageDetails {
 pub struct ImageCircuitConfig<F: PrimeField> {
     pub greyscale: GreyscaleChipConfig,
     pub poseidon: PoseidonChipConfig<F>,
-    pub sponge: SpongeChipConfig,
-    pub packer: PackingChipConfig
+    pub sponge: SpongeChipConfig
 }
 
 // struct for the image provenance circuit config as a whole (hash + greyscale)
@@ -66,8 +64,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         ImageCircuitConfig {
             greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
-            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
-            packer: PackingChip::configure(meta, [advice[5], advice[6]], instance)
+            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance)
         }
     }
 
@@ -76,7 +73,6 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let greyscale_chip = GreyscaleChip::construct(config.greyscale.clone());
         let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
         let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
-        let packing_chip: PackingChip<F> = PackingChip::construct(config.packer.clone());
 
         // // populate the lookup table for constraining pixel values to bytes (0-255)
         layouter.assign_table(
@@ -115,14 +111,12 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.png_vectors.b
         )?;
 
-        // pack the grey pixels into field elements inside circuit so it is constrained properly
+        // add expected grey pixels to expected vector
         let mut result: Vec<Number<F>> = vec![];
+        result.extend(greyscale_result);
 
-        // use the packing chip to pack greyscale results and add to expected results
-        let packed_elements = packing_chip.pack(&mut layouter, &greyscale_result)?;
-        result.extend(packed_elements);
-
-        // write exifdata to a region and pass Numbers to the packing chip
+        // write exifdata to a region and pass Numbers to the result vector
+        // TODO: fix this to just convert exif values into field elements
         let exif_numbers: Vec<Number<F>> = layouter.assign_region(
             || "exif_bytes", |mut region| {
                 self.png_vectors.exif
@@ -140,8 +134,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             }
         )?;
 
-        let packed_exif = packing_chip.pack(&mut layouter, &exif_numbers)?;
-        result.extend(packed_exif);
+        result.extend(exif_numbers);
 
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
