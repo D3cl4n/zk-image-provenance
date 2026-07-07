@@ -1,7 +1,7 @@
 image dimensions: 64x64
 k = 15
 greyscale chip rows used: 4096
-packing chip rows used: 147
+packing chip rows used: 4376
 poseidon permutation chip rows used: 192 per permutation call
 sponge chip rows used: 2 per absorb call
 number of permutations: 134

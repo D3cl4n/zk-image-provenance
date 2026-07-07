@@ -470,31 +470,14 @@ class Camera:
 
 
     # implement the padding scheme to match rust code - will shift to Pi
-    def pad(self, preimage_packed, rate):
+    def pad(self, preimage, rate):
         print("[*] Padding input elements to closest multiple of the rate")
-        preimage_packed.append(self.poseidon_instance.field_p(1))
-        rem = len(preimage_packed) % rate
+        preimage.append(self.poseidon_instance.field_p(1))
+        rem = len(preimage) % rate
         if rem != 0:
-            preimage_packed.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
+            preimage.extend([self.poseidon_instance.field_p(0)] * (rate - rem))
 
-        return [preimage_packed[i:i+rate] for i in range(0, len(preimage_packed), rate)]
-
-
-    # given a vector representing all the bytes to be hashed, pack into field elements (31 bytes per field element)
-    def pack(self, raw_preimage):
-        print("[*] Packing 31 bytes per field element before hashing")
-        preimage_elements = [] # list storing all the field elements, each packed with 31 bytes from preimage
-        bytes_per_element = 31
-        blocks = [raw_preimage[i:i+bytes_per_element] for i in range(0, len(raw_preimage), bytes_per_element)] # 31 byte blocks
-        
-        for block in blocks:
-            element = self.poseidon_instance.field_p(0)
-            for byte in block: # if last block is less then 31 bytes we will naturally stop
-                element = element * self.poseidon_instance.field_p(256) + self.poseidon_instance.field_p(byte)
-
-            preimage_elements.append(element)
-
-        return preimage_elements
+        return [preimage[i:i+rate] for i in range(0, len(preimage), rate)]
 
 
     # construct the eXIf chunk based on the png spec
@@ -556,8 +539,12 @@ class Camera:
 
         exif_data = self.construct_exif_data()
         raw_preimage = r_vec + g_vec + b_vec + list(exif_data)
-        packed_preimage = self.pack(raw_preimage)
-        padded_preimage = self.pad(packed_preimage, 3)
+        
+        # convert raw_preimage bytes into field elements, 1:1 ratio
+        for i in range(len(raw_preimage)):
+            raw_preimage[i] = self.poseidon_instance.field_p(raw_preimage[i])
+
+        padded_preimage = self.pad(raw_preimage, 3)
         H = int(self.poseidon_instance.hash(padded_preimage).lift()).to_bytes(32, "big")
         print(f"[*] Hash of original image: {H}")
 
