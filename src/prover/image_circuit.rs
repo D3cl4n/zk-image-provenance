@@ -62,7 +62,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], byte_table, rem_table),
+            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
             sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance)
         }
@@ -115,27 +115,6 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let mut result: Vec<Number<F>> = vec![];
         result.extend(greyscale_result);
 
-        // write exifdata to a region and pass Numbers to the result vector
-        // TODO: fix this to just convert exif values into field elements
-        let exif_numbers: Vec<Number<F>> = layouter.assign_region(
-            || "exif_bytes", |mut region| {
-                self.png_vectors.exif
-                .iter()
-                .enumerate()
-                .map(|(i, byte)| {
-                    region.assign_advice(
-                        || "byte_val_cell",
-                        config.packer.advice[1],
-                        i,
-                        || Value::known(F::from(*byte as u64)),
-                    ).map(Number)
-                })
-                .collect()
-            }
-        )?;
-
-        result.extend(exif_numbers);
-
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
             &self.png_vectors.r, 
@@ -173,7 +152,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         // expose each field element in the result vector
         println!("[+] Result length: {}", result.len());
         for i in 0..result.len() {
-            packing_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+            greyscale_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
         }
 
         Ok(())
