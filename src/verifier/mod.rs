@@ -4,24 +4,13 @@ use crate::png;
 
 
 // pack a vector of u8s into field elements
-fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
-    let bytes_per_element: usize = 31;
-    
-    // pack bytes of hash into field element- reversed to match big endian
-    data
-        .chunks(bytes_per_element)
-        .map(|chunk| {
-            let mut element: F = F::ZERO;
-            let base_256: F = F::from(256 as u64);
+fn convert_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
+    let mut elements: Vec<F> = vec![];
+    for &byte in data.iter() {
+        elements.push(F::from(byte as u64));
+    } 
 
-            // iterate over each byte in slice and pack into position based on powers of 256
-            for &byte in chunk {
-                element = element * base_256 + F::from(byte as u64);
-            } 
-
-            element
-        })
-        .collect()
+    elements
 }
 
 
@@ -29,10 +18,10 @@ fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
 pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     let mut expected: Vec<F> = vec![];
 
-    expected.extend(pack_into_field_elements::<F>(
+    expected.extend(convert_into_field_elements::<F>(
         png::get_png_greyscale_values(edited_img)
     ));
-    expected.extend(pack_into_field_elements::<F>(
+    expected.extend(convert_into_field_elements::<F>(
         png::extract_chunk_data(edited_img, b"eXIf")
     ));
     
