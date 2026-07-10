@@ -29,7 +29,7 @@ fn main() {
 
     // setup the proof generation
     let circuit = prover::construct_circuit_struct(&original_img);
-    let k: u32 = 15;
+    let k: u32 = 20;
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("[!] keygen_vk failed");
     let pk = keygen_pk(&params, vk.clone(), &circuit).expect("[!] keygen_pk failed");

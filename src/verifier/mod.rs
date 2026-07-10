@@ -25,9 +25,15 @@ pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
         png::extract_chunk_data(edited_img, b"eXIf")
     ));
     
-    expected.extend(convert_into_field_elements::<F>(
-        png::extract_chunk_data(edited_img, b"hASh")
-    ));
+    // match circuit which exposes hash as one field element
+    let hash_bytes: Vec<u8> = png::extract_chunk_data(edited_img, b"hASh");
+    let mut hash_slice: [u8; 32] = hash_bytes.try_into().expect("[!] Hash chunk is not 32 bytes long");
+    hash_slice.reverse(); // hASh chunk is big-endian, from_repr expects little-endian
+    let mut repr = F::Repr::default();
+    repr.as_mut().copy_from_slice(&hash_slice);
+    let hash_element: F = Option::from(F::from_repr(repr))
+        .expect("[!] Hash bytes are not a valid field element");
+    expected.push(hash_element);
 
     println!("[*] Verifier expected len {:?}", expected.len());
 

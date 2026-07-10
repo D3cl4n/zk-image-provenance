@@ -245,17 +245,11 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
             .chain(exif.iter().copied())
             .collect();
 
-        // pack 31 bytes into each field element then pad and construct blocks
-        let bytes_per_element: usize = 31;
-        let base_256: F = F::from(256 as u64);
-        let mut preimage_elements: Vec<F> = input
-            .chunks(bytes_per_element)
-            .map(|chunk| {
-                chunk.iter().fold(F::ZERO, |acc, &byte| {
-                    acc * base_256 + F::from(byte as u64)
-                })
-            })
-            .collect();
+        // convert bytes to field elements in a one-to-one ration
+        let mut preimage_elements: Vec<F> = vec![];
+        for i in 0..input.len() {
+            preimage_elements.push(F::from(input[i] as u64));
+        }
 
         // divide the vector of packed field elements into slices of 3 and pad
         preimage_elements.push(F::ONE);
