@@ -11,7 +11,7 @@ use crate::prover::number::Number;
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
-    advice: [Column<Advice>; 5], // advice columns for: [r, g, b, y, rem]
+    pub advice: [Column<Advice>; 5], // advice columns for: [r, g, b, y, rem]
     instance: Column<Instance>,
     pub byte_table: TableColumn, // one fixed column for byte values for lookups
     pub rem_table: TableColumn,

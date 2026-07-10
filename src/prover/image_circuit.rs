@@ -111,13 +111,35 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             &self.png_vectors.b
         )?;
 
-        // add expected grey pixels to expected vector
+        // add expected grey pixels to vector of instance values
         let mut result: Vec<Number<F>> = vec![];
         result.extend(greyscale_result);
 
+        // add exifdata to the vector of instance values by writing to advice columns
+        let exif_numbers: Vec<Number<F>> = layouter.assign_region(
+            || "exif_region",
+            |mut region| {
+                self.png_vectors.exif
+                .iter()
+                .enumerate()
+                .map(|(i, byte)| {
+                    let cell = region.assign_advice(
+                        || "exif_byte",
+                        config.greyscale.advice[4],
+                        i,
+                        || Value::known(F::from(*byte as u64))
+                    )?;
+                    Ok(Number(cell))
+                })
+                .collect()
+            }
+        )?;
+
+        result.extend(exif_numbers);
+
         // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
         let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
-            &self.png_vectors.r, 
+            &self.png_vectors.r,
             &self.png_vectors.g, 
             &self.png_vectors.b, 
             &self.png_vectors.exif,
