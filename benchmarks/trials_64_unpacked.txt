@@ -1,4 +1,4 @@
-k = 20
+k = 20, dimensions: 64x64
 [*] Trial 0: prover 201910 ms, verifier 1483 ms, proof size 4864 bytes
 [*] Trial 1: prover 210182 ms, verifier 1408 ms, proof size 4864 bytes
 [*] Trial 2: prover 215786 ms, verifier 1940 ms, proof size 4864 bytes

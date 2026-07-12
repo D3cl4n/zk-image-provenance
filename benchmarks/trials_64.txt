@@ -1,4 +1,4 @@
-k = 15
+k = 15, dimensions: 64x64
 [*] Trial 0: prover 5393 ms, verifier 90 ms, proof size 4608 bytes
 [*] Trial 1: prover 5268 ms, verifier 62 ms, proof size 4608 bytes
 [*] Trial 2: prover 5342 ms, verifier 61 ms, proof size 4608 bytes
