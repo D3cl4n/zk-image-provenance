@@ -112,7 +112,7 @@ class EditorUtils:
 
 # main function
 def main():
-    editor = EditorUtils("photos_unpacked/original_64.png")
+    editor = EditorUtils("photos_unpacked/original_128.png")
     editor.greyscale()
 
 
