@@ -64,7 +64,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         ImageCircuitConfig {
             greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
-            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance)
+            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]])
         }
     }
 
