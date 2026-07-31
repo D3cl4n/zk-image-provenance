@@ -1,48 +1,38 @@
 # zk-image-provenance
 
 ## Problem Statement
-Cameras can use a signing key to digitially sign photos as soon as they are captured. The digital signature provides authenticity that the photo came from a real camera (as opposed to AI generation or vice versa) and integrity of the photo contents + metadata. That said, the original image is often not what is distributed to the public. For example, photos in newspapers are often edited before distributed (greyscaling, cropping, etc.). Recepients of the edited image are not able to verify the digital signature since they do not possess the original image. 
+Zero-knowledge proofs enable a prover to convince a verifier that a statement is true, without revealing the underlying witness data. This primitive naturally lends itself to privacy-preserving systems, where hiding the witness prevents the verifier from learning sensitive information. That said, zero-knowledge proofs can also be used in systems where the witness is not necessarily confidential but is not readily available to the verifier. One such use case is image provenance, where signed images are transformed before being distributed. Since the original image is not available to the user, the digital signature cannot be verified without a zero-knowledge proof. In this use case, zero-knowledge proofs enable verification of the authenticity of the image's source, the integrity of the image contents, and that only permitted transformations were applied. In this work we present an end-to-end prototype system that implements this provenance framework and several optimizations. One of our key optimizations is a packing scheme for reducing the number of Poseidon sponge absorb and permutation operations by $\approx$$31\times$. We also show that this packing scheme reduces median prover runtime by $\approx$$40\times$ and verifier runtime by $\approx$$22\times$. We also introduce a chain of trust that removes digital signature verification from the circuit. Finally, we introduce custom PNG chunks that embed the required information in the captured images.
 
-## Prototype Summary
-### Camera Computations
-- $\text{SK}, \text{VK} = \text{ECDSA.Keygen}()$
-- $\text{I} = \text{Capture}(\text{width, height, format})$
-- $\text{H} = \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif})$
-- $\sigma = \text{ECDSA.Sign}(\text{SK}, \text{H})$
-- $\text{CustomChunk}(\text{data}, \text{type}) = \text{length}(\text{data}) || \text{type} || \text{data} || \text{CRC32}(\text{type} || \text{data})$
-- $\text{ExifChunk} = \text{CustomChunk}(\text{I}_\text{exif}, \text{eXIf})$
-- $\text{HashChunk} = \text{CustomChunk}(\text{H}, \text{hASh})$
-- $\text{SignatureChunk} = \text{CustomChunk}(\sigma, \text{sIGn})$
-- $\text{I} = \text{EmbedChunks}(\text{I}, \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk})$
+## Hardware and Software Specifications
+### Signing Camera
+The Raspberry Pi 4 used as the signing camera has the following specifications:
+    - CPU: Broadcom BCM2711, Quad core Cortex-A72 (ARM v8) 64-bit
+    - RAM: 8 GB LPDDR4-3200 SDRAM
+    - Disk: 128 GB MicroSD
+    - Raspberry Pi Camera Module v2
 
-### Editor Computations
-- $\text{I}'_{\text{IDAT}} = \text{Greyscale}(\text{I}_{\text{IDAT}}) = \left\lfloor \frac{30 \times \text{r} + 58 \times \text{g} + 11 \times \text{b}}{100} \right\rfloor; \; \forall\: \text{r,g,b} \in \text{I}$
-- $\text{I}'_{\text{IHDR}} = \text{SetToZero}(\text{I}_{\text{IHDR.ColorType}})$
-- $\text{I}' = \text{I}_\text{IHDR}' || \text{I}_\text{IDAT}' || \text{ExifChunk} || \text{HashChunk} || \text{SignatureChunk} || \text{I}_\text{IEND}$
+### Prover and Verifier Machine
+The proofs are computed by a Lenovo Thinkpad X1 with the following specifications:
 
-#### ZKP Computed by Editor (Instance-Witness Relationship)
-- $\mathcal{R} := \{(\text{H}, \text{I}') \; ; \; (\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \; :\\ \text{I}' = \text{Greyscale}(\text{I}_{\text{R}}, \text{I}_{\text{G}}, \text{I}_{\text{B}}) \wedge \text{Poseidon}(\text{I}_{R}||\text{I}_{G}||\text{I}_{B}||\text{I}_\text{exif}) = \text{H}\}$
-- $\pi = \text{Halo2.Prove}(\text{I}, \text{I}', \text{H}_{0}, \text{H}_{1})$
+\begin{itemiz}
+    \item CPU: 12th Gen Intel i9-12900H
+    \item Memory: 16 GB
+    \item OS: Ubuntu 22.04.4 (in WSL2)
+    \item rustc: 1.87.0
+    \item Kernel: x86\_64 Linux 6.6.87.2-microsoft-standard-WSL2
+\end{itemize}
 
-### Verifier Computations
-- $\text{H}_{0} = \text{Poseidon}(\text{I}'_{R}||\text{I}'_{G}||\text{I}'_{B}||\text{I}'_{\text{exif}})$
-- $\text{H}_{1} = \text{Extract}(\text{I}', \text{hASh})$
-- $\sigma = \text{Extract}(\text{I}', \text{sIGn})$
-- $\text{ECDSA.Verify}(\text{PK}, \sigma, \text{H}) = \text{True}$ 
-- $\text{Halo2.Verify}(\pi, \text{I}', \text{H}) = \text{True}$
+\subsection{Software Used}
+The primary libraries used by the implementation are listed below:
 
-
-## Threat Model
-### Hash Swapping
-
-### Signature Swapping
-
-### Unauthorized Image Transformation After Signing
-
-### Exifdata Tampering
-
-### Alternate Greyscale Linear Combinations
-
-### Original Image Dictionary Attack
-
+\begin{itemize}
+    \item halo2\_proofs v0.3.2 
+    \item Python v3.14
+    \item halo2curves v0.9.0
+    \item image v0.25.9
+    \item rand v0.8
+    \item ff v0.13.1
+    \item crc32fast v1.5.0
+    \item secp256k1 v0.31.1
+\end{itemize}
 
