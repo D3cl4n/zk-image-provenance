@@ -6,33 +6,27 @@ Zero-knowledge proofs enable a prover to convince a verifier that a statement is
 ## Hardware and Software Specifications
 ### Signing Camera
 The Raspberry Pi 4 used as the signing camera has the following specifications:
-    - CPU: Broadcom BCM2711, Quad core Cortex-A72 (ARM v8) 64-bit
-    - RAM: 8 GB LPDDR4-3200 SDRAM
-    - Disk: 128 GB MicroSD
-    - Raspberry Pi Camera Module v2
+- CPU: Broadcom BCM2711, Quad core Cortex-A72 (ARM v8) 64-bit
+- RAM: 8 GB LPDDR4-3200 SDRAM
+- Disk: 128 GB MicroSD
+- Raspberry Pi Camera Module v2
 
 ### Prover and Verifier Machine
 The proofs are computed by a Lenovo Thinkpad X1 with the following specifications:
+- CPU: 12th Gen Intel i9-12900H
+- Memory: 16 GB
+- OS: Ubuntu 22.04.4 (in WSL2)
+- rustc: 1.87.0
+- Kernel: x86\_64 Linux 6.6.87.2-microsoft-standard-WSL2
 
-\begin{itemiz}
-    \item CPU: 12th Gen Intel i9-12900H
-    \item Memory: 16 GB
-    \item OS: Ubuntu 22.04.4 (in WSL2)
-    \item rustc: 1.87.0
-    \item Kernel: x86\_64 Linux 6.6.87.2-microsoft-standard-WSL2
-\end{itemize}
-
-\subsection{Software Used}
+### Software Used
 The primary libraries used by the implementation are listed below:
-
-\begin{itemize}
-    \item halo2\_proofs v0.3.2 
-    \item Python v3.14
-    \item halo2curves v0.9.0
-    \item image v0.25.9
-    \item rand v0.8
-    \item ff v0.13.1
-    \item crc32fast v1.5.0
-    \item secp256k1 v0.31.1
-\end{itemize}
+- halo2\_proofs v0.3.2 
+- Python v3.14
+- halo2curves v0.9.0
+- image v0.25.9
+- rand v0.8
+- ff v0.13.1
+- crc32fast v1.5.0
+- secp256k1 v0.31.1
 
