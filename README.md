@@ -30,3 +30,19 @@ The primary libraries used by the implementation are listed below:
 - crc32fast v1.5.0
 - secp256k1 v0.31.1
 
+## Limitations and Future Work
+### Limitations
+- The prototype and the hardware it was run on do not scale well enough to handle images of significant size. Memory is the main bottleneck and memory usage needs to be optimized in future work.
+- The prototype relies on transferring the verifying key to the verifier out-of-band. Thus, security is based on an assumption of no swapping or corruption during that process. 
+- The only transformation implemented by the prototype is greyscale.
+- The prototype relies on the signing camera and circuit using the same field, hash function, and parameters. 
+- Currently, there is no mitigation against an adversary injecting additional hASh, sIGn, or eXIf chunks. 
+
+### Future Work
+- Implementing PKI or a public blockchain to publish verifying keys, removing the out-of-band security assumption from the current prototype.
+- Improving prover efficiency using folding / IVC with a system like Nova.
+- Improving prover efficiency by condensing Poseidon computations into a scheme that uses fewer rows and implementing Poseidon2.
+- Implementing other common transformations such as cropping, minimal blurring, and resizing. 
+- Implementing an optional protocol for the camera and circuit to negotiate alternate hash functions and parameters. 
+- Researching existing policy on whether the IDAT chunk needs to be hashed with the pixels and EXIF metadata and adjusting the prototype accordingly. 
+- Implementing duplicate-chunk detection and mitigation. 
