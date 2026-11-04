@@ -8,6 +8,7 @@ use crate::prover::number::Number;
 use crate::prover::greyscale::{GreyscaleChip, GreyscaleChipConfig, GreyscaleInstructions};
 use crate::prover::poseidon::{PoseidonChip, PoseidonChipConfig, PermutationInstructions};
 use crate::prover::sponge::{SpongeChip, SpongeChipConfig, SpongeInstructions};
+use crate::prover::packer::{PackingChip, PackingChipConfig, PackingChipInstructions};
 
 
 // structure to store the image details
@@ -24,7 +25,8 @@ pub struct ImageDetails {
 pub struct ImageCircuitConfig<F: PrimeField> {
     pub greyscale: GreyscaleChipConfig,
     pub poseidon: PoseidonChipConfig<F>,
-    pub sponge: SpongeChipConfig
+    pub sponge: SpongeChipConfig,
+    pub packer: PackingChipConfig
 }
 
 // struct for the image provenance circuit config as a whole (hash + greyscale)
@@ -62,7 +64,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
 
         // construct the GreyscaleChipConfig, PoseidonChipConfig, and SpongeChipConfig
         ImageCircuitConfig {
-            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
+            greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
             sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
             packer: PackingChip::configure(meta, [advice[5], advice[6]], instance, byte_table)
@@ -74,6 +76,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         let greyscale_chip = GreyscaleChip::construct(config.greyscale.clone());
         let poseidon_chip = PoseidonChip::construct(config.poseidon.clone());
         let sponge_chip: SpongeChip<F> = SpongeChip::construct(config.sponge.clone());
+        let packing_chip: PackingChip<F> = PackingChip::construct(config.packer.clone());
 
         // // populate the lookup table for constraining pixel values to bytes (0-255)
         layouter.assign_table(
@@ -141,7 +144,7 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         result.push(Number(digest_cell));
 
         for i in 0..result.len() {
-            greyscale_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
+            packing_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
         }
 
         Ok(())
