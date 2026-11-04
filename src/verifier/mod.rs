@@ -14,29 +14,31 @@ fn convert_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
 }
 
 
-// combine the hash and packed grey pixels into vector of expected field elements
+// pack bytes into field elements, 31 bytes each, big-endian (matches packer chip + capture.py)
+fn pack_into_field_elements<F: PrimeField>(data: Vec<u8>) -> Vec<F> {
+    let base_256: F = F::from(256u64);
+    data.chunks(31)
+        .map(|chunk| chunk.iter().fold(F::ZERO, |acc, &b| acc * base_256 + F::from(b as u64)))
+        .collect()
+}
+
 pub fn construct_expected_value<F: PrimeField>(edited_img: &String) -> Vec<F> {
     let mut expected: Vec<F> = vec![];
 
-    expected.extend(convert_into_field_elements::<F>(
-        png::get_png_greyscale_values(edited_img)
-    ));
-    expected.extend(convert_into_field_elements::<F>(
-        png::extract_chunk_data(edited_img, b"eXIf")
-    ));
-    
-    // match circuit which exposes hash as one field element
+    expected.extend(pack_into_field_elements::<F>(png::get_png_greyscale_values(edited_img)));
+    expected.extend(pack_into_field_elements::<F>(png::extract_chunk_data(edited_img, b"eXIf")));
+
+    // digest stays one field element; your from_repr version is correct, keep it as is
     let hash_bytes: Vec<u8> = png::extract_chunk_data(edited_img, b"hASh");
     let mut hash_slice: [u8; 32] = hash_bytes.try_into().expect("[!] Hash chunk is not 32 bytes long");
-    hash_slice.reverse(); // hASh chunk is big-endian, from_repr expects little-endian
+    hash_slice.reverse();
     let mut repr = F::Repr::default();
     repr.as_mut().copy_from_slice(&hash_slice);
     let hash_element: F = Option::from(F::from_repr(repr))
         .expect("[!] Hash bytes are not a valid field element");
     expected.push(hash_element);
 
-    println!("[*] Verifier expected len {:?}", expected.len());
-
+    println!("[*] Verifier expected len {:?}", expected.len()); // should print 139 for 64x64 + 142-byte EXIF
     expected
 }
 
