@@ -6,6 +6,7 @@ use halo2_proofs::{
     poly::Rotation,
 };
 use crate::prover::number::Number;
+use crate::prover::tamper::{self, T};
 
 
 // structure for sponge construction chip configuration
@@ -110,7 +111,7 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
         &self, 
         layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
-        inputs: [Value<F>; 3] // rate is 3 in neptune parameters
+        inputs: [AssignedCell<F, F>; 3] // rate is 3 in neptune parameters
     ) -> Result<[AssignedCell<F, F>; 4], Error>;
 
     // squeeze - Sponge I/O
@@ -119,17 +120,13 @@ pub trait SpongeInstructions<F: PrimeField>: Chip<F> {
         state: [AssignedCell<F, F>; 4]
     ) -> Result<AssignedCell<F, F>, Error>; // capacity elements are retained in the sponge
 
-    // pad - Sponge funtionality before input is passed to permute()
-    // split each vector into chunks of size r, pad last chunk to r elements using 0s if needed
-    // pack 31 bytes from the preimage into one field element
+    // pad - append constant 1 then constant zeros to a multiple of r; split into blocks of r
     fn pad(
         &self,
-        r_channel: &Vec<u8>,
-        g_channel: &Vec<u8>,
-        b_channel: &Vec<u8>,
-        exif: &Vec<u8>,
+        layouter: &mut impl Layouter<F>,
+        elements: Vec<AssignedCell<F, F>>,
         r: usize
-    ) -> Result<Vec<[Value<F>; 3]>, Error>; // return one vector of arrays (each 3 elements): pad(r || g || b || exif)
+    ) -> Result<Vec<[AssignedCell<F, F>; 3]>, Error>;
 }
 
 
@@ -145,11 +142,18 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         let config = self.config();
         layouter.assign_region(
             || "initial_state", |mut region| {
+                let first = if tamper::get() == T::SpongeInit {
+                    let c = region.assign_advice(|| "input0_tampered", config.advice[0], 0, || Value::known(F::ONE))?;
+                    region.constrain_constant(c.cell(), F::ZERO)?;
+                    c
+                } else {
+                    region.assign_advice_from_constant(|| "input0", config.advice[0], 0, F::ZERO)?
+                };
                 Ok([
-                    region.assign_advice(|| "input0", config.advice[0], 0, || Value::known(F::from(0u64)))?,
-                    region.assign_advice(|| "input1", config.advice[1], 0, || Value::known(F::from(0u64)))?,
-                    region.assign_advice(|| "input2", config.advice[2], 0, || Value::known(F::from(0u64)))?,
-                    region.assign_advice(|| "input3", config.advice[3], 0, || Value::known(F::from(0u64)))?
+                    first,
+                    region.assign_advice_from_constant(|| "input1", config.advice[1], 0, F::ZERO)?,
+                    region.assign_advice_from_constant(|| "input2", config.advice[2], 0, F::ZERO)?,
+                    region.assign_advice_from_constant(|| "input3", config.advice[3], 0, F::ZERO)?
                 ])
             }
         )
@@ -160,7 +164,7 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         &self, 
         layouter: &mut impl Layouter<F>,
         state: [AssignedCell<F, F>; 4],
-        inputs: [Value<F>; 3] 
+        inputs: [AssignedCell<F, F>; 3] 
     ) -> Result<[AssignedCell<F, F>; 4], Error> {
         let config = self.config();
         layouter.assign_region(
@@ -177,10 +181,9 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
                 // write input elements to the r advice columns
                 row_offset += 1;
                 let input_elements = [
-                    region.assign_advice(|| "input0", config.advice[0], row_offset, || inputs[0])?,
-                    region.assign_advice(|| "input1", config.advice[1], row_offset, || inputs[1])?,
-                    region.assign_advice(|| "input2", config.advice[2], row_offset, || inputs[2])?,
-                    region.assign_advice(|| "zero", config.advice[3], row_offset, || Value::known(F::ZERO))?
+                    inputs[0].copy_advice(|| "input0", &mut region, config.advice[0], row_offset)?,
+                    inputs[1].copy_advice(|| "input1", &mut region, config.advice[1], row_offset)?,
+                    inputs[2].copy_advice(|| "input2", &mut region, config.advice[2], row_offset)?
                 ];
 
                 config.s_sponge_absorb.enable(&mut region, row_offset)?;
@@ -229,53 +232,33 @@ impl<F: PrimeField> SpongeInstructions<F> for SpongeChip<F> {
         Ok(state[1].clone()) // match poseidon-hash module and squeeze the 2nd state element
     }
 
-    // pad function - returning pad(r_channel || g_channel || b_chanel || exif)
     fn pad(
         &self,
-        r_channel: &Vec<u8>,
-        g_channel: &Vec<u8>,
-        b_channel: &Vec<u8>,
-        exif: &Vec<u8>,
+        layouter: &mut impl Layouter<F>,
+        elements: Vec<AssignedCell<F, F>>,
         r: usize
-    ) -> Result<Vec<[Value<F>; 3]>, Error> {
-        // concatenate input vectors 
-        let input: Vec<u8> = r_channel.iter().copied()
-            .chain(g_channel.iter().copied())
-            .chain(b_channel.iter().copied())
-            .chain(exif.iter().copied())
-            .collect();
-
-        // pack 31 bytes into each field element then pad and construct blocks
-        let bytes_per_element: usize = 31;
-        let base_256: F = F::from(256 as u64);
-        let mut preimage_elements: Vec<F> = input
-            .chunks(bytes_per_element)
-            .map(|chunk| {
-                chunk.iter().fold(F::ZERO, |acc, &byte| {
-                    acc * base_256 + F::from(byte as u64)
-                })
-            })
-            .collect();
-
-        // divide the vector of packed field elements into slices of 3 and pad
-        preimage_elements.push(F::ONE);
-        let rem: usize = preimage_elements.len() % r;
-        if rem != 0 {
-            preimage_elements.resize(preimage_elements.len() + (r - rem), F::ZERO);
-        }
-
-        let blocks: Vec<[Value<F>; 3]> = preimage_elements
-            .chunks(r)
-            .map(|elements| {
-                [
-                    Value::known(elements[0]),
-                    Value::known(elements[1]),
-                    Value::known(elements[2])
-                ]
-            })
-            .collect();
-
-        // return
-        Ok(blocks)
+    ) -> Result<Vec<[AssignedCell<F, F>; 3]>, Error> {
+        let config = self.config();
+        let mut all = elements;
+        let zeros = if (all.len() + 1) % r == 0 { 0 } else { r - (all.len() + 1) % r };
+        let pad_cells: Vec<AssignedCell<F, F>> = layouter.assign_region(
+            || "sponge_padding",
+            |mut region| {
+                let mut out = vec![];
+                if tamper::get() == T::SpongePad {
+                    let c = region.assign_advice(|| "pad_one_tampered", config.advice[0], 0, || Value::known(F::from(2u64)))?;
+                    region.constrain_constant(c.cell(), F::ONE)?;
+                    out.push(c);
+                } else {
+                    out.push(region.assign_advice_from_constant(|| "pad_one", config.advice[0], 0, F::ONE)?);
+                }
+                for i in 0..zeros {
+                    out.push(region.assign_advice_from_constant(|| "pad_zero", config.advice[0], i + 1, F::ZERO)?);
+                }
+                Ok(out)
+            },
+        )?;
+        all.extend(pad_cells);
+        Ok(all.chunks(r).map(|c| [c[0].clone(), c[1].clone(), c[2].clone()]).collect())
     }
 }
