@@ -64,7 +64,8 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
         ImageCircuitConfig {
             greyscale: GreyscaleChip::configure(meta, [advice[0], advice[1], advice[2], advice[3], advice[4]], instance, byte_table, rem_table),
             poseidon: PoseidonChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], fixed),
-            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]])
+            sponge: SpongeChip::configure(meta, [advice[0], advice[1], advice[2], advice[3]], instance),
+            packer: PackingChip::configure(meta, [advice[5], advice[6]], instance, byte_table)
         }
     }
 
@@ -104,75 +105,41 @@ impl<F: PrimeField> Circuit<F> for ImageCircuit {
             }
         )?;
 
-        let greyscale_result = greyscale_chip.greyscale(
+        let grey = greyscale_chip.greyscale(
             layouter.namespace(|| "greyscale_namespace"),
             &self.png_vectors.r,
             &self.png_vectors.g,
             &self.png_vectors.b
         )?;
 
-        // add expected grey pixels to vector of instance values
+        // range-checked EXIF byte cells: used BOTH for the public packed EXIF and the hash input
+        let exif_cells: Vec<Number<F>> = packing_chip.load_bytes(&mut layouter, &self.png_vectors.exif)?;
+
+        // public outputs: pack(grey) || pack(exif) || digest
         let mut result: Vec<Number<F>> = vec![];
-        result.extend(greyscale_result);
+        result.extend(packing_chip.pack(&mut layouter, &grey.y)?);
+        result.extend(packing_chip.pack(&mut layouter, &exif_cells)?);
 
-        // add exifdata to the vector of instance values by writing to advice columns
-        let exif_numbers: Vec<Number<F>> = layouter.assign_region(
-            || "exif_region",
-            |mut region| {
-                self.png_vectors.exif
-                .iter()
-                .enumerate()
-                .map(|(i, byte)| {
-                    let cell = region.assign_advice(
-                        || "exif_byte",
-                        config.greyscale.advice[4],
-                        i,
-                        || Value::known(F::from(*byte as u64))
-                    )?;
-                    Ok(Number(cell))
-                })
-                .collect()
-            }
-        )?;
+        // hash input stream r||g||b||exif built from the SAME cells (copy constraints)
+        let mut stream: Vec<Number<F>> = vec![];
+        stream.extend(grey.r.iter().cloned());
+        stream.extend(grey.g.iter().cloned());
+        stream.extend(grey.b.iter().cloned());
+        stream.extend(exif_cells.iter().cloned());
+        let hash_input: Vec<AssignedCell<F, F>> = packing_chip
+            .pack(&mut layouter, &stream)?
+            .into_iter().map(|n| n.0).collect();
 
-        result.extend(exif_numbers);
+        let preimage = sponge_chip.pad(&mut layouter, hash_input, 3)?;
 
-        // compute Poseidon(r||g||b||exif) using the sponge and permutation chips
-        let preimage: Vec<[Value<F>; 3]> = sponge_chip.pad(
-            &self.png_vectors.r,
-            &self.png_vectors.g, 
-            &self.png_vectors.b, 
-            &self.png_vectors.exif,
-            3
-        )?;
-
-        // compute the hash and expose as public 
         let mut state: [AssignedCell<F, F>; 4] = sponge_chip.initialize(&mut layouter)?;
-        for i in 0..preimage.len() {
-            // absorb the input block 
-            state = sponge_chip.absorb(
-                &mut layouter,
-                state,
-                preimage[i]
-            )?;
-
-            // compute the permutation once the block is absobed
-            state = poseidon_chip.permute(
-                &mut layouter,
-                state
-            )?;
+        for block in preimage.into_iter() {
+            state = sponge_chip.absorb(&mut layouter, state, block)?;
+            state = poseidon_chip.permute(&mut layouter, state)?;
         }
-
-        println!("[*] Number of state vectors absorbed: {}", preimage.len());
-
-        // squeeze once all blocks are permuted and expose as public
         let digest_cell: AssignedCell<F, F> = sponge_chip.squeeze(state)?;
-        // print the digest here for debugging
-        println!("[+] Hash: {:?}", digest_cell.value().copied());
         result.push(Number(digest_cell));
 
-        // expose each field element in the result vector
-        println!("[+] Result length: {}", result.len());
         for i in 0..result.len() {
             greyscale_chip.expose_as_public(&mut layouter, result[i].clone(), i)?;
         }

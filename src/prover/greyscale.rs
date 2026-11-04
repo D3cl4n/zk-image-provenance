@@ -8,6 +8,15 @@ use halo2_proofs::{
 use crate::prover::number::Number;
 
 
+// cells produced by the greyscale chip; r/g/b are the SAME cells the hash must consume
+#[derive(Clone, Debug)]
+pub struct GreyscaleOutput<F: PrimeField> {
+    pub r: Vec<Number<F>>,
+    pub g: Vec<Number<F>>,
+    pub b: Vec<Number<F>>,
+    pub y: Vec<Number<F>>,
+}
+
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
@@ -153,7 +162,7 @@ pub trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
         r: &Vec<u8>,
         g: &Vec<u8>,
         b: &Vec<u8>
-    ) -> Result<Vec<Self::Num>, Error>;
+    ) -> Result<GreyscaleOutput<F>, Error>;
 }
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
@@ -177,7 +186,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
         r: &Vec<u8>,
         g: &Vec<u8>, 
         b: &Vec<u8>
-    ) -> Result<Vec<Self::Num>, Error> {
+    ) -> Result<GreyscaleOutput<F>, Error> {
         let config = self.config();
 
         // create a region for the lookup table
@@ -186,7 +195,10 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 let mut offset: usize = 0;
 
                 // loop over r, g, b values and compute greyscale 
-                let mut y_values: Vec<Self::Num> = vec![];
+                let mut y_values: Vec<Number<F>> = vec![];
+                let mut r_cells: Vec<Number<F>> = vec![];
+                let mut g_cells: Vec<Number<F>> = vec![];
+                let mut b_cells: Vec<Number<F>> = vec![];
                 for i in 0..r.len() {
                     // enable greyscale selector - triggering lookup constraint on all row values
                     config.s_greyscale.enable(&mut region, offset)?;
@@ -200,26 +212,29 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                     let y = (sum / 100) as u8;
                     
                     // writing unedited pixels to first three advice columns
-                    region.assign_advice(
+                    let r_cell = region.assign_advice(
                         || "r_init", 
                         config.advice[0], 
                         offset, 
                         || Value::known(F::from(r[i] as u64))
                     )?;
+                    r_cells.push(Number(r_cell));
 
-                    region.assign_advice(
+                    let g_cell = region.assign_advice(
                         || "g_init", 
                         config.advice[1], 
                         offset, 
                         || Value::known(F::from(g[i] as u64))
                     )?;
+                    g_cells.push(Number(g_cell));
 
-                    region.assign_advice(
+                    let b_cell = region.assign_advice(
                         || "b_init", 
                         config.advice[2], 
                         offset, 
                         || Value::known(F::from(b[i] as u64))
                     )?;
+                    b_cells.push(Number(b_cell));
 
                     // map greyscale value to field element and write to fourth advice column
                     let grey_cell = region.assign_advice(
@@ -246,7 +261,7 @@ impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
                 println!("[*] Greyscale chip rows used: {}", offset);
 
                 // return value
-                Ok(y_values)
+                Ok(GreyscaleOutput { r: r_cells, g: g_cells, b: b_cells, y: y_values })
             }
         )
     }
