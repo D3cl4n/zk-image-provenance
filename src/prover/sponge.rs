@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, Column, ConstraintSystem, Error, Selector},
+    plonk::{Advice, Column, ConstraintSystem, Error, Instance, Selector},
     poly::Rotation,
 };
 use crate::prover::number::Number;
@@ -13,6 +13,7 @@ use crate::prover::tamper::{self, T};
 #[derive(Clone, Debug)]
 pub struct SpongeChipConfig {
     advice: [Column<Advice>; 4],
+    instance: Column<Instance>,
     s_sponge_absorb: Selector
 }
 
@@ -79,7 +80,8 @@ impl<F: PrimeField> SpongeChip<F> {
     // configure the chip including all gates and constraints 
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
-        advice: [Column<Advice>; 4]
+        advice: [Column<Advice>; 4],
+        instance: Column<Instance>
     ) -> <Self as Chip<F>>::Config {
         let s_sponge_absorb = meta.selector();
 
@@ -88,6 +90,7 @@ impl<F: PrimeField> SpongeChip<F> {
 
         SpongeChipConfig {
             advice,
+            instance,
             s_sponge_absorb
         }
     }

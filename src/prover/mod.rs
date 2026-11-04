@@ -3,6 +3,7 @@ pub mod poseidon;
 pub mod greyscale;
 pub mod sponge;
 pub mod number;
+pub mod packer;
 
 use crate::png;
 

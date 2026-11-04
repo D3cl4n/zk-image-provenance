@@ -20,8 +20,7 @@ pub struct GreyscaleOutput<F: PrimeField> {
 // structure for the ciruit's greyscale chip config
 #[derive(Clone, Debug)]
 pub struct GreyscaleChipConfig {
-    pub advice: [Column<Advice>; 5], // advice columns for: [r, g, b, y, rem]
-    instance: Column<Instance>,
+    advice: [Column<Advice>; 5], // advice columns for: [r, g, b, y, rem]
     pub byte_table: TableColumn, // one fixed column for byte values for lookups
     pub rem_table: TableColumn,
     s_greyscale: Selector
@@ -95,7 +94,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
         advice: [Column<Advice>; 5],
-        instance: Column<Instance>,
         byte_table: TableColumn,
         rem_table: TableColumn
     ) -> <Self as Chip<F>>::Config {
@@ -135,7 +133,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
 
         GreyscaleChipConfig {
             advice, 
-            instance,
             byte_table,
             rem_table, 
             s_greyscale
@@ -146,14 +143,6 @@ impl<F: PrimeField> GreyscaleChip<F> {
 // trait for sub-functions of the circuit
 pub trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
     type Num;
-
-    // expose output as public
-    fn expose_as_public(
-        &self, 
-        layouter: &mut impl Layouter<F>, 
-        num: Self::Num, 
-        row: usize
-    ) -> Result<(), Error>;
 
     // greyscale
     fn greyscale(
@@ -167,17 +156,6 @@ pub trait GreyscaleInstructions<F: PrimeField>: Chip<F> {
 
 impl<F: PrimeField> GreyscaleInstructions<F> for GreyscaleChip<F> {
     type Num = Number<F>;
-
-    // expose output as public
-    fn expose_as_public(
-        &self, 
-        layouter: &mut impl Layouter<F>, 
-        num: Self::Num, 
-        row: usize
-    ) -> Result<(), Error> {
-        let config = self.config();
-        layouter.constrain_instance(num.0.cell(), config.instance, row)
-    }
 
     // greyscale transformation
     fn greyscale(
