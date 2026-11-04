@@ -42,29 +42,27 @@ fn main() {
     let mut proof_sizes = vec![];
 
     // for loop of 30 iterations to get accurate runtimes for prover and verifier
-    for i in 0..30 {
         // fresh witness assignment per iteration of prover
-        let circuit_trial = prover::construct_circuit_struct(&original_img);
+    let circuit_trial = prover::construct_circuit_struct(&original_img);
         // creating the proof and starting the time for prover runtime measurement
-        let start_prover = Instant::now();
-        let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
-        create_proof(&params, &pk, &[circuit_trial], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
-        let proof = transcript.finalize();
-        proof_sizes.push(proof.len());
+    let start_prover = Instant::now();
+    let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
+    create_proof(&params, &pk, &[circuit_trial], &[&[&expected]], OsRng, &mut transcript).expect("[!] Proof generation failed");
+    let proof = transcript.finalize();
+    proof_sizes.push(proof.len());
 
         // end time for measuring prover time
-        prover_runtimes.push(start_prover.elapsed().as_millis());
+    prover_runtimes.push(start_prover.elapsed().as_millis());
 
         // write the proof to a .bin file
-        std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
+    std::fs::write("proof.bin", &proof).expect("[!] Failed to write proof to file");
 
         // verify the proof and time the verifier 
-        let start_verifier = Instant::now();
-        let strategy = SingleVerifier::new(&params);
-        let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
-        verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
-        verifier_runtimes.push(start_verifier.elapsed().as_millis());
-    }
+    let start_verifier = Instant::now();
+    let strategy = SingleVerifier::new(&params);
+    let mut transcript = Blake2bRead::<_, EqAffine, Challenge255<_>>::init(&proof[..]);
+    verify_proof(&params, &vk, strategy, &[&[&expected]], &mut transcript).expect("[!] Proof verification failed");
+    verifier_runtimes.push(start_verifier.elapsed().as_millis());
 
     // print all the runtimes neatly
     for i in 0..prover_runtimes.len() {
