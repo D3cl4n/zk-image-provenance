@@ -340,6 +340,8 @@ vec![from_hex("0x360d7470611e473d353f628f76d110f34e71162f31003b7057538c259642630
 ```
 
 #### Horizon Labs Test Cases
+`https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/poseidon2.rs` 
+
 ```
 use ark_ff::fields::{Fp256, MontBackend, MontConfig};
 use std::convert::TryInto;
@@ -351,3 +353,12 @@ pub struct FqConfig;
 pub type FpPallas = Fp256<MontBackend<FqConfig, 4>>;
 ```
 
+```
+[0, 1, 2]
+
+produces
+
+[0x1a9b54c7512a914dd778282c44b3513fea7251420b9d95750baae059b2268d7a,
+0x1c48ea0994a7d7984ea338a54dbf0c8681f5af883fe988d59ba3380c9f7901fc,
+0x079ddd0a80a3e9414489b526a2770448964766685f4c4842c838f8a23120b401]
+```
