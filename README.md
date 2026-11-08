@@ -1,6 +1,6 @@
 # zk-image-provenance
 
-## Version Control
+## Version Control - 11/8/2026
 Patch for soundness error pushed, corresponding to latest code on `main` branch. Benchmarks will be rerun and included in next iteration of preprint. 
 
 ## Problem Statement
