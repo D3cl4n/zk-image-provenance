@@ -14,11 +14,11 @@ pub struct Poseidon2ChipConfig {
     advice: [Column<Advice>; 31],   // 31 advice columns for a wide construction
     byte_table: TableColumn,        // lookup table to make sure bytes are within [0, 255]
     instance: Column<Instance>,     // for exposing public values
-    s_init: Selector,               // selector for the prologue row: writing [0, 0, IV] into the t laes
-    s_e1: Selector,                 // row 0 of a permutation (absorb fused into this gate)
-    s_i: [Selector; 4],             // rows 1, 2, 3, 4 one per internal segment
-    s_e2: Selector,                 // row 5
-    s_digest: Selector              // last row for outputting digest value
+    s_init: Selector,               // ensures correct starting values at start of permutation
+    s_e1: Selector,                 // selector computes RF/2 external rounds in one row (row 0)
+    s_i: [Selector; 4],             // each selector computes 14 RP internal rounds giving us 14*4 = 56 internal rounds in 4 rows 
+    s_e2: Selector,                 // selector computes the last RF/2 external rounds in one row (row 5)
+    s_digest: Selector              // 
 }
 
 
@@ -54,10 +54,15 @@ impl<F: PrimeField> Chip<F> for Poseidon2Chip<F> {
 */
 fn create_init_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>,
-    advice: [Column<Advice>; 3],
+    advice: [Column<Advice>; 3], // pass A19, A21, A23 here 
     s_init: Selector
 ) {
     meta.create_gate("ps_init", |meta| {
         let s_init = meta.query_selector(s_init);
     });
 }
+
+
+/*
+* Gate Purpose: compute
+*/
