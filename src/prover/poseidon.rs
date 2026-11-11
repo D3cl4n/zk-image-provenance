@@ -52,7 +52,11 @@ fn adv<F: PrimeField>(meta: &mut VirtualCells<F>, col: Column<Advice>, rot: Rota
     -> Expression<F> { meta.query_advice(col, rot) }
 
 
-// helper function for 
+// helper function for MixLayer (ML) using the circular matrix formed by (2, 1, 1)
+fn mul_me<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
+    let s = x[0].clone() + x[1].clone() + x[2].clone();
+    [x[0].clone()]
+}
 
 
 /*
