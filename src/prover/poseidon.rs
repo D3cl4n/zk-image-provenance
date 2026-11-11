@@ -47,6 +47,14 @@ impl<F: PrimeField> Chip<F> for Poseidon2Chip<F> {
 }
 
 
+// helper function to query an advice column at a rotation
+fn adv<F: PrimeField>(meta: &mut VirtualCells<F>, col: Column<Advice>, rot: Rotation)
+    -> Expression<F> { meta.query_advice(col, rot) }
+
+
+// helper function for 
+
+
 /*
 * Gate Purpose: bake in the initial absorb for the t lanes to values [0, 0, IV] and constrain the values
 * Columns used: adv0 -> lane0, adv1 -> lane1, adv2 -> lane2
@@ -64,5 +72,23 @@ fn create_init_gate<F: PrimeField> (
 
 
 /*
-* Gate Purpose: compute
+* Gate Purpose: compute RF/2 external rounds in the 2nd row using the e1 selector
+* Columns used: A0, ..., A23 for the 24 cells of SB q, b values
+* Constraints
 */
+fn create_e1_gate<F: PrimeField> (
+    meta: &mut ConstraintSystem<F>,
+    advice: [Column<Advice>; 31],
+    s_e1: Selector,
+    rc: [[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
+) {
+    meta.create_gate("e1_gate", |meta| {
+        let s_e1 = meta.query_selector(s_e1);
+        let b_prev = [
+            adv(advice[19], Rotation::prev()), 
+            adv(advice[21], Rotation::prev()), 
+            adv(advice[23], Rotation::prev())];
+        let m0 = adv(meta, advice[24], Rotation::cur());
+        let m1 = adv(meta, advice[25], Rotation::cur());
+    });
+}
