@@ -94,7 +94,8 @@ fn create_e1_gate<F: PrimeField> (
             adv(meta, advice[23], Rotation::prev())];
         let m0 = adv(meta, advice[24], Rotation::cur()); // this rows messsage elements to be absorbed 
         let m1 = adv(meta, advice[25], Rotation::cur());
-        let mut after_ml = mul_me(&b_prev);
-
+        let mut curr_state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
+        curr_state[0] += m0; // absorb the next block now that the last permutation is finished
+        curr_state[1] += m1; 
     });
 }
