@@ -52,10 +52,10 @@ fn adv<F: PrimeField>(meta: &mut VirtualCells<F>, col: Column<Advice>, rot: Rota
     -> Expression<F> { meta.query_advice(col, rot) }
 
 
-// helper function for MixLayer (ML) using the circular matrix formed by (2, 1, 1)
+// helper function for MixLayer (ML) using the circular matrix formed by (2, 1, 1) and the state vector x
 fn mul_me<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
     let s = x[0].clone() + x[1].clone() + x[2].clone();
-    [x[0].clone()]
+    [x[0].clone() + s, x[1].clone() + s, x[2].clone() + s]
 }
 
 
@@ -89,10 +89,12 @@ fn create_e1_gate<F: PrimeField> (
     meta.create_gate("e1_gate", |meta| {
         let s_e1 = meta.query_selector(s_e1);
         let b_prev = [
-            adv(advice[19], Rotation::prev()), 
-            adv(advice[21], Rotation::prev()), 
-            adv(advice[23], Rotation::prev())];
-        let m0 = adv(meta, advice[24], Rotation::cur());
+            adv(meta, advice[19], Rotation::prev()), 
+            adv(meta, advice[21], Rotation::prev()), 
+            adv(meta, advice[23], Rotation::prev())];
+        let m0 = adv(meta, advice[24], Rotation::cur()); // this rows messsage elements to be absorbed 
         let m1 = adv(meta, advice[25], Rotation::cur());
+        let mut after_ml = mul_me(&b_prev);
+
     });
 }
