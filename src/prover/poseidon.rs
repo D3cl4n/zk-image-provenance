@@ -94,8 +94,18 @@ fn create_e1_gate<F: PrimeField> (
             adv(meta, advice[23], Rotation::prev())];
         let m0 = adv(meta, advice[24], Rotation::cur()); // this rows messsage elements to be absorbed 
         let m1 = adv(meta, advice[25], Rotation::cur());
-        let mut curr_state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
-        curr_state[0] += m0; // absorb the next block now that the last permutation is finished
-        curr_state[1] += m1; 
+        let mut state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
+        state[0] += m0; // absorb the next block now that the last permutation is finished
+        state[1] += m1; 
+        let mut lanes = mul_me(&state); // initial ML transformation before any external round happens
+        
+        let mut constraints = vec![]; // vector to hold all constraints
+        for i in 0..4 { // for loop with 4 iterations since we are doing RF / 2 = 4 rounds in this gate
+            let mut sbox_out = vec![]; // vector to hold the S-Box outputs
+            for j in 0..3 { // perform ARC and SB over all 3 lanes, storing S-Box output in sbox_out
+                let a = lanes[i].clone() + Expression::Constant(rc[i][j]); 
+                let a_sq = 0; // TODO: fill this in to grab the S-Box output at the correct column written in by synthesize
+            }
+        }
     });
 }
