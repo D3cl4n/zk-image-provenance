@@ -76,9 +76,9 @@ fn create_init_gate<F: PrimeField> (
 
 
 /*
-* Gate Purpose: compute RF/2 external rounds in the 2nd row using the e1 selector
-* Columns used: A0, ..., A23 for the 24 cells of SB q, b values
-* Constraints
+* Gate Purpose: compute RF/2 external rounds in the using the e1 selector
+* Columns used: A0, ..., A23 for the 24 cells of SB q, b values, A24 and A25 for the elements to absorb
+* Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
 */
 fn create_e1_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>,
@@ -116,4 +116,19 @@ fn create_e1_gate<F: PrimeField> (
 
         constraints // return the constraints as required by create_gate
     });
+}
+
+
+/*
+* Gate Purpose: compute RF/2 external rounds in the 2nd row using the e1 selector
+* Columns used: A0, ..., A23 for the 24 cells of SB q, b values, A24 and A25 for the elements to absorb
+* Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
+*/
+fn create_i0_gate<F: PrimeField>(
+    meta: &mut ConstraintSystem,
+    advice: [Column<Advice>; 31],
+    s_i0: Selector,
+    rc: [F; 14] // 14 RP rounds, each RP round only has lane0 go into ARC
+) {
+    
 }
