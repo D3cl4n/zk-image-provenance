@@ -61,7 +61,7 @@ fn mul_me<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
 
 // helper fuction of MixLayer (ML) using the circuit matrix for internal rounds
 fn mul_mi<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
-    
+
 }
 
 /*
@@ -76,6 +76,8 @@ fn create_init_gate<F: PrimeField> (
 ) {
     meta.create_gate("ps_init", |meta| {
         let s_init = meta.query_selector(s_init);
+
+        // TODO: finish this and return constraints on constants
     });
 }
 
