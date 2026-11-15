@@ -130,8 +130,8 @@ fn create_e1_gate<F: PrimeField> (
 
 
 /*
-* Gate Purpose: compute RF/2 external rounds in the 2nd row using the e1 selector
-* Columns used: A0, ..., A23 for the 24 cells of SB q, b values, A24 and A25 for the elements to absorb
+* Gate Purpose: compute RP/4 = 14 internal rounds in the next row using the i0 selector
+* Columns used: A0, A1, A2 for the current state (ML from previous row), q and b in the subsequent pairs of cols
 * Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
 */
 fn create_i0_gate<F: PrimeField>(
@@ -170,7 +170,7 @@ fn create_i0_gate<F: PrimeField>(
             constraints.push(s_i0.clone() * (a_sq.clone() - a.clone() * a.clone()));
             constraints.push(s_i0.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
 
-            lanes_cur = mul_mi(&lanes_cur);
+            lanes_cur = mul_mi([&b, &lanes_cur[1].clone(), &lanes_cur[2].clone()]);
         }
 
         constraints
