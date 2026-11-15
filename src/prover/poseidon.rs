@@ -107,7 +107,13 @@ fn create_e1_gate<F: PrimeField> (
                 let a_sq = adv(meta, advice[6*i + 2*j]); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
                 let b = adv(meta, advice[6*i + 2*j + 1]); // a_sq = a*a, b = a_sq * a_sq * a = a^5
                 sbox_out.push(b);
+
+                // 24 constraints over the 12 a_sq values and the 12 b values
+                constraints.push(s_e1.clone() * (a_sq.clone() - a.clone() * a.clone()));
+                constraints.push(s_e1.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
             }
         }
+
+        constraints // return the constraints as required by create_gate
     });
 }
