@@ -189,5 +189,12 @@ fn create_i1_gate<F: PrimeField> (
     s_i1: Selector,
     rc: [F; 14]
 ) {
-    
+    meta.create_gate("i1_gate", |meta| {
+        let s_i1 = meta.query_selector(s_i1);
+
+
+        let constraits = vec![];
+
+        constraints
+    });
 }
