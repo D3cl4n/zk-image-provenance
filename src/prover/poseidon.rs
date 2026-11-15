@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, Column, TableColumn, ConstraintSystem, Error, Instance, Selector, Expression},
+    plonk::{Advice, Column, TableColumn, ConstraintSystem, Error, Instance, Selector, Expression, VirtualCells},
     poly::Rotation,
 };
 use crate::prover::number::Number;
@@ -126,7 +126,7 @@ fn create_e1_gate<F: PrimeField> (
 * Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
 */
 fn create_i0_gate<F: PrimeField>(
-    meta: &mut ConstraintSystem,
+    meta: &mut ConstraintSystem<F>,
     advice: [Column<Advice>; 31],
     s_i0: Selector,
     rc: [F; 14] // 14 RP rounds, each RP round only has lane0 go into ARC
