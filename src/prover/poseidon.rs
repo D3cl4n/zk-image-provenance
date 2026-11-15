@@ -61,8 +61,10 @@ fn mul_me<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
 
 // helper fuction of MixLayer (ML) using the circuit matrix for internal rounds
 fn mul_mi<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
-
+    let s = x[0].clone() + x[1].clone() + x[2].clone();
+    [x[0].clone + s.clone(), x[1].clone() + s.clone(), x[2].clone() + x[2].clone() + s.clone()]
 }
+
 
 /*
 * Gate Purpose: bake in the initial absorb for the t lanes to values [0, 0, IV] and constrain the values
