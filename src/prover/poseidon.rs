@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, Column, TableColumn, ConstraintSystem, Error, Instance, Selector},
+    plonk::{Advice, Column, TableColumn, ConstraintSystem, Error, Instance, Selector, Expression},
     poly::Rotation,
 };
 use crate::prover::number::Number;
