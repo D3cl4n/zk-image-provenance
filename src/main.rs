@@ -6,7 +6,6 @@ mod verifier;
 // main function
 fn main() {
     use std::time::{Instant, Duration};
-    use crate::prover::image_circuit::{ImageDetails, ImageCircuit};
     use halo2_proofs::{
         pasta::{EqAffine, Fp},
         plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, SingleVerifier},

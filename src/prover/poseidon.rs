@@ -55,7 +55,7 @@ fn adv<F: PrimeField>(meta: &mut VirtualCells<F>, col: Column<Advice>, rot: Rota
 // helper function for MixLayer (ML) using the circular matrix formed by (2, 1, 1) and the state vector x
 fn mul_me<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
     let s = x[0].clone() + x[1].clone() + x[2].clone();
-    [x[0].clone() + s, x[1].clone() + s, x[2].clone() + s]
+    [x[0].clone() + s.clone(), x[1].clone() + s.clone(), x[2].clone() + s]
 }
 
 
