@@ -91,7 +91,8 @@ fn create_e1_gate<F: PrimeField> (
         let b_prev = [
             adv(meta, advice[19], Rotation::prev()), 
             adv(meta, advice[21], Rotation::prev()), 
-            adv(meta, advice[23], Rotation::prev())];
+            adv(meta, advice[23], Rotation::prev())
+        ];
         let m0 = adv(meta, advice[24], Rotation::cur()); // this rows messsage elements to be absorbed 
         let m1 = adv(meta, advice[25], Rotation::cur());
         let mut state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
@@ -133,7 +134,10 @@ fn create_i0_gate<F: PrimeField>(
     meta.create_gate("i0_gate", |meta| {
         let s_i0 = meta.query_selector(s_i0);
         let b_prev = [
-
+            adv(meta, advice[19], Rotation::prev()), 
+            adv(meta, advice[21], Rotation::prev()), 
+            adv(meta, advice[23], Rotation::prev())
         ];
+        let state = mul_me(&b_prev); // complete last ML which was deferred from E1 to here
     });
 }
