@@ -138,6 +138,19 @@ fn create_i0_gate<F: PrimeField>(
             adv(meta, advice[21], Rotation::prev()), 
             adv(meta, advice[23], Rotation::prev())
         ];
-        let state = mul_me(&b_prev); // complete last ML which was deferred from E1 to here
+        let lanes = mul_me(&b_prev); // complete last ML which was deferred from E1 to here
+        let lanes_cur = [ // A0, A1, A2 hold MDS(A19_prev, A21_prev, A23_prev)
+            adv(meta, advice[0], Rotation::cur()),
+            adv(meta, advice[1], Rotation::cur()),
+            adv(meta, advice[2], Rotation::cur())
+        ];
+
+        // constraints for the I0 gate
+        let mut constraints = vec![];
+        for i in 0..3 { // 3 constraints for A0, A1, A2 <-> A19, A21, A32 (previous row, MDS multiplied)
+            constraints.push(s_i0.clone() * (lanes_cur[i].clone() - lanes[i].clone()));
+        }
+
+        constraints
     });
 }
