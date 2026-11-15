@@ -176,3 +176,18 @@ fn create_i0_gate<F: PrimeField>(
         constraints
     });
 }
+
+
+/*
+* Gate Purpose: compute RP/4 = 14 internal rounds in the next row using the i1 selector
+* Columns used: A0, A1, A2 for the current state (ML from previous row), q and b in the subsequent pairs of cols
+* Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
+*/
+fn create_i1_gate<F: PrimeField> (
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 31],
+    s_i1: Selector,
+    rc: [F; 14]
+) {
+    
+}
