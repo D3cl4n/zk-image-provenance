@@ -104,7 +104,8 @@ fn create_e1_gate<F: PrimeField> (
             let mut sbox_out = vec![]; // vector to hold the S-Box outputs
             for j in 0..3 { // perform ARC and SB over all 3 lanes, storing S-Box output in sbox_out
                 let a = lanes[i].clone() + Expression::Constant(rc[i][j]); 
-                let a_sq = 0; // TODO: fill this in to grab the S-Box output at the correct column written in by synthesize
+                let a_sq = adv(meta, advice[6*i + 2*j]); 
+                let b = adv(meta, advice[6*i + 2*j + 1]); 
             }
         }
     });
