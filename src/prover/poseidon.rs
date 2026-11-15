@@ -139,7 +139,7 @@ fn create_i0_gate<F: PrimeField>(
             adv(meta, advice[23], Rotation::prev())
         ];
         let lanes = mul_me(&b_prev); // complete last ML which was deferred from E1 to here
-        let lanes_cur = [ // A0, A1, A2 hold MDS(A19_prev, A21_prev, A23_prev)
+        let mut lanes_cur = [ // A0, A1, A2 hold MDS(A19_prev, A21_prev, A23_prev)
             adv(meta, advice[0], Rotation::cur()),
             adv(meta, advice[1], Rotation::cur()),
             adv(meta, advice[2], Rotation::cur())
@@ -156,6 +156,12 @@ fn create_i0_gate<F: PrimeField>(
             let a = lanes_cur[0].clone() + Expression::Constant(rc[i]); // ARC
             let a_sq = adv(meta, advice[3 + 2*i], Rotation::cur()); // a_sq stored in A3, b stored in A4 and so on
             let b = adv(meta, advice[3 + 2*i + 1], Rotation::cur());
+
+            // 28 constraints, 2 per RP round performed
+            constraints.push(s_i0.clone() * (a_sq.clone() - a.clone() * a.clone()));
+            constraints.push(s_i0.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
+
+            lanes_cur = mul_mi(&lanes_cur);
         }
 
         constraints
