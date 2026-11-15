@@ -95,8 +95,8 @@ fn create_e1_gate<F: PrimeField> (
         let m0 = adv(meta, advice[24], Rotation::cur()); // this rows messsage elements to be absorbed 
         let m1 = adv(meta, advice[25], Rotation::cur());
         let mut state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
-        state[0] += m0; // absorb the next block now that the last permutation is finished
-        state[1] += m1; 
+        state[0] = state[0].clone() + m0; // absorb the next block now that the last permutation is finished
+        state[1] = state[1].clone() + m1; 
         let mut lanes = mul_me(&state); // initial ML transformation before any external round happens
         
         let mut constraints = vec![]; // vector to hold all constraints
@@ -130,5 +130,10 @@ fn create_i0_gate<F: PrimeField>(
     s_i0: Selector,
     rc: [F; 14] // 14 RP rounds, each RP round only has lane0 go into ARC
 ) {
-    
+    meta.create_gate("i0_gate", |meta| {
+        let s_i0 = meta.query_selector(s_i0);
+        let b_prev = [
+
+        ];
+    });
 }
