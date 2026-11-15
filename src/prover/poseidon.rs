@@ -151,6 +151,13 @@ fn create_i0_gate<F: PrimeField>(
             constraints.push(s_i0.clone() * (lanes_cur[i].clone() - lanes[i].clone()));
         }
 
+        // 14 internal RP rounds 
+        for i in 0..14 {
+            let a = lanes_cur[0].clone() + Expression::Constant(rc[i]); // ARC
+            let a_sq = adv(meta, advice[3 + 2*i], Rotation::cur()); // a_sq stored in A3, b stored in A4 and so on
+            let b = adv(meta, advice[3 + 2*i + 1], Rotation::cur());
+        }
+
         constraints
     });
 }
