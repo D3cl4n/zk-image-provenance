@@ -104,8 +104,8 @@ fn create_e1_gate<F: PrimeField> (
             let mut sbox_out = vec![]; // vector to hold the S-Box outputs
             for j in 0..3 { // perform ARC and SB over all 3 lanes, storing S-Box output in sbox_out
                 let a = lanes[i].clone() + Expression::Constant(rc[i][j]); 
-                let a_sq = adv(meta, advice[6*i + 2*j]); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
-                let b = adv(meta, advice[6*i + 2*j + 1]); // a_sq = a*a, b = a_sq * a_sq * a = a^5
+                let a_sq = adv(meta, advice[6*i + 2*j], Rotation::cur()); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
+                let b = adv(meta, advice[6*i + 2*j + 1], Rotation::cur()); // a_sq = a*a, b = a_sq * a_sq * a = a^5
                 sbox_out.push(b);
 
                 // 24 constraints over the 12 a_sq values and the 12 b values
