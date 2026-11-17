@@ -88,12 +88,23 @@ fn recompute_end_lanes<F: PrimeField>(
 fn create_init_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>,
     advice: [Column<Advice>; 3], // pass A19, A21, A23 here 
-    s_init: Selector
+    s_init: Selector,
+    iv: F
 ) {
     meta.create_gate("ps_init", |meta| {
         let s_init = meta.query_selector(s_init);
+        let b_prev = [
+            adv(meta, advice[0], Rotation::cur()),
+            adv(meta, advice[1], Rotation::cur()),
+            adv(meta, advice[2], Rotation::cur())
+        ];
+        let lanes = mul_me(&b_prev);
 
-        // TODO: finish this and return constraints on constants
+        vec![
+            s_init.clone() * lanes[0].clone(), 
+            s_init.clone() * lanes[1].clone(), 
+            s_init.clone() * (lanes[2].clone() - Expression::Constant(iv))
+        ]
     });
 }
 
