@@ -121,13 +121,13 @@ fn create_e1_gate<F: PrimeField> (
         let mut state = mul_me(&b_prev); // this is the ML layer for the end of the last permutation
         state[0] = state[0].clone() + m0; // absorb the next block now that the last permutation is finished
         state[1] = state[1].clone() + m1; 
-        let lanes = mul_me(&state); // initial ML transformation before any external round happens
+        let mut lanes = mul_me(&state); // initial ML transformation before any external round happens
         
         let mut constraints = vec![]; // vector to hold all constraints
         for i in 0..4 { // for loop with 4 iterations since we are doing RF / 2 = 4 rounds in this gate
             let mut sbox_out = vec![]; // vector to hold the S-Box outputs
             for j in 0..3 { // perform ARC and SB over all 3 lanes, storing S-Box output in sbox_out
-                let a = lanes[i].clone() + Expression::Constant(rc[i][j]); 
+                let a = lanes[j].clone() + Expression::Constant(rc[i][j]); 
                 let a_sq = adv(meta, advice[6*i + 2*j], Rotation::cur()); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
                 let b = adv(meta, advice[6*i + 2*j + 1], Rotation::cur()); // a_sq = a*a, b = a_sq * a_sq * a = a^5
                 sbox_out.push(b.clone());
@@ -136,6 +136,7 @@ fn create_e1_gate<F: PrimeField> (
                 constraints.push(s_e1.clone() * (a_sq.clone() - a.clone() * a.clone()));
                 constraints.push(s_e1.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
             }
+            if i < 3 { lanes = mul_me(&[sbox_out[0].clone(), sbox_out[1].clone(), sbox_out[2].clone()]); }
         }
 
         constraints // return the constraints as required by create_gate
