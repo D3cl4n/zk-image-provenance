@@ -58,7 +58,6 @@ fn extract_signature_from_png(edited_img: &String) -> Signature {
 // extract hash bytes as a slice and construct a Message struct
 fn ecdsa_message_from_digest(edited_img: &String) -> Message {
     println!("[*] Extracting Poseidon hash from edited png");
-    let image_chunks: Vec<png::PngChunk> = png::get_image_chunks(edited_img);
 
     // extract the hash value from the chunks
     let hash: Vec<u8> = png::extract_chunk_data(edited_img, b"hASh");

@@ -1,11 +1,10 @@
 use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::{AssignedCell, Chip, Layouter, Value},
-    plonk::{Advice, Column, TableColumn, ConstraintSystem, Error, Instance, Selector, Expression, VirtualCells},
+    circuit::Chip,
+    plonk::{Advice, Column, TableColumn, ConstraintSystem, Instance, Selector, Expression, VirtualCells},
     poly::Rotation,
 };
-use crate::prover::number::Number;
 
 
 // chip configuration for Poseidon2 sponge and permutation

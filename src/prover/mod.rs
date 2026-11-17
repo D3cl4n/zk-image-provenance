@@ -4,8 +4,6 @@ pub mod poseidon;
 //pub mod greyscale;
 //pub mod crop;
 
-use crate::png;
-
 
 // structure for the circuit which is returned to create_proof(params, pk, circuits, instances, rng, transcript)
 pub struct ImageCircuit {
