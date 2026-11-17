@@ -203,7 +203,7 @@ fn create_i1_gate<F: PrimeField> (
         ];
 
         // constraints for the I1 gate
-        let constraits = vec![];
+        let constraints = vec![];
         // 14 internal RP rounds 
         for i in 0..14 {
             let a = lanes_cur[0].clone() + Expression::Constant(rc[i]); // ARC
@@ -211,8 +211,8 @@ fn create_i1_gate<F: PrimeField> (
             let b = adv(meta, advice[3 + 2*i + 1], Rotation::cur());
 
             // 28 constraints, 2 per RP round performed
-            constraints.push(s_i0.clone() * (a_sq.clone() - a.clone() * a.clone()));
-            constraints.push(s_i0.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
+            constraints.push(s_i1.clone() * (a_sq.clone() - a.clone() * a.clone()));
+            constraints.push(s_i1.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
 
             if i < 13 { lanes_cur = mul_mi(&[b, lanes_cur[1].clone(), lanes_cur[2].clone()]); } // deferred to I1 for last I0 RP round
         }
