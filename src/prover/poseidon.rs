@@ -69,7 +69,7 @@ fn mul_mi<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
 // helper function to recompute lane values given starting lanes, and b cells (from S-Box outputs)
 fn recompute_end_lanes<F: PrimeField>(
     meta: &mut VirtualCells<F>, 
-    advice: [Columns<Advice>; 31], 
+    advice: [Column<Advice>; 31], 
     rot: Rotation
 ) -> [Expression<F>; 3] {
     let mut lanes = [adv(meta, advice[0], rot), adv(meta, advice[1], rot), adv(meta, advice[2], rot)];
@@ -218,7 +218,7 @@ fn create_i1_gate<F: PrimeField> (
         ];
 
         // constraints for the I1 gate
-        let constraints = vec![];
+        let mut constraints = vec![];
         for i in 0..3 { // 3 constraints for A0, A1, A2 <-> A19, A21, A23 (previous row, MDS multiplied)
             constraints.push(s_i1.clone() * (lanes_cur[i].clone() - start[i].clone()));
         }
