@@ -66,6 +66,21 @@ fn mul_mi<F: PrimeField>(x: &[Expression<F>; 3]) -> [Expression<F>; 3] {
 }
 
 
+// helper function to recompute lane values given starting lanes, and b cells (from S-Box outputs)
+fn recompute_end_lanes<F: PrimeField>(
+    meta: &mut VirtualCells<F>, 
+    advice: [Columns<Advice>; 31], 
+    rot: Rotation
+) -> [Expression<F>; 3] {
+    let mut lanes = [adv(meta, advice[0], rot), adv(meta, advice[1], rot), adv(meta, advice[2], rot)];
+    for i in 0..14 {
+        let b = adv(meta, advice[4 + 2*i], rot);
+        lanes = mul_mi(&[b, lanes[1].clone(), lanes[2].clone()]);
+    }
+    lanes
+}
+
+
 /*
 * Gate Purpose: bake in the initial absorb for the t lanes to values [0, 0, IV] and constrain the values
 * Columns used: adv0 -> lane0, adv1 -> lane1, adv2 -> lane2
@@ -204,6 +219,10 @@ fn create_i1_gate<F: PrimeField> (
 
         // constraints for the I1 gate
         let constraints = vec![];
+        for i in 0..3 { // 3 constraints for A0, A1, A2 <-> A19, A21, A23 (previous row, MDS multiplied)
+            constraints.push(s_i1.clone() * (lanes_cur[i].clone() - start[i].clone()));
+        }
+
         // 14 internal RP rounds 
         for i in 0..14 {
             let a = lanes_cur[0].clone() + Expression::Constant(rc[i]); // ARC
