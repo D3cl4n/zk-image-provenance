@@ -205,12 +205,7 @@ fn create_i1_gate<F: PrimeField> (
 ) {
     meta.create_gate("i1_gate", |meta| {
         let s_i1 = meta.query_selector(s_i1);
-        let b_prev = [
-            adv(meta, advice[26], Rotation::prev()),
-            adv(meta, advice[28], Rotation::prev()),
-            adv(meta, advice[30], Rotation::prev())
-        ];
-        let start = mul_mi(&b_prev);
+        let start = recompute_end_lanes(meta, advice, Rotation::prev());
         let mut lanes_cur = [ // A0, A1, A2 hold MDS(A19_prev, A21_prev, A23_prev)
             adv(meta, advice[0], Rotation::cur()),
             adv(meta, advice[1], Rotation::cur()),
