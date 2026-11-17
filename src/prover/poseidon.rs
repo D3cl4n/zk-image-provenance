@@ -172,7 +172,6 @@ fn create_i0_gate<F: PrimeField>(
 
             if i < 13 { lanes_cur = mul_mi(&[b, lanes_cur[1].clone(), lanes_cur[2].clone()]); } // deferred to I1 for last I0 RP round
         }
-
         constraints
     });
 }
@@ -180,7 +179,7 @@ fn create_i0_gate<F: PrimeField>(
 
 /*
 * Gate Purpose: compute RP/4 = 14 internal rounds in the next row using the i1 selector
-* Columns used: A0, A1, A2 for the current state (ML from previous row), q and b in the subsequent pairs of cols
+* Columns used: A0, A1, A2 for the state after ML from previous row, q and b in the subsequent pairs of cols
 * Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
 */
 fn create_i1_gate<F: PrimeField> (
@@ -192,11 +191,31 @@ fn create_i1_gate<F: PrimeField> (
     meta.create_gate("i1_gate", |meta| {
         let s_i1 = meta.query_selector(s_i1);
         let b_prev = [
-            adv(meta, )
+            adv(meta, advice[26], Rotation::prev()),
+            adv(meta, advice[28], Rotation::prev()),
+            adv(meta, advice[30], Rotation::prev())
+        ];
+        let start = mul_mi(&b_prev);
+        let mut lanes_cur = [ // A0, A1, A2 hold MDS(A19_prev, A21_prev, A23_prev)
+            adv(meta, advice[0], Rotation::cur()),
+            adv(meta, advice[1], Rotation::cur()),
+            adv(meta, advice[2], Rotation::cur())
         ];
 
+        // constraints for the I1 gate
         let constraits = vec![];
+        // 14 internal RP rounds 
+        for i in 0..14 {
+            let a = lanes_cur[0].clone() + Expression::Constant(rc[i]); // ARC
+            let a_sq = adv(meta, advice[3 + 2*i], Rotation::cur()); // a_sq stored in A3, b stored in A4 and so on
+            let b = adv(meta, advice[3 + 2*i + 1], Rotation::cur());
 
+            // 28 constraints, 2 per RP round performed
+            constraints.push(s_i0.clone() * (a_sq.clone() - a.clone() * a.clone()));
+            constraints.push(s_i0.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
+
+            if i < 13 { lanes_cur = mul_mi(&[b, lanes_cur[1].clone(), lanes_cur[2].clone()]); } // deferred to I1 for last I0 RP round
+        }
         constraints
     });
 }
