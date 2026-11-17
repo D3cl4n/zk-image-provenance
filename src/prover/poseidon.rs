@@ -170,7 +170,7 @@ fn create_i0_gate<F: PrimeField>(
             constraints.push(s_i0.clone() * (a_sq.clone() - a.clone() * a.clone()));
             constraints.push(s_i0.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
 
-            lanes_cur = mul_mi(&[b, lanes_cur[1].clone(), lanes_cur[2].clone()]);
+            if i < 13 { lanes_cur = mul_mi(&[b, lanes_cur[1].clone(), lanes_cur[2].clone()]); } // deferred to I1 for last I0 RP round
         }
 
         constraints
@@ -191,7 +191,9 @@ fn create_i1_gate<F: PrimeField> (
 ) {
     meta.create_gate("i1_gate", |meta| {
         let s_i1 = meta.query_selector(s_i1);
-
+        let b_prev = [
+            adv(meta, )
+        ];
 
         let constraits = vec![];
 
