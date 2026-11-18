@@ -224,9 +224,9 @@ fn create_int_gate<F: PrimeField> (
             adv(meta, advice[2], Rotation::cur())
         ];
 
-        // constraints for the I1 gate
+        // constraints for the internal gate(s)
         let mut constraints = vec![];
-        for i in 0..3 { // 3 constraints for A0, A1, A2 <-> A19, A21, A23 (previous row, MDS multiplied)
+        for i in 0..3 { // 3 constraints for A0, A1, A2 <-> reconstruct_end_lanes()
             constraints.push(s_int.clone() * (lanes_cur[i].clone() - start[i].clone()));
         }
 
@@ -260,5 +260,34 @@ fn create_e2_gate(
 ) {
     meta.create_gate("e2_gate", |meta| {
         let s_e2 = meta.query_selector(s_e2);
+        let start = recompute_end_lanes(meta, advice, Rotation::prev());
+        let mut lanes_cur = [ // A0, A1, A2 hold MDS(start[0], start[1], start[2])
+            adv(meta, advice[0], Rotation::cur()),
+            adv(meta, advice[1], Rotation::cur()),
+            adv(meta, advice[2], Rotation::cur())
+        ];
+
+        // constraints for the E2 gate
+        let mut constraints = vec![];
+        for i in 0..3 { // 3 constraints for (A0, A1, A2) <-> (previous row, MDS multiplied)
+            constraints.push(s_int.clone() * (lanes_cur[i].clone() - start[i].clone()));
+        }
+
+        // perform and constrain q, b over 4 RF rounds
+        for i in 0..4 {
+            let sbox_out = vec![];
+            for j in 0..3 {
+                let a = lanes[j].clone() + Expression::Constant(rc[i][j]); 
+                let a_sq = adv(meta, advice[6*i + 2*j], Rotation::cur()); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
+                let b = adv(meta, advice[6*i + 2*j + 1], Rotation::cur()); // a_sq = a*a, b = a_sq * a_sq * a = a^5
+                sbox_out.push(b.clone());
+
+                // 24 constraints over the 12 a_sq values and the 12 b values
+                constraints.push(s_e1.clone() * (a_sq.clone() - a.clone() * a.clone()));
+                constraints.push(s_e1.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
+            }
+            if i < 3 { lanes = mul_me(&[sbox_out[0].clone(), sbox_out[1].clone(), sbox_out[2].clone()]); }
+        }
+        constraints
     });
 }
