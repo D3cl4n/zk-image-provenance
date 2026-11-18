@@ -270,7 +270,7 @@ fn create_e2_gate<F: PrimeField> (
         // constraints for the E2 gate
         let mut constraints = vec![];
         for i in 0..3 { // 3 constraints for (A0, A1, A2) <-> (previous row, MDS multiplied)
-            constraints.push(s_int.clone() * (lanes_cur[i].clone() - start[i].clone()));
+            constraints.push(s_e2.clone() * (lanes_cur[i].clone() - start[i].clone()));
         }
 
         // perform and constrain q, b over 4 RF rounds
@@ -283,8 +283,8 @@ fn create_e2_gate<F: PrimeField> (
                 sbox_out.push(b.clone());
 
                 // 24 constraints over the 12 a_sq values and the 12 b values
-                constraints.push(s_e1.clone() * (a_sq.clone() - a.clone() * a.clone()));
-                constraints.push(s_e1.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
+                constraints.push(s_e2.clone() * (a_sq.clone() - a.clone() * a.clone()));
+                constraints.push(s_e2.clone() * (b.clone() - a_sq.clone() * a_sq.clone() * a.clone()));
             }
             if i < 3 { lanes = mul_me(&[sbox_out[0].clone(), sbox_out[1].clone(), sbox_out[2].clone()]); }
         }
