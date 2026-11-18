@@ -252,7 +252,7 @@ fn create_int_gate<F: PrimeField> (
 * Columns used: A0, ..., A31: (A0, A1, A2) are the MDS outputs but the lanes need to be recomputed
 * Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
 */
-fn create_e2_gate(
+fn create_e2_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 31],
     s_e2: Selector,
@@ -305,6 +305,6 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 31],
     ) -> <Self as Chip<F>>::Config {
-        
+
     }
 }
