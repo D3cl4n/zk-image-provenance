@@ -296,12 +296,12 @@ fn create_e2_gate<F: PrimeField> (
 // implementation of additional methods for the Poseidon2 chip
 impl<F: PrimeField> Poseidon2Chip<F> {
     // constructor
-    fn construct(config: <Self as Chip<F>>::Config) -> Self {
+    pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
         Poseidon2Chip { config, _marker: PhantomData<F> }
     }
 
     // configure the chip with all the gates and constraints
-    fn configure(
+    pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 31],
     ) -> <Self as Chip<F>>::Config {
