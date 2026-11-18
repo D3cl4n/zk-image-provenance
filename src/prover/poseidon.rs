@@ -260,22 +260,12 @@ fn create_e2_gate<F: PrimeField> (
 ) {
     meta.create_gate("e2_gate", |meta| {
         let s_e2 = meta.query_selector(s_e2);
-        let start = recompute_end_lanes(meta, advice, Rotation::prev());
-        let mut lanes_cur = [ // A0, A1, A2 hold MDS(start[0], start[1], start[2])
-            adv(meta, advice[0], Rotation::cur()),
-            adv(meta, advice[1], Rotation::cur()),
-            adv(meta, advice[2], Rotation::cur())
-        ];
-
-        // constraints for the E2 gate
+        let mut lanes = recompute_end_lanes(meta, advice, Rotation::prev()); // I3 end lane values (after ML)
         let mut constraints = vec![];
-        for i in 0..3 { // 3 constraints for (A0, A1, A2) <-> (previous row, MDS multiplied)
-            constraints.push(s_e2.clone() * (lanes_cur[i].clone() - start[i].clone()));
-        }
 
         // perform and constrain q, b over 4 RF rounds
         for i in 0..4 {
-            let sbox_out = vec![];
+            let mut sbox_out = vec![];
             for j in 0..3 {
                 let a = lanes[j].clone() + Expression::Constant(rc[i][j]); 
                 let a_sq = adv(meta, advice[6*i + 2*j], Rotation::cur()); // multiply by 6 to get to the correct start col, each RF round takes 6 cols
@@ -297,7 +287,7 @@ fn create_e2_gate<F: PrimeField> (
 impl<F: PrimeField> Poseidon2Chip<F> {
     // constructor
     pub fn construct(config: <Self as Chip<F>>::Config) -> Self {
-        Poseidon2Chip { config, _marker: PhantomData<F> }
+        Poseidon2Chip { config, _marker: PhantomData }
     }
 
     // configure the chip with all the gates and constraints
