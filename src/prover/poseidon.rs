@@ -294,7 +294,24 @@ impl<F: PrimeField> Poseidon2Chip<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 31],
+        iv: F,
+        rc: &[F; 80] // 24 RCs for RF rounds, 56 RCs for RP rounds, 80 total
     ) -> <Self as Chip<F>>::Config {
+        // make the needed selectors
+        let s_init = meta.selector();
+        let s_digest = meta.selector();
+        let s_e1 = meta.selector();
+        let s_e2 = meta.selector();
+        let s_i0 = meta.selector();
+        let s_i1 = meta.selector();
+        let s_i2 = meta.selector();
+        let s_i3 = meta.selector();
 
+        create_init_gate(meta, advice, s_init, iv);
+        create_e1_gate(meta, advice, s_e1);
+        create_int_gate(meta, advice, s_i0);
+        create_int_gate(meta, advice, s_i1);
+        create_int_gate(meta, advice, s_i2);
+        create_int_gate(meta, advice, s_i3);
     }
 }
