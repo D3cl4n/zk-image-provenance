@@ -245,3 +245,20 @@ fn create_int_gate<F: PrimeField> (
         constraints
     });
 }
+
+
+/*
+* Gate Purpose: compute RF/2 external rounds in the using the e2 selector
+* Columns used: A0, ..., A31: (A0, A1, A2) are the MDS outputs but the lanes need to be recomputed
+* Constraints: q = a^{2} constrained, b = q^{2}*a constrained, a is an ARC/ML function of previous cells
+*/
+fn create_e2_gate(
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 31],
+    s_e2: Selector,
+    rc: &[[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
+) {
+    meta.create_gate("e2_gate", |meta| {
+        let s_e2 = meta.query_selector(s_e2);
+    });
+}
