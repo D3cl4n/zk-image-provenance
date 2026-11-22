@@ -289,20 +289,19 @@ fn create_e2_gate<F: PrimeField> (
 */
 fn create_digest_gate<F: PrimeField>(
     meta: &mut ConstraintSystem<F>, 
-    advice: [Column<Advice>; 3], // pass A19, A21, A23 here
+    advice: [Column<Advice>; 4], // pass A19, A21, A23 here
     instance: Column<Instance>, 
-    instance_rotation: u32, // how many rows to go back from current to get to first cell of instance
     s_digest: Selector
 ) {
     meta.create_gate("digest_gate", |meta| {
         let s_digest = meta.query_selector(s_digest);
         let b_prev = [
-            adv(meta, advice[0], Rotation::prev()), 
-            adv(meta, advice[1], Rotation::prev()), 
-            adv(meta, advice[2], Rotation::prev())
+            adv(meta, advice[0], Rotation::cur()), 
+            adv(meta, advice[1], Rotation::cur()), 
+            adv(meta, advice[2], Rotation::cur())
         ];
         let mut lanes = mul_me(&b_prev); // E2 end lane values (after ML)
-        let hash = meta.query_instance(instance_rotation); // gets the hash value written into the instance column
+        let hash = adv(meta, advice[3], Rotation::cur()); // gets the hash value written into the instance column
 
         // only constraint is ensuring equality between the rate element squeezed and the hash
         vec![
@@ -327,6 +326,10 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         iv: F,
         rc: &[F; 80] // 24 RCs for RF rounds, 56 RCs for RP rounds, 80 total
     ) -> <Self as Chip<F>>::Config {
+        // enable equality on instance column and A24 to copy constrain digest values
+        meta.enable_equality(advice[24]);
+        meta.enable_equality(instance);
+        
         // make the needed selectors
         let s_init = meta.selector();
         let s_digest = meta.selector();
@@ -349,6 +352,7 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         create_int_gate(meta, advice, s_i2, rc[40..54]);
         create_int_gate(meta, advice, s_i3, rc[54..68]);
         create_e2_gate(meta, advice, s_e2, [rc[68..71], rc[71..74], rc[74..77], rc[77..80]]);
+        create_digest_gate(meta, [advice[19], advice[21], advice[23], advice[24]], instance, 0, s_digest);
 
         Poseidon2ChipConfig {
             advice,
