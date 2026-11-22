@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
     circuit::Chip,
-    plonk::{Advice, Column, TableColumn, ConstraintSystem, Instance, Selector, Expression, VirtualCells},
+    plonk::{Advice, Column, ConstraintSystem, Instance, Selector, Expression, VirtualCells},
     poly::Rotation,
 };
 
@@ -11,7 +11,6 @@ use halo2_proofs::{
 #[derive(Clone, Debug)]
 pub struct Poseidon2ChipConfig {
     advice: [Column<Advice>; 31],   // 31 advice columns for a wide construction
-    byte_table: TableColumn,        // lookup table to make sure bytes are within [0, 255]
     instance: Column<Instance>,     // for exposing public values
     s_init: Selector,               // ensures correct starting values at start of permutation
     s_e1: Selector,                 // selector computes RF/2 external rounds in one row (row 0)
@@ -256,7 +255,7 @@ fn create_e2_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 31],
     s_e2: Selector,
-    rc: &[[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
+    rc: [[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
 ) {
     meta.create_gate("e2_gate", |meta| {
         let s_e2 = meta.query_selector(s_e2);
@@ -294,6 +293,7 @@ impl<F: PrimeField> Poseidon2Chip<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>, 
         advice: [Column<Advice>; 31],
+        instance: Column<Instance>,
         iv: F,
         rc: &[F; 80] // 24 RCs for RF rounds, 56 RCs for RP rounds, 80 total
     ) -> <Self as Chip<F>>::Config {
@@ -307,11 +307,27 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         let s_i2 = meta.selector();
         let s_i3 = meta.selector();
 
-        create_init_gate(meta, advice, s_init, iv);
-        create_e1_gate(meta, advice, s_e1);
-        create_int_gate(meta, advice, s_i0);
-        create_int_gate(meta, advice, s_i1);
-        create_int_gate(meta, advice, s_i2);
-        create_int_gate(meta, advice, s_i3);
+        // prepare round constants for gate creation
+        let e1_rcs: [[F; 3]; 4] = [
+            [rc[0..3], rc[3..6], rc[6..9], rc[9..12]]
+        ];
+
+        create_init_gate(meta, [advice[19], advice[21], advice[23]], s_init, iv);
+        create_e1_gate(meta, advice, s_e1, [rc[0..3], rc[3..6], rc[6..9], rc[9..12]]);
+        create_i0_gate(meta, advice, s_i0, rc[12..26]);
+        create_int_gate(meta, advice, s_i1, rc[26..40]);
+        create_int_gate(meta, advice, s_i2, rc[40..54]);
+        create_int_gate(meta, advice, s_i3, rc[54..68]);
+        create_e2_gate(meta, advice, s_e2, [rc[68..71], rc[71..74], rc[74..77], rc[77..80]]);
+
+        Poseidon2ChipConfig {
+            advice,
+            instance, 
+            s_init,
+            s_e1,
+            s_i: [s_i0, s_i1, s_i2, s_i3],
+            s_e2,
+            s_digest
+        }
     }
 }
