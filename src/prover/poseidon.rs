@@ -282,6 +282,36 @@ fn create_e2_gate<F: PrimeField> (
 }
 
 
+/*
+* Gate Purpose: maps the digest from the end of the permutation to the instance column
+* Columns used: instance, SB outputs from E2 (A19, A21, A23)
+* Constraints: ensure equality between the hash in the instance column and the squeezed element
+*/
+fn create_digest_gate<F: PrimeField>(
+    meta: &mut ConstraintSystem<F>, 
+    advice: [Column<Advice>; 3], // pass A19, A21, A23 here
+    instance: Column<Instance>, 
+    instance_rotation: u32, // how many rows to go back from current to get to first cell of instance
+    s_digest: Selector
+) {
+    meta.create_gate("digest_gate", |meta| {
+        let s_digest = meta.query_selector(s_digest);
+        let b_prev = [
+            adv(meta, advice[0], Rotation::prev()), 
+            adv(meta, advice[1], Rotation::prev()), 
+            adv(meta, advice[2], Rotation::prev())
+        ];
+        let mut lanes = mul_me(&b_prev); // E2 end lane values (after ML)
+        let hash = meta.query_instance(instance_rotation); // gets the hash value written into the instance column
+
+        // only constraint is ensuring equality between the rate element squeezed and the hash
+        vec![
+            s_digest * (lanes[0].clone() - hash)
+        ]
+    });
+}
+
+
 // implementation of additional methods for the Poseidon2 chip
 impl<F: PrimeField> Poseidon2Chip<F> {
     // constructor
