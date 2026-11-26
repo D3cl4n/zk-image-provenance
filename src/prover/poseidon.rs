@@ -344,11 +344,11 @@ impl<F: PrimeField> Poseidon2Chip<F> {
 
         create_init_gate(meta, [advice[19], advice[21], advice[23]], s_init, iv);
         create_e1_gate(meta, advice, s_e1, [&rc[0..3], &rc[3..6], &rc[6..9], &rc[9..12]]);
-        create_i0_gate(meta, advice, s_i0, &rc[12..26]);
-        create_int_gate(meta, advice, s_i1, &rc[26..40]);
-        create_int_gate(meta, advice, s_i2, &rc[40..54]);
-        create_int_gate(meta, advice, s_i3, &rc[54..68]);
-        create_e2_gate(meta, advice, s_e2, [&rc[68..71], &rc[71..74], &rc[74..77], &rc[77..80]]);
+        create_i0_gate(meta, advice, s_i0, &rc[24..38]);
+        create_int_gate(meta, advice, s_i1, &rc[38..52]);
+        create_int_gate(meta, advice, s_i2, &rc[52..66]);
+        create_int_gate(meta, advice, s_i3, &rc[66..80]);
+        create_e2_gate(meta, advice, s_e2, [&rc[12..15], &rc[15..18], &rc[18..21], &rc[21..24]]);
         create_digest_gate(meta, [advice[19], advice[21], advice[23], advice[24]], instance, s_digest);
 
         Poseidon2ChipConfig {
