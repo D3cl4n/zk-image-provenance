@@ -104,9 +104,9 @@ class Poseidon2:
         self.t = t
         self.rf = rf
         self.rp = rp
-        self.mds_e = mds_e
-        self.mds_i = mds_i
-        self.rcs = [self.field_p(x) for x in rcs]
+        self.mds_e = [[self.field_p(x) for x in row] for row in mds_e]
+        self.mds_i = [[self.field_p(x) for x in row] for row in mds_i]
+        self.rcs = [[self.field_p(x) for x in row] for row in rcs]
         self.state = [self.field_p(0)] * self.t # swap with iv?
 
     # pow5 helper function
