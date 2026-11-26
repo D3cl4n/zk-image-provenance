@@ -115,11 +115,11 @@ class Poseidon2:
 
     # sub bytes helper function for external rounds
     def sb_e(self):
-        return [self.pow5(self.state[0], self.pow5(self.state[1], self.pow5(self.state[2])))]
+        return [self.pow5(self.state[0]), self.pow5(self.state[1]), self.pow5(self.state[2])]
 
     # sub bytes helper function for internal rounds
     def sb_i(self):
-        return [self.pow5(self.state[0], self.state[1], self.state[2])]
+        return [self.pow5(self.state[0]), self.state[1], self.state[2]]
 
     # add round constants helper function for external rounds
     def arc_e(self, constants):
