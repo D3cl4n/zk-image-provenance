@@ -137,7 +137,6 @@ class Poseidon2:
         next_state.append(self.field_p(self.state[0] * mds[0][0] + self.state[1] * mds[0][1] + self.state[2] * mds[0][2]))
         next_state.append(self.field_p(self.state[0] * mds[1][0] + self.state[1] * mds[1][1] + self.state[2] * mds[1][2]))
         next_state.append(self.field_p(self.state[0] * mds[2][0] + self.state[1] * mds[2][1] + self.state[2] * mds[2][2]))
-        next_state.append(self.field_p(self.state[0] * mds[3][0] + self.state[1] * mds[3][1] + self.state[2] * mds[3][2]))
 
         return next_state
 
