@@ -144,14 +144,24 @@ class Poseidon2:
     # Poseidon2 permutation
     def permute(self):
         rc_idx = 0
+        self.state = self.mds_mul(self.mds_e)
         for _ in range(0, self.rf // 2):
-            pass
+            self.state = self.arc_e(self.rcs[rc_idx])
+            self.state = self.sb_e()
+            self.state = self.mds_mul(self.mds_e)
+            rc_idx += 1
 
         for _ in range(0, self.rp):
-            pass
+            self.state = self.arc_i(self.rcs[rc_idx])
+            self.state = self.sb_i()
+            self.state = self.mds_mul(self.mds_i)
+            rc_idx += 1
 
         for _ in range(0, self.rf // 2):
-            pass
+            self.state = self.arc_e(self.rcs[rc_idx])
+            self.state = self.sb_e()
+            self.state = self.mds_mul(self.mds_e)
+            rc_idx += 1
 
     # absorb the input
     def absorb(self, inputs):
