@@ -134,10 +134,10 @@ class Poseidon2:
     # generic MDS multiplication - pass mds_i or mds_e depending on round
     def mds_mul(self, mds):
         next_state = []
-        next_state.append(self.field_p(self.state[0] * mds[0][0] + self.state[1] * mds[0][1] + self.state[2] * mds[0][2] + self.state[3] * mds[0][3]))
-        next_state.append(self.field_p(self.state[0] * mds[1][0] + self.state[1] * mds[1][1] + self.state[2] * mds[1][2] + self.state[3] * mds[1][3]))
-        next_state.append(self.field_p(self.state[0] * mds[2][0] + self.state[1] * mds[2][1] + self.state[2] * mds[2][2] + self.state[3] * mds[2][3]))
-        next_state.append(self.field_p(self.state[0] * mds[3][0] + self.state[1] * mds[3][1] + self.state[2] * mds[3][2] + self.state[3] * mds[3][3]))
+        next_state.append(self.field_p(self.state[0] * mds[0][0] + self.state[1] * mds[0][1] + self.state[2] * mds[0][2]))
+        next_state.append(self.field_p(self.state[0] * mds[1][0] + self.state[1] * mds[1][1] + self.state[2] * mds[1][2]))
+        next_state.append(self.field_p(self.state[0] * mds[2][0] + self.state[1] * mds[2][1] + self.state[2] * mds[2][2]))
+        next_state.append(self.field_p(self.state[0] * mds[3][0] + self.state[1] * mds[3][1] + self.state[2] * mds[3][2]))
 
         return next_state
 
