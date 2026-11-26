@@ -1,10 +1,11 @@
 use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::Chip,
+    circuit::{Chip, Layouter, AssignedCell, Region, Value, Error},
     plonk::{Advice, Column, ConstraintSystem, Instance, Selector, Expression, VirtualCells},
     poly::Rotation,
 };
+use crate::prover::number::Number;
 
 
 // chip configuration for Poseidon2 sponge and permutation
@@ -360,3 +361,31 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         }
     }
 }
+
+
+// trait for the sub-functions of the poseidon permutation
+pub trait Poseidon2Instructions<F: PrimeField>: Chip<F> {
+    type Num;
+
+    // permutation
+    fn permute(
+        &self, 
+        layouter: &mut impl Layouter<F>,
+        state: [AssignedCell<F, F>; 4]
+    ) -> Result<[AssignedCell<F, F>; 4], Error>;
+}
+
+
+// implement the needed functionality for synthesis with the chip
+impl<F: PrimeField> Poseidon2Instructions<F> for Poseidon2Chip<F> {
+    type Num = Number<F>;
+
+    // permutation function
+    fn permute(
+        &self, 
+        mut layouter: impl Layouter<F>,
+        state: [AssignedCell<F, F>; 3]
+    ) -> Result<[AssignedCell<F, F>; 4], Error> {
+        let chip_config = self.config();
+    }
+} 
