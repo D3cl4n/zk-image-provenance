@@ -48,3 +48,32 @@ class Poseidon2:
         next_state.append(self.field_p(self.state[0] * mds[3][0] + self.state[1] * mds[3][1] + self.state[2] * mds[3][2] + self.state[3] * mds[3][3]))
 
         return next_state
+
+    # Poseidon2 permutation
+    def permute(self):
+        rc_idx = 0
+        for _ in range(0, self.rf // 2):
+            pass
+
+        for _ in range(0, self.rp):
+            pass
+
+        for _ in range(0, self.rf // 2):
+            pass
+
+    # absorb the input
+    def absorb(self, inputs):
+        assert len(inputs) == self.r
+        self.state = [self.field_p(self.state[0] + inputs[0]), self.field_p(self.state[1] + inputs[1]), self.state[2]]
+    
+    # squeeze state[1] as output
+    def squeeze(self):
+        return self.state[1]
+        
+    # hash given a padded and packed preimage
+    def hash(self, preimage_blocks):
+        for block in preimage_blocks:
+            self.absorb(block)
+            self.permute()
+    
+        return self.squeeze()
