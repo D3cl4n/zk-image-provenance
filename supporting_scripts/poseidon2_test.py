@@ -82,6 +82,15 @@ MDS_I = [
     [1, 2, 1],
     [1, 1, 3],
 ]
+
+# prime for the Pasta curve
+P = 28948022309329048855892746252171976963363056481941560715954676764349967630337
+
+# RF, RP, t, alpha
+RF = 8
+RP = 56
+T = 3
+ALPHA = 5
  
 
 # class for computing the Poseidon2 hash
@@ -160,3 +169,24 @@ class Poseidon2:
             self.permute()
     
         return self.squeeze()
+
+
+# test cases
+def test_permutation():
+    poseidon2 = Poseidon2(P, 128, ALPHA, T-1, T, RF, RP, MDS_E, MDS_I, ROUND_CONSTANTS)
+    kats_input_vec = [poseidon2.field_p(0), poseidon2.field_p(1), poseidon2.field_p(2)]
+    expected_output = [
+        poseidon2.field_p(0x1a9b54c7512a914dd778282c44b3513fea7251420b9d95750baae059b2268d7a), 
+        poseidon2.field_p(0x1c48ea0994a7d7984ea338a54dbf0c8681f5af883fe988d59ba3380c9f7901fc), 
+        poseidon2.field_p(0x079ddd0a80a3e9414489b526a2770448964766685f4c4842c838f8a23120b401)
+    ]
+
+    poseidon2.state = kats_input_vec
+    poseidon2.permute()
+
+    assert poseidon2.state == expected_output
+
+
+
+if __name__ == '__main__':
+    test_permutation()
