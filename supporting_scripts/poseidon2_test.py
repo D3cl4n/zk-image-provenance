@@ -36,3 +36,15 @@ class Poseidon2:
         return [self.field_p(self.state[0] + constants[0]), self.field_p(self.state[1] + constants[1]), self.field_p(self.state[2] + constants[2])]
 
     # add round constants helper function for internal rounds
+    def arc_i(self, constant):
+        return [self.field_p(self.state[0] + constant), self.state[1], self.state[2]]
+
+    # generic MDS multiplication - pass mds_i or mds_e depending on round
+    def mds_mul(self, mds):
+        next_state = []
+        next_state.append(self.field_p(self.state[0] * mds[0][0] + self.state[1] * mds[0][1] + self.state[2] * mds[0][2] + self.state[3] * mds[0][3]))
+        next_state.append(self.field_p(self.state[0] * mds[1][0] + self.state[1] * mds[1][1] + self.state[2] * mds[1][2] + self.state[3] * mds[1][3]))
+        next_state.append(self.field_p(self.state[0] * mds[2][0] + self.state[1] * mds[2][1] + self.state[2] * mds[2][2] + self.state[3] * mds[2][3]))
+        next_state.append(self.field_p(self.state[0] * mds[3][0] + self.state[1] * mds[3][1] + self.state[2] * mds[3][2] + self.state[3] * mds[3][3]))
+
+        return next_state
