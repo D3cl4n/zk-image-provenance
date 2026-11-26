@@ -122,14 +122,10 @@ class Poseidon2:
         return [self.pow5(self.state[0]), self.state[1], self.state[2]]
 
     # add round constants helper function for external rounds
-    def arc_e(self, constants):
+    def arc(self, constants):
         assert len(constants) == self.t
 
         return [self.field_p(self.state[0] + constants[0]), self.field_p(self.state[1] + constants[1]), self.field_p(self.state[2] + constants[2])]
-
-    # add round constants helper function for internal rounds
-    def arc_i(self, constant):
-        return [self.field_p(self.state[0] + constant), self.state[1], self.state[2]]
 
     # generic MDS multiplication - pass mds_i or mds_e depending on round
     def mds_mul(self, mds):
@@ -145,19 +141,19 @@ class Poseidon2:
         rc_idx = 0
         self.state = self.mds_mul(self.mds_e)
         for _ in range(0, self.rf // 2):
-            self.state = self.arc_e(self.rcs[rc_idx])
+            self.state = self.arc(self.rcs[rc_idx])
             self.state = self.sb_e()
             self.state = self.mds_mul(self.mds_e)
             rc_idx += 1
 
         for _ in range(0, self.rp):
-            self.state = self.arc_i(self.rcs[rc_idx])
+            self.state = self.arc(self.rcs[rc_idx])
             self.state = self.sb_i()
             self.state = self.mds_mul(self.mds_i)
             rc_idx += 1
 
         for _ in range(0, self.rf // 2):
-            self.state = self.arc_e(self.rcs[rc_idx])
+            self.state = self.arc(self.rcs[rc_idx])
             self.state = self.sb_e()
             self.state = self.mds_mul(self.mds_e)
             rc_idx += 1
