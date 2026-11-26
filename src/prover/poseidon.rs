@@ -117,7 +117,7 @@ fn create_e1_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>,
     advice: [Column<Advice>; 31],
     s_e1: Selector,
-    rc: [[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
+    rc: [&[F]; 4] // pass the round constants needed (3 per round, 4 rounds total)
 ) {
     meta.create_gate("e1_gate", |meta| {
         let s_e1 = meta.query_selector(s_e1);
@@ -163,7 +163,7 @@ fn create_i0_gate<F: PrimeField>(
     meta: &mut ConstraintSystem<F>,
     advice: [Column<Advice>; 31],
     s_i0: Selector,
-    rc: [F; 14] // 14 RP rounds, each RP round only has lane0 go into ARC
+    rc: &[F] // 14 RP rounds, each RP round only has lane0 go into ARC
 ) {
     meta.create_gate("i0_gate", |meta| {
         let s_i0 = meta.query_selector(s_i0);
@@ -212,7 +212,7 @@ fn create_int_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 31],
     s_int: Selector,
-    rc: [F; 14]
+    rc: &[F]
 ) {
     meta.create_gate("int_gate", |meta| {
         let s_int = meta.query_selector(s_int);
@@ -255,7 +255,7 @@ fn create_e2_gate<F: PrimeField> (
     meta: &mut ConstraintSystem<F>, 
     advice: [Column<Advice>; 31],
     s_e2: Selector,
-    rc: [[F; 3]; 4] // pass the round constants needed (3 per round, 4 rounds total)
+    rc: [&[F]; 4] // pass the round constants needed (3 per round, 4 rounds total)
 ) {
     meta.create_gate("e2_gate", |meta| {
         let s_e2 = meta.query_selector(s_e2);
@@ -329,7 +329,7 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         // enable equality on instance column and A24 to copy constrain digest values
         meta.enable_equality(advice[24]);
         meta.enable_equality(instance);
-        
+
         // make the needed selectors
         let s_init = meta.selector();
         let s_digest = meta.selector();
@@ -340,19 +340,14 @@ impl<F: PrimeField> Poseidon2Chip<F> {
         let s_i2 = meta.selector();
         let s_i3 = meta.selector();
 
-        // prepare round constants for gate creation
-        let e1_rcs: [[F; 3]; 4] = [
-            [rc[0..3], rc[3..6], rc[6..9], rc[9..12]]
-        ];
-
         create_init_gate(meta, [advice[19], advice[21], advice[23]], s_init, iv);
-        create_e1_gate(meta, advice, s_e1, [rc[0..3], rc[3..6], rc[6..9], rc[9..12]]);
-        create_i0_gate(meta, advice, s_i0, rc[12..26]);
-        create_int_gate(meta, advice, s_i1, rc[26..40]);
-        create_int_gate(meta, advice, s_i2, rc[40..54]);
-        create_int_gate(meta, advice, s_i3, rc[54..68]);
-        create_e2_gate(meta, advice, s_e2, [rc[68..71], rc[71..74], rc[74..77], rc[77..80]]);
-        create_digest_gate(meta, [advice[19], advice[21], advice[23], advice[24]], instance, 0, s_digest);
+        create_e1_gate(meta, advice, s_e1, [&rc[0..3], &rc[3..6], &rc[6..9], &rc[9..12]]);
+        create_i0_gate(meta, advice, s_i0, &rc[12..26]);
+        create_int_gate(meta, advice, s_i1, &rc[26..40]);
+        create_int_gate(meta, advice, s_i2, &rc[40..54]);
+        create_int_gate(meta, advice, s_i3, &rc[54..68]);
+        create_e2_gate(meta, advice, s_e2, [&rc[68..71], &rc[71..74], &rc[74..77], &rc[77..80]]);
+        create_digest_gate(meta, [advice[19], advice[21], advice[23], advice[24]], instance, s_digest);
 
         Poseidon2ChipConfig {
             advice,
