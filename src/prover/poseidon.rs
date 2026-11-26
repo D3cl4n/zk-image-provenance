@@ -329,6 +329,7 @@ impl<F: PrimeField> Poseidon2Chip<F> {
     ) -> <Self as Chip<F>>::Config {
         // enable equality on instance column and A24 to copy constrain digest values
         meta.enable_equality(advice[24]);
+        meta.enable_equality(advice[25]);
         meta.enable_equality(instance);
 
         // make the needed selectors
