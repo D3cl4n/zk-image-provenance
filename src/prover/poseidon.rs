@@ -12,9 +12,13 @@ include!("rc_limbs.rs");
 
 // helper function to convert round constant limbs into flat list of field elements
 fn get_rcs<F: PrimeField>() -> [F; 80] {
-    core::array::from_fn(|i| {
-        let mut repr = F::Repr::default();
+    core::array::from_fn(|i| { // collect all field elements after finished indexing lists of limbs using i
+        let mut repr = F::Repr::default(); // type to convert between bytes and field elements
         let bytes = repr.as_mut();
+        for (j, limb) in RC_LIMBS[i].iter().enumerate() { 
+            bytes[8*j..8*j + 8].copy_from_slice(&limb.to_le_bytes()); // for each limb convert to little endian bytes and place in repr
+        }
+        F::from_repr(repr).expect("[!] Error converting to field element") // add field element into array returned
     })
 }
 
