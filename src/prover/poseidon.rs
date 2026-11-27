@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 use ff::PrimeField;
 use halo2_proofs::{
-    circuit::{Chip, Layouter, AssignedCell, Region, Value, Error},
-    plonk::{Advice, Column, ConstraintSystem, Instance, Selector, Expression, VirtualCells},
+    circuit::{Chip, Layouter, AssignedCell, Region, Value},
+    plonk::{Advice, Column, ConstraintSystem, Instance, Selector, Expression, VirtualCells, Error},
     poly::Rotation,
 };
 use crate::prover::number::Number;
@@ -12,7 +12,10 @@ include!("rc_limbs.rs");
 
 // helper function to convert round constant limbs into flat list of field elements
 fn get_rcs<F: PrimeField>() -> [F; 80] {
-
+    core::array::from_fn(|i| {
+        let mut repr = F::Repr::default();
+        let bytes = repr.as_mut();
+    })
 }
 
 // chip configuration for Poseidon2 sponge and permutation
