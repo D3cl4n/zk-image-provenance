@@ -383,11 +383,11 @@ pub trait Poseidon2Instructions<F: PrimeField>: Chip<F> {
     type Num;
 
     // permutation
-    fn permute(
+    fn hash(
         &self, 
         layouter: &mut impl Layouter<F>,
-        state: [AssignedCell<F, F>; 4]
-    ) -> Result<[AssignedCell<F, F>; 4], Error>;
+        blocks: &[AssignedCell<F, F>; 2] //
+    ) -> Result<AssignedCell<F, F>, Error>; // returns the state after the permutation runs
 }
 
 
@@ -396,11 +396,11 @@ impl<F: PrimeField> Poseidon2Instructions<F> for Poseidon2Chip<F> {
     type Num = Number<F>;
 
     // permutation function
-    fn permute(
+    fn hash(
         &self, 
-        mut layouter: impl Layouter<F>,
-        state: [AssignedCell<F, F>; 3]
-    ) -> Result<[AssignedCell<F, F>; 4], Error> {
+        layouter: &mut impl Layouter<F>,
+        blocks: &[AssignedCell<F, F>; 2]
+    ) -> Result<AssignedCell<F, F>, Error> {
         let chip_config = self.config();
     }
 } 
