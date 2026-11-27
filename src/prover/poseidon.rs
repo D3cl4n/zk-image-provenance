@@ -382,7 +382,14 @@ impl<F: PrimeField> Poseidon2Chip<F> {
 pub trait Poseidon2Instructions<F: PrimeField>: Chip<F> {
     type Num;
 
-    // permutation
+    // padding the input to a multiple of the rate r=2, segment into blocks of size r
+    fn pad(
+        &self,
+        layouter: &mut impl Layouter<F>,
+        packed_input: &[AssignedCell<F, F>]
+    ) -> 
+
+    // hash
     fn hash(
         &self, 
         layouter: &mut impl Layouter<F>,
@@ -395,12 +402,23 @@ pub trait Poseidon2Instructions<F: PrimeField>: Chip<F> {
 impl<F: PrimeField> Poseidon2Instructions<F> for Poseidon2Chip<F> {
     type Num = Number<F>;
 
-    // permutation function
+    // hash function
     fn hash(
         &self, 
         layouter: &mut impl Layouter<F>,
         blocks: &[AssignedCell<F, F>; 2]
     ) -> Result<AssignedCell<F, F>, Error> {
         let chip_config = self.config();
+        let mut row_offset = 0;
+
+        layouter.assign_region(
+            || "hash_region", |mut region| {
+                // for loop over each block
+                for block in blocks {
+                    block[0].copy_advice(|| "m0", &mut region, config.advice[24], row_offset); // copy m0 into A24 for absorb
+                    block[1].copy_advice(|| "m1", &mut region, config.advice[25], row_offset); // copy m1 into A25 for absorb
+                }
+            }
+        )
     }
 } 
