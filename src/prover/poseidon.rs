@@ -10,6 +10,11 @@ use crate::prover::number::Number;
 // load round constants at compile time using macro
 include!("rc_limbs.rs");
 
+// helper function to convert round constant limbs into flat list of field elements
+fn get_rcs<F: PrimeField>() -> [F; 80] {
+
+}
+
 // chip configuration for Poseidon2 sponge and permutation
 #[derive(Clone, Debug)]
 pub struct Poseidon2ChipConfig {
